@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCS Informática y Electricidad - CLOUD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { gcsBlue: '#1e40af', gcsRed: '#dc2626' } } }
+        }
+    </script>
+    <style>
+        body { background-color: #f8fafc; font-family: 'Segoe UI', sans-serif; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-bg { background-color: rgba(30, 58, 138, 0.4); backdrop-filter: blur(4px); }
+        .input-gcs { width: 100%; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; outline: none; }
+        .input-gcs:focus { border-color: #1e40af; ring: 2px; }
+        .ticket-row:hover { background-color: #eff6ff; }
+        .logo-container img { max-height: 80px; object-fit: contain; }
+    </style>
+</head>
+<body>
+
+    <div id="publicView" class="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50">
+        <div class="max-w-3xl w-full bg-white rounded-xl shadow-2xl overflow-hidden fade-in border-t-8 border-gcsBlue">
+            <div class="bg-white p-8 text-center border-b border-gray-100">
+                <div class="logo-container flex justify-center mb-4">
+                    <img src="image_a64fbd.png" alt="GCS Logo" onerror="this.style.display='none'">
+                </div>
+                <h1 class="text-2xl font-bold text-gcsBlue uppercase">Portal de Asistencia</h1>
+            </div>
+            <div class="p-8 bg-gray-50">
+                <form onsubmit="submitPublicTicket(event)" class="space-y-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <label class="cursor-pointer group">
+                            <input type="radio" name="pType" value="Incidencia" class="peer sr-only" checked>
+                            <div class="p-5 rounded-xl border-2 border-gray-200 bg-white peer-checked:border-gcsRed peer-checked:bg-red-50 hover:shadow-md transition text-center">
+                                <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 text-gcsRed"></i>
+                                <div class="font-bold text-gray-700">Incidencia</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group">
+                            <input type="radio" name="pType" value="Solicitud" class="peer sr-only">
+                            <div class="p-5 rounded-xl border-2 border-gray-200 bg-white peer-checked:border-gcsBlue peer-checked:bg-blue-50 hover:shadow-md transition text-center">
+                                <i class="fa-solid fa-laptop-medical text-3xl mb-2 text-gcsBlue"></i>
+                                <div class="font-bold text-gray-700">Petición</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="email" id="pEmail" class="input-gcs" placeholder="Tu Correo" required>
+                        <input type="tel" id="pPhone" class="input-gcs" placeholder="Teléfono" required>
+                        <input type="text" id="pDomUser" class="input-gcs" placeholder="Usuario Dominio" required>
+                        <input type="text" id="pTag" class="input-gcs" placeholder="Etiqueta Equipo" required>
+                    </div>
+                    <textarea id="pDesc" rows="4" class="input-gcs" placeholder="Descripción del problema..." required></textarea>
+                    <button type="submit" class="w-full bg-gcsBlue hover:bg-blue-800 text-white font-bold py-4 rounded-lg shadow-lg transition flex justify-center items-center gap-2 text-lg">
+                        <span>Registrar Ticket</span> <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </button>
+                </form>
+            </div>
+            <div class="bg-white p-4 text-center border-t">
+                <button onclick="showLogin()" class="text-xs text-gray-400 font-bold hover:text-gcsBlue"><i class="fa-solid fa-lock mr-1"></i> Acceso Técnicos</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loginView" class="hidden min-h-screen flex flex-col items-center justify-center bg-slate-900 p-4">
+        <div class="bg-white p-8 rounded-xl w-full max-w-sm fade-in shadow-2xl relative">
+            <button onclick="location.reload()" class="absolute top-4 right-4 text-gray-300 hover:text-red-500"><i class="fa-solid fa-times text-xl"></i></button>
+            <h2 class="text-xl font-bold text-gcsBlue text-center mb-6">Acceso GCS Cloud</h2>
+            <form onsubmit="handleStaffLogin(event)" class="space-y-4">
+                <input type="text" id="staffUser" placeholder="Usuario" class="input-gcs" required>
+                <input type="password" id="staffPass" placeholder="Contraseña" class="input-gcs" required>
+                <button type="submit" class="w-full bg-gcsBlue text-white font-bold py-3 rounded hover:bg-blue-800 transition">Conectar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboardView" class="hidden min-h-screen flex flex-col">
+        <nav class="bg-white border-b h-16 flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm">
+            <div class="flex items-center gap-3">
+                <img src="image_a64fbd.png" class="h-8 object-contain" alt="GCS" onerror="this.style.display='none'">
+                <div class="font-bold text-lg text-gcsBlue hidden sm:block">GCS <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">ONLINE</span></div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right text-xs mr-2 border-r pr-4">
+                    <div class="font-bold text-gray-700" id="dashUser">...</div>
+                    <div class="text-gcsRed font-bold uppercase text-[10px]" id="dashRole">...</div>
+                </div>
+                <button onclick="openUserModal()" id="btnUsers" class="hidden bg-gcsBlue text-white p-2 rounded shadow"><i class="fa-solid fa-users"></i></button>
+                <button onclick="location.reload()" class="bg-red-50 text-red-500 hover:bg-red-100 p-2 rounded"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+        </nav>
+
+        <div class="flex-grow p-6 max-w-7xl mx-auto w-full">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white p-4 rounded shadow border-l-4 border-gcsRed text-center"><div class="text-xs text-gray-500 font-bold uppercase">Incidencias</div><div class="text-3xl font-bold" id="kpiInc">0</div></div>
+                <div class="bg-white p-4 rounded shadow border-l-4 border-gcsBlue text-center"><div class="text-xs text-gray-500 font-bold uppercase">Peticiones</div><div class="text-3xl font-bold" id="kpiReq">0</div></div>
+                <div class="bg-white p-4 rounded shadow border-l-4 border-orange-400 text-center"><div class="text-xs text-gray-500 font-bold uppercase">Pendientes</div><div class="text-3xl font-bold" id="kpiPend">0</div></div>
+                <div class="bg-white p-4 rounded shadow border-l-4 border-green-500 text-center"><div class="text-xs text-gray-500 font-bold uppercase">Resueltos</div><div class="text-3xl font-bold" id="kpiRes">0</div></div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow border overflow-hidden">
+                <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+                    <h3 class="font-bold text-gcsBlue"><i class="fa-solid fa-satellite-dish mr-2"></i>Tickets en Vivo</h3>
+                    <input type="text" id="techSearch" onkeyup="renderTable()" placeholder="Buscar..." class="border rounded px-3 py-1 text-sm focus:border-gcsBlue outline-none">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-white uppercase bg-slate-700">
+                            <tr>
+                                <th class="px-6 py-3">ID</th><th class="px-6 py-3">Tipo</th><th class="px-6 py-3">Usuario</th><th class="px-6 py-3">Estado</th><th class="px-6 py-3">Fecha</th><th class="px-6 py-3 text-right">Ver</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticketTableBody">
+                            <tr><td colspan="6" class="text-center py-4">Cargando datos de la nube...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="workModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-bg px-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl flex flex-col max-h-[90vh] fade-in overflow-hidden">
+            <div class="bg-gcsBlue text-white p-4 flex justify-between items-center">
+                <div class="flex items-center gap-3"><span class="font-mono text-xl font-bold bg-white/20 px-2 rounded" id="wId">...</span><span class="text-xs uppercase px-2 py-1 bg-black/30 font-bold" id="wStatus">...</span></div>
+                <button onclick="closeModal('workModal')"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="flex flex-col md:flex-row h-full overflow-hidden bg-gray-100">
+                <div class="w-full md:w-1/3 bg-white p-6 border-r overflow-y-auto">
+                    <div class="mb-4 space-y-2 text-sm">
+                        <p><b>Usuario:</b> <span id="wDomUser"></span></p>
+                        <p><b>Tel:</b> <span id="wPhone"></span></p>
+                        <p><b>Equipo:</b> <span id="wTag"></span></p>
+                        <p class="text-xs text-gray-400 break-all" id="wEmail"></p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded border border-blue-100 mb-4">
+                        <div class="text-xs mb-1">Inicio: <span id="timeStart" class="font-bold">-</span></div>
+                        <div class="text-xs mb-2">Fin: <span id="timeEnd" class="font-bold">-</span></div>
+                        <div class="grid grid-cols-2 gap-2"><button onclick="logTime('start')" class="bg-white text-blue-600 border py-1 rounded text-xs font-bold">Inicio</button><button onclick="logTime('end')" class="bg-white text-slate-600 border py-1 rounded text-xs font-bold">Fin</button></div>
+                    </div>
+                    <div class="text-sm bg-yellow-50 p-4 rounded border italic" id="wDesc"></div>
+                </div>
+                <div class="w-full md:w-2/3 flex flex-col bg-gray-50">
+                    <div id="chatBox" class="flex-grow p-6 overflow-y-auto space-y-4"></div>
+                    <div class="p-4 bg-white border-t">
+                        <div class="flex gap-2 mb-4"><input type="text" id="noteInput" class="flex-grow border rounded px-4 py-2 text-sm" placeholder="Nota..."><button onclick="addNote()" class="bg-gcsBlue text-white px-4 rounded"><i class="fa-solid fa-paper-plane"></i></button></div>
+                        <div class="grid grid-cols-4 gap-3">
+                            <button onclick="updateStatus('Pendiente')" class="bg-orange-100 text-orange-700 py-2 rounded font-bold text-xs border border-orange-200">Pendiente</button>
+                            <button onclick="updateStatus('Resuelto')" class="bg-green-100 text-green-700 py-2 rounded font-bold text-xs border border-green-200">Resolver</button>
+                            <div class="col-span-2 flex gap-2" id="adminActions"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="userModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-bg px-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md fade-in">
+            <h3 class="font-bold mb-4 text-gcsBlue">Gestión Equipo (Cloud)</h3>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="newTechUser" placeholder="Usuario" class="input-gcs text-sm">
+                <button onclick="createTechUser()" class="bg-gcsBlue text-white px-4 rounded font-bold text-xs">Crear</button>
+            </div>
+            <div id="userList" class="max-h-56 overflow-y-auto space-y-2 border-t pt-2"></div>
+            <button onclick="closeModal('userModal')" class="w-full text-gray-400 text-sm mt-4">Cerrar</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, arrayUnion, serverTimestamp } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- ¡PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE! (PASO 3) ---
+        // Borra esto y pega tu 'const firebaseConfig' real
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY_AQUI",
+            authDomain: "TU_PROJECT.firebaseapp.com",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_PROJECT.appspot.com",
+            messagingSenderId: "NUMEROS",
+            appId: "APP_ID"
+        };
+        // ---------------------------------------------------------
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Variables Globales
+        window.tickets = []; 
+        window.users = [];
+        window.currentUser = null;
+        window.currentTicketId = null;
+
+        // --- FUNCIONES PÚBLICAS ---
+        window.submitPublicTicket = async (e) => {
+            e.preventDefault();
+            const type = document.querySelector('input[name="pType"]:checked').value;
+            const prefix = type === 'Incidencia' ? 'INC' : 'REQ';
+            const id = `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`;
+            
+            const data = {
+                id: id,
+                type: type,
+                email: document.getElementById('pEmail').value,
+                phone: document.getElementById('pPhone').value,
+                domUser: document.getElementById('pDomUser').value,
+                tag: document.getElementById('pTag').value,
+                desc: document.getElementById('pDesc').value,
+                status: 'Abierto',
+                date: new Date().toLocaleString(),
+                notes: [],
+                startTime: '-',
+                endTime: '-'
+            };
+
+            // Guardar en Firebase
+            try {
+                await setDoc(doc(db, "tickets", id), data);
+                
+                // UI Exito
+                document.getElementById('publicView').classList.add('hidden');
+                document.getElementById('dashboardView').classList.add('hidden'); // por si acaso
+                const successView = document.getElementById('successView'); // Necesitamos crear este div en el HTML si no existe, o reusar el del ejemplo anterior. 
+                // NOTA: He añadido la vista de éxito en el HTML de arriba.
+                document.getElementById('successView').classList.remove('hidden');
+                document.getElementById('successId').innerText = id;
+
+                // Configurar Mailto
+                const subject = encodeURIComponent(`GCS Ticket: ${id} [${type}]`);
+                const body = encodeURIComponent(`ID: ${id}\nUser: ${data.domUser}\nDesc: ${data.desc}`);
+                document.getElementById('mailBtn').href = `mailto:pablodepinto22@gmail.com?subject=${subject}&body=${body}`;
+
+            } catch (error) {
+                alert("Error conectando con la nube: " + error.message);
+            }
+        }
+
+        window.showLogin = () => {
+            document.getElementById('publicView').classList.add('hidden');
