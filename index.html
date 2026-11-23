@@ -502,11 +502,19 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .chat-quick-btn:hover{border-color:var(--b1);color:var(--b1);background:var(--card2)}
 .chat-quick-btn span:last-child{color:var(--b1);font-weight:700;flex-shrink:0}
 
-.calc-form{padding:12px 14px;background:var(--card);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:7px}
+.calc-form{padding:11px 14px;background:var(--card);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:7px}
 .calc-input-row{display:flex;gap:8px;align-items:center}
 .calc-input-row input{margin-top:0;flex:1;padding:9px 11px;font-size:.84rem;min-height:38px}
 .calc-hint{font-size:.71rem;color:var(--mut);line-height:1.35}
-.calc-loading{align-self:flex-start;background:var(--card);border:1px solid var(--line);color:var(--mut);padding:9px 12px;border-radius:6px;font-size:.8rem;font-style:italic}
+.calc-sim{padding:10px 14px;background:var(--card);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.calc-sim-hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.calc-sim-hd b{font-size:.78rem;color:var(--tx);letter-spacing:.01em}
+.calc-sim-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:7px}
+.calc-sim-grid label{margin:0;font-size:.7rem;font-weight:600;color:var(--mut);display:flex;flex-direction:column;gap:3px}
+.calc-sim-grid input,.calc-sim-grid select{margin:0;padding:6px 8px;font-size:.8rem;min-height:32px;border-radius:4px}
+.calc-sim-acts{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px}
+.calc-sim-acts small{font-size:.7rem;color:var(--mut)}
+.calc-sim[data-collapsed="true"] .calc-sim-body{display:none}
 
 /* Admin Candidaturas Status Colors & Archivo */
 .sol-sel-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;background:var(--card2);padding:10px 12px;border-radius:5px;border:1px solid var(--line);transition:background .15s,border-color .15s}
@@ -592,23 +600,23 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 
 <dialog id="dlg"></dialog>
 
-<!-- Floating AI Calculator Chatbot & Quick-Inquiry Widget (Web3Forms) -->
-<button class="chat-fab" id="chatFab" type="button" aria-expanded="false" aria-controls="chatPanel" aria-label="Abrir calculadora con IA y chat de consultas sobre la promoción de Móstoles">
+<!-- Floating Rental Calculator & Quick-Inquiry Widget (Web3Forms) -->
+<button class="chat-fab" id="chatFab" type="button" aria-expanded="false" aria-controls="chatPanel" aria-label="Abrir calculadora de alquiler y chat de consultas sobre la promoción de Móstoles">
   <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
-  <span class="chat-fab-lbl">Calculadora IA</span>
+  <span class="chat-fab-lbl">Calculadora</span>
 </button>
 
-<aside class="chat-panel" id="chatPanel" role="dialog" aria-label="Calculadora con IA y consultas de la promoción de Móstoles" hidden>
+<aside class="chat-panel" id="chatPanel" role="dialog" aria-label="Calculadora de alquiler y consultas de la promoción de Móstoles" hidden>
   <div class="chat-hd">
     <div class="chat-hd-info">
       <span class="chat-hd-logo" id="chatLogo" aria-hidden="true"></span>
       <div class="chat-hd-txt">
-        <b id="chatTitle">Calculadora IA · Móstoles</b>
-        <small id="chatSubtitle">Cálculos y solvencia con IA al instante</small>
+        <b id="chatTitle">Calculadora · Móstoles</b>
+        <small id="chatSubtitle">Solvencia 3×, pagas, fianza y cuotas al instante</small>
       </div>
     </div>
     <div class="chat-hd-acts">
-      <button class="chat-close" id="chatClear" type="button" title="Reiniciar conversación" aria-label="Reiniciar conversación" hidden>
+      <button class="chat-close" id="chatClear" type="button" title="Reiniciar historial" aria-label="Reiniciar historial" hidden>
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
       </button>
       <button class="chat-close" id="chatClose" type="button" title="Cerrar" aria-label="Cerrar asistente">
@@ -618,7 +626,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
   </div>
 
   <div class="chat-tabs" role="tablist" aria-label="Modo del asistente">
-    <button class="chat-tab on" id="chatTabCalc" type="button" role="tab" aria-selected="true" aria-controls="chatPaneCalc">Calculadora IA</button>
+    <button class="chat-tab on" id="chatTabCalc" type="button" role="tab" aria-selected="true" aria-controls="chatPaneCalc">Calculadora</button>
     <button class="chat-tab" id="chatTabMail" type="button" role="tab" aria-selected="false" aria-controls="chatPaneMail">Enviar consulta</button>
   </div>
 
@@ -627,15 +635,55 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
     <button class="chat-link-btn" id="chatCtxUnlink" type="button">Quitar</button>
   </div>
 
-  <!-- Tab 1: Chatbot Calculadora IA -->
+  <!-- Tab 1: Simulador y Calculadora de Alquiler (100% instantánea) -->
   <div class="chat-pane" id="chatPaneCalc" role="tabpanel" aria-labelledby="chatTabCalc">
+    <div class="calc-sim" id="calcSimBox" data-collapsed="false">
+      <div class="calc-sim-hd">
+        <b>Simulador rápido de solvencia y cuotas</b>
+        <button type="button" class="chat-link-btn" id="calcSimToggle">Ocultar</button>
+      </div>
+      <form class="calc-sim-body" id="calcSimForm" novalidate>
+        <div class="calc-sim-grid">
+          <label>Ingresos netos (€)
+            <input id="simIncome" type="number" min="300" max="1000000" step="50" placeholder="Ej. 3200">
+          </label>
+          <label>Tipo de salario
+            <select id="simPagas">
+              <option value="12">12 pagas / mes</option>
+              <option value="14">14 pagas / mes</option>
+              <option value="anual">Total anual</option>
+            </select>
+          </label>
+          <label>Personas / titulares
+            <select id="simPeople">
+              <option value="1">1 persona</option>
+              <option value="2">2 personas</option>
+              <option value="3">3 personas</option>
+              <option value="4">4 personas</option>
+            </select>
+          </label>
+          <label>Habitaciones
+            <select id="simHabs">
+              <option value="0">Todas (2–4 hab.)</option>
+              <option value="2">2 habitaciones</option>
+              <option value="3">3 habitaciones</option>
+              <option value="4">4 habitaciones</option>
+            </select>
+          </label>
+        </div>
+        <div class="calc-sim-acts">
+          <small>Prorrateo automático + viviendas libres reales</small>
+          <button type="submit" class="btn sm">Simular</button>
+        </div>
+      </form>
+    </div>
     <div class="chat-body" id="calcBody" aria-live="polite"></div>
     <form class="calc-form" id="calcForm" novalidate>
       <div class="calc-input-row">
-        <input id="calcInput" type="text" maxlength="500" autocomplete="off" placeholder="Ej: Gano 2.400€ en 14 pagas, ¿qué piso encaja?">
+        <input id="calcInput" type="text" maxlength="240" autocomplete="off" placeholder="Ej: 2400 en 14 pagas, REF-04, 1250 entre 2, (1800+1500)/3">
         <button class="btn sm chat-send" id="calcSubmitBtn" type="submit">Calcular</button>
       </div>
-      <span class="calc-hint">Asistente con IA: solvencia 3×, pagas, fianza, gastos y comparativas reales.</span>
+      <span class="calc-hint">Solvencia 3×, 12/14 pagas, entrada, reparto entre personas, REF-XX o cuentas libres.</span>
     </form>
   </div>
 
@@ -1291,8 +1339,22 @@ function doPost(e) {
   }
 }`;
 const GOOGLE_ICON = `<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>`;
+const safeGetJson = (storage, key, fallback) => {
+  try {
+    const raw = storage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return parsed === null || parsed === undefined ? fallback : parsed;
+  } catch {
+    return fallback;
+  }
+};
+const safeSetItem = (storage, key, value) => {
+  try { storage.setItem(key, value); } catch {}
+};
+
 const getCfg = () => {
-  const saved = JSON.parse(localStorage.getItem('inv-cfg') || '{}');
+  const saved = safeGetJson(localStorage, 'inv-cfg', {});
   return {
     ...DEFAULT_CFG,
     ...saved,
@@ -1325,7 +1387,7 @@ async function sendWeb3Forms(fields) {
     return { ok: false, error: err, message: err?.message || 'Error de conexión' };
   }
 }
-const saveCfg = (c) => localStorage.setItem('inv-cfg', JSON.stringify(c));
+const saveCfg = (c) => safeSetItem(localStorage, 'inv-cfg', JSON.stringify(c));
 
 /* Helpers */
 const $ = id => document.getElementById(id);
@@ -1387,18 +1449,18 @@ $('ckReject').onclick = () => { localStorage.setItem('inv-ck', 'essential'); $('
    SISTEMA DE USUARIOS, ROLES Y SINCRONIZACIÓN RÁPIDA FIREBASE AUTH + FIRESTORE
    ========================================================================== */
 const ROLE_CACHE_KEY = 'inv-role-cache';
-const getRoleCache = () => JSON.parse(localStorage.getItem(ROLE_CACHE_KEY) || '{}');
+const getRoleCache = () => safeGetJson(localStorage, ROLE_CACHE_KEY, {});
 const setCachedRole = (email, role) => {
   const cache = getRoleCache();
   cache[String(email || '').trim().toLowerCase()] = role;
-  localStorage.setItem(ROLE_CACHE_KEY, JSON.stringify(cache));
+  safeSetItem(localStorage, ROLE_CACHE_KEY, JSON.stringify(cache));
 };
 
-let CURRENT_USER = JSON.parse(sessionStorage.getItem('inv-session') || 'null');
+let CURRENT_USER = safeGetJson(sessionStorage, 'inv-session', null);
 function setSession(user) {
   CURRENT_USER = user ? { uid: user.uid, email: user.email, name: user.name, role: user.role, isFirebase: true } : null;
-  if (CURRENT_USER) sessionStorage.setItem('inv-session', JSON.stringify(CURRENT_USER));
-  else sessionStorage.removeItem('inv-session');
+  if (CURRENT_USER) safeSetItem(sessionStorage, 'inv-session', JSON.stringify(CURRENT_USER));
+  else { try { sessionStorage.removeItem('inv-session'); } catch {} }
   updateUserHeader();
 }
 
@@ -1583,15 +1645,15 @@ const DEFAULT_SOLS = [
   }
 ];
 
-let V = JSON.parse(localStorage.getItem('inv-viv-v8') || 'null') || seedViviendas();
-let BLOG = JSON.parse(localStorage.getItem('inv-blog') || 'null') || DEFAULT_BLOG;
-let SOLS = JSON.parse(localStorage.getItem('inv-sols') || 'null') || DEFAULT_SOLS;
-let STATS = JSON.parse(localStorage.getItem('inv-stats') || '{"qrScans":38,"views":{}}');
+let V = safeGetJson(localStorage, 'inv-viv-v8', null) || seedViviendas();
+let BLOG = safeGetJson(localStorage, 'inv-blog', null) || DEFAULT_BLOG;
+let SOLS = safeGetJson(localStorage, 'inv-sols', null) || DEFAULT_SOLS;
+let STATS = safeGetJson(localStorage, 'inv-stats', { qrScans: 38, views: {} });
 
-const saveV = () => localStorage.setItem('inv-viv-v8', JSON.stringify(V));
-const saveBlog = () => localStorage.setItem('inv-blog', JSON.stringify(BLOG));
-const saveSols = () => localStorage.setItem('inv-sols', JSON.stringify(SOLS));
-const saveStats = () => localStorage.setItem('inv-stats', JSON.stringify(STATS));
+const saveV = () => safeSetItem(localStorage, 'inv-viv-v8', JSON.stringify(V));
+const saveBlog = () => safeSetItem(localStorage, 'inv-blog', JSON.stringify(BLOG));
+const saveSols = () => safeSetItem(localStorage, 'inv-sols', JSON.stringify(SOLS));
+const saveStats = () => safeSetItem(localStorage, 'inv-stats', JSON.stringify(STATS));
 
 /* Operaciones Cloud Firestore (con respaldo local automático) */
 async function cloudSaveUnit(v) {
@@ -3370,7 +3432,7 @@ function renderApp() {
    ÁREA DE CANDIDATOS Y ACCESO UNIFICADO (#mi-solicitud)
    ========================================================================== */
 function renderSolicitudCards(email) {
-  const found = SOLS.filter(s => s.email === email.toLowerCase());
+  const found = SOLS.filter(s => s && !s.deleted && s.email === email.toLowerCase());
   if (!found.length) {
     return '<div class="panel" style="background:var(--card2)"><p class="m">No encontramos candidaturas registradas con ese correo electrónico. <a href="#contacto" style="color:var(--b1);font-weight:700">Enviar primera candidatura →</a></p></div>';
   }
@@ -3525,11 +3587,9 @@ function renderMiSolicitud() {
     try {
       const q = query(collection(fbDb, 'solicitudes'), where('email', '==', em));
       const snap = await getDocs(q);
-      if (!snap.empty) {
-        const remote = snap.docs.map(d => d.data());
-        SOLS = [...remote, ...SOLS.filter(s => s.email !== em)];
-        saveSols();
-      }
+      const remote = snap.docs.map(d => d.data()).filter(s => s && !s.deleted);
+      SOLS = [...remote, ...SOLS.filter(s => s && !s.deleted && s.email !== em)];
+      saveSols();
     } catch (_) {}
     $('ls').innerHTML = renderSolicitudCards(em);
   };
@@ -3743,6 +3803,9 @@ function renderAdmin(subTab) {
   <div id="admBody"></div>`;
 
   const body = $('admBody');
+  body.onclick = null;
+  body.onchange = null;
+  body.oninput = null;
 
   /* TAB 1: INVENTARIO */
   if (adminTab === 'inventario') {
@@ -3914,6 +3977,7 @@ function renderAdmin(subTab) {
       const sel = sol.selecciones[selIdx];
       const prop = V.find(v => v.ref === sel.ref);
       const dlg = $('dlg');
+      dlg.oncancel = null;
       dlg.classList.remove('wide');
       dlg.innerHTML = `
         <h3>Confirmar paso a «Vendido»</h3>
@@ -3935,6 +3999,7 @@ function renderAdmin(subTab) {
       dlg.showModal();
 
       const revert = () => {
+        dlg.oncancel = null;
         selectEl.value = prevState;
         dlg.close();
       };
@@ -3945,34 +4010,43 @@ function renderAdmin(subTab) {
         const btn = $('soldConfirmBtn');
         btn.disabled = true;
         btn.textContent = 'Archivando…';
-        sol.selecciones[selIdx].estado = 'Vendido';
-        sol.archived = true;
-        sol.archiveReason = 'Vendido';
-        sol.archivedAt = new Date().toLocaleString('es-ES');
-        sol.archivedBy = CURRENT_USER.email;
-        SHEET_PENDING_QUEUE.delete(sol.id);
+        try {
+          sol.selecciones[selIdx].estado = 'Vendido';
+          sol.archived = true;
+          sol.archiveReason = 'Vendido';
+          sol.archivedAt = new Date().toLocaleString('es-ES');
+          sol.archivedBy = CURRENT_USER.email;
+          SHEET_PENDING_QUEUE.delete(sol.id);
 
-        if ($('soldMarkUnit')?.checked && prop) {
-          prop.st = 'A';
-          await cloudSaveUnit(prop);
+          if ($('soldMarkUnit')?.checked && prop) {
+            prop.st = 'A';
+            await cloudSaveUnit(prop);
+          }
+          await cloudSaveSol(sol);
+          let sheetRes = null;
+          if (getCfg().appsScriptUrl) {
+            sheetRes = await syncToGoogleSheets('archive', sol);
+          }
+          dlg.oncancel = null;
+          dlg.close();
+          if (sheetRes?.outdatedScript) {
+            notify('Movida a Archivo en la web, pero Google Sheets sigue en Apps Script v1/v2: actualiza e implementa «Nueva versión» v3.');
+          } else {
+            notify(`${sol.nombre} (${sel.ref}) marcada como Vendido y movida a Archivo`);
+          }
+          renderAdmin('candidatos');
+        } catch (err) {
+          console.warn('Error archivando vendido:', err);
+          btn.disabled = false;
+          btn.textContent = 'Confirmar Vendido y Archivar';
+          notify('No se pudo completar el archivado. Inténtalo de nuevo.');
         }
-        await cloudSaveSol(sol);
-        let sheetRes = null;
-        if (getCfg().appsScriptUrl) {
-          sheetRes = await syncToGoogleSheets('archive', sol);
-        }
-        dlg.close();
-        if (sheetRes?.outdatedScript) {
-          notify('Movida a Archivo en la web, pero Google Sheets sigue en Apps Script v1/v2: actualiza e implementa «Nueva versión» v3.');
-        } else {
-          notify(`${sol.nombre} (${sel.ref}) marcada como Vendido y movida a Archivo`);
-        }
-        renderAdmin('candidatos');
       };
     };
 
     const openRejectModal = sol => {
       const dlg = $('dlg');
+      dlg.oncancel = null;
       dlg.classList.remove('wide');
       const refsList = (sol.selecciones || []).map(x => x.ref).join(', ');
       dlg.innerHTML = `
@@ -4007,40 +4081,47 @@ function renderAdmin(subTab) {
         if (!verifyChk.checked) return;
         confirmBtn.disabled = true;
         confirmBtn.textContent = 'Procesando…';
-        SHEET_PENDING_QUEUE.delete(sol.id);
+        try {
+          SHEET_PENDING_QUEUE.delete(sol.id);
 
-        if (archOpt.checked) {
-          sol.selecciones = (sol.selecciones || []).map(x => ({ ...x, estado: 'Rechazada' }));
-          sol.archived = true;
-          sol.archiveReason = 'Rechazada';
-          sol.archivedAt = new Date().toLocaleString('es-ES');
-          sol.archivedBy = CURRENT_USER.email;
-          await cloudSaveSol(sol);
-          let sheetRes = null;
-          if (getCfg().appsScriptUrl) {
-            sheetRes = await syncToGoogleSheets('archive', sol);
-          }
-          dlg.close();
-          if (sheetRes?.outdatedScript) {
-            notify('Guardada en Archivo en la web, pero tu Google Apps Script está en v1/v2: publica una «Nueva versión» con el código v3.');
+          if (archOpt.checked) {
+            sol.selecciones = (sol.selecciones || []).map(x => ({ ...x, estado: 'Rechazada' }));
+            sol.archived = true;
+            sol.archiveReason = 'Rechazada';
+            sol.archivedAt = new Date().toLocaleString('es-ES');
+            sol.archivedBy = CURRENT_USER.email;
+            await cloudSaveSol(sol);
+            let sheetRes = null;
+            if (getCfg().appsScriptUrl) {
+              sheetRes = await syncToGoogleSheets('archive', sol);
+            }
+            dlg.close();
+            if (sheetRes?.outdatedScript) {
+              notify('Guardada en Archivo en la web, pero tu Google Apps Script está en v1/v2: publica una «Nueva versión» con el código v3.');
+            } else {
+              notify(`Candidatura de ${sol.nombre} rechazada y guardada en Archivo`);
+            }
           } else {
-            notify(`Candidatura de ${sol.nombre} rechazada y guardada en Archivo`);
+            SOLS = SOLS.filter(x => x.id !== sol.id);
+            await cloudDeleteSol(sol.id, sol);
+            let sheetRes = null;
+            if (getCfg().appsScriptUrl) {
+              sheetRes = await syncToGoogleSheets('delete', sol.id);
+            }
+            dlg.close();
+            if (sheetRes?.outdatedScript) {
+              notify('Eliminada de la web, pero Excel sigue en Apps Script v1/v2: publica una «Nueva versión» con v3 para borrar filas.');
+            } else {
+              notify(`Candidatura de ${sol.nombre} rechazada y eliminada de la web y del Excel`);
+            }
           }
-        } else {
-          SOLS = SOLS.filter(x => x.id !== sol.id);
-          await cloudDeleteSol(sol.id, sol);
-          let sheetRes = null;
-          if (getCfg().appsScriptUrl) {
-            sheetRes = await syncToGoogleSheets('delete', sol.id);
-          }
-          dlg.close();
-          if (sheetRes?.outdatedScript) {
-            notify('Eliminada de la web, pero Excel sigue en Apps Script v1/v2: publica una «Nueva versión» con v3 para borrar filas.');
-          } else {
-            notify(`Candidatura de ${sol.nombre} rechazada y eliminada de la web y del Excel`);
-          }
+          renderAdmin('candidatos');
+        } catch (err) {
+          console.warn('Error rechazando candidatura:', err);
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Confirmar rechazo';
+          notify('No se pudo procesar el rechazo. Inténtalo de nuevo.');
         }
-        renderAdmin('candidatos');
       };
     };
 
@@ -4158,10 +4239,12 @@ function renderAdmin(subTab) {
         s.selecciones.map(x => `${x.ref}(${normSolStatus(x.estado)})`).join(' | ')
       ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(';'));
       const csv = '\uFEFF' + [headers.join(';'), ...rows].join('\n');
+      const blobUrl = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+      a.href = blobUrl;
       a.download = `Candidatos_INVERCOR_${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
       notify('Archivo CSV compatible con Excel descargado');
     };
 
@@ -4261,6 +4344,7 @@ function renderAdmin(subTab) {
         const sol = SOLS.find(x => x.id === restBtn.dataset.restoreSol);
         if (!sol) return;
         const dlg = $('dlg');
+        dlg.oncancel = null;
         dlg.classList.remove('wide');
         dlg.innerHTML = `
           <h3>Restaurar candidatura</h3>
@@ -4272,21 +4356,31 @@ function renderAdmin(subTab) {
         dlg.showModal();
         $('restCancelBtn').onclick = () => dlg.close();
         $('restConfirmBtn').onclick = async () => {
-          sol.archived = false;
-          delete sol.archiveReason;
-          delete sol.archivedAt;
-          delete sol.archivedBy;
-          sol.selecciones = (sol.selecciones || []).map(x => ({ ...x, estado: 'En revisión' }));
-          await cloudSaveSol(sol);
-          let sheetRes = null;
-          if (getCfg().appsScriptUrl) {
-            sheetRes = await syncToGoogleSheets('restore', sol);
+          const btn = $('restConfirmBtn');
+          btn.disabled = true;
+          btn.textContent = 'Restaurando…';
+          try {
+            sol.archived = false;
+            delete sol.archiveReason;
+            delete sol.archivedAt;
+            delete sol.archivedBy;
+            sol.selecciones = (sol.selecciones || []).map(x => ({ ...x, estado: 'En revisión' }));
+            await cloudSaveSol(sol);
+            let sheetRes = null;
+            if (getCfg().appsScriptUrl) {
+              sheetRes = await syncToGoogleSheets('restore', sol);
+            }
+            dlg.close();
+            notify(sheetRes?.outdatedScript
+              ? 'Restaurada en la web, pero actualiza Apps Script a v3 («Nueva versión») para moverla en Excel.'
+              : `Candidatura de ${sol.nombre} restaurada a Candidaturas`);
+            renderAdmin('archivo');
+          } catch (err) {
+            console.warn('Error restaurando candidatura:', err);
+            btn.disabled = false;
+            btn.textContent = 'Confirmar restauración';
+            notify('No se pudo restaurar la candidatura. Inténtalo de nuevo.');
           }
-          dlg.close();
-          notify(sheetRes?.outdatedScript
-            ? 'Restaurada en la web, pero actualiza Apps Script a v3 («Nueva versión») para moverla en Excel.'
-            : `Candidatura de ${sol.nombre} restaurada a Candidaturas`);
-          renderAdmin('archivo');
         };
         return;
       }
@@ -4296,6 +4390,7 @@ function renderAdmin(subTab) {
         const sol = SOLS.find(x => x.id === purgeBtn.dataset.purgeSol);
         if (!sol) return;
         const dlg = $('dlg');
+        dlg.oncancel = null;
         dlg.classList.remove('wide');
         dlg.innerHTML = `
           <h3>Eliminar definitivamente del Archivo</h3>
@@ -4313,17 +4408,27 @@ function renderAdmin(subTab) {
         $('purgeCancelBtn').onclick = () => dlg.close();
         $('purgeConfirmBtn').onclick = async () => {
           if (!$('purgeVerifyChk').checked) return;
-          SOLS = SOLS.filter(x => x.id !== sol.id);
-          await cloudDeleteSol(sol.id, sol);
-          let sheetRes = null;
-          if (getCfg().appsScriptUrl) {
-            sheetRes = await syncToGoogleSheets('delete', sol.id, { sheetName: ARCHIVE_SHEET_NAME });
+          const btn = $('purgeConfirmBtn');
+          btn.disabled = true;
+          btn.textContent = 'Eliminando…';
+          try {
+            SOLS = SOLS.filter(x => x.id !== sol.id);
+            await cloudDeleteSol(sol.id, sol);
+            let sheetRes = null;
+            if (getCfg().appsScriptUrl) {
+              sheetRes = await syncToGoogleSheets('delete', sol.id, { sheetName: ARCHIVE_SHEET_NAME });
+            }
+            dlg.close();
+            notify(sheetRes?.outdatedScript
+              ? 'Eliminada de la web, pero actualiza Apps Script a v3 («Nueva versión») para borrarla del Excel.'
+              : `Registro de ${sol.nombre} eliminado definitivamente`);
+            renderAdmin('archivo');
+          } catch (err) {
+            console.warn('Error eliminando registro:', err);
+            btn.disabled = false;
+            btn.textContent = 'Eliminar definitivamente';
+            notify('No se pudo eliminar el registro. Inténtalo de nuevo.');
           }
-          dlg.close();
-          notify(sheetRes?.outdatedScript
-            ? 'Eliminada de la web, pero actualiza Apps Script a v3 («Nueva versión») para borrarla del Excel.'
-            : `Registro de ${sol.nombre} eliminado definitivamente`);
-          renderAdmin('archivo');
         };
       }
     };
@@ -4623,11 +4728,105 @@ const CHAT_QUICK_PROMPTS = [
   '¿Qué pisos de 2 o 3 habitaciones siguen disponibles ahora mismo?'
 ];
 const CALC_QUICK_ACTIONS = [
-  { label: 'Cobro 2.400 € en 14 pagas, ¿qué piso encaja?', query: 'Cobro 2.400 € netos al mes en 14 pagas, ¿qué renta máxima 3x tengo y qué pisos disponibles encajan?' },
-  { label: 'Gastos de entrada y fianza para 1.100 €/mes', query: 'Calcula los gastos de entrada, fianza y coste anual para un alquiler de 1.100 €/mes' },
-  { label: 'Dividir 1.250 €/mes entre 2 + suministros', query: 'Si compartimos un piso de 1.250 €/mes entre 2 personas, ¿cuánto pagamos al mes y al entrar?' },
-  { label: 'Comparar pisos disponibles de 2 y 3 hab.', query: 'Compara los pisos disponibles más económicos de 2 y 3 habitaciones y sus ingresos mínimos' }
+  { label: 'Cobro 2.400 € en 14 pagas, ¿qué piso encaja?', query: 'Cobro 2.400 € en 14 pagas' },
+  { label: 'Gastos de entrada y fianza para 1.100 €/mes', query: 'Entrada para 1.100 €' },
+  { label: 'Dividir 1.250 €/mes entre 2 + 140 € gastos', query: 'Dividir 1.250 € entre 2 con 140 € de gastos' },
+  { label: 'Comparar pisos libres de 2, 3 y 4 hab.', query: 'Comparar pisos disponibles por habitaciones' }
 ];
+
+/* Evaluador aritmético seguro (sin eval / Function) con soporte de porcentajes */
+function safeEvalMath(raw) {
+  let cleaned = String(raw || '')
+    .replace(/€/g, '')
+    .replace(/×/g, '*')
+    .replace(/÷/g, '/')
+    .replace(/(\d)\.(\d{3})(?=\D|$)/g, '$1$2')
+    .replace(/,/g, '.')
+    .trim();
+
+  // Soporta "15% de 1200" -> "(15/100)*1200"
+  const pctOf = cleaned.match(/^(\d+(?:\.\d+)?)\s*%\s*de\s*(\d+(?:\.\d+)?)$/i);
+  if (pctOf) {
+    cleaned = `(${pctOf[1]}/100)*${pctOf[2]}`;
+  } else {
+    // Soporta "1100 + 10%" o "1100 - 15%"
+    cleaned = cleaned.replace(/(\d+(?:\.\d+)?)\s*([+-])\s*(\d+(?:\.\d+)?)%/g, '($1 $2 ($1 * $3 / 100))');
+  }
+
+  if (!cleaned || !/^[0-9+\-*/().\s]+$/.test(cleaned)) return null;
+  if (!/[+\-*/]/.test(cleaned)) return null;
+
+  const tokens = cleaned.match(/\d+(?:\.\d+)?|[+\-*/()]/g);
+  if (!tokens || tokens.join('') !== cleaned.replace(/\s+/g, '')) return null;
+
+  let pos = 0;
+  const peek = () => tokens[pos];
+  const consume = () => tokens[pos++];
+
+  function parseExpr() {
+    let val = parseTerm();
+    while (peek() === '+' || peek() === '-') {
+      const op = consume();
+      const rhs = parseTerm();
+      val = op === '+' ? val + rhs : val - rhs;
+    }
+    return val;
+  }
+  function parseTerm() {
+    let val = parseFactor();
+    while (peek() === '*' || peek() === '/') {
+      const op = consume();
+      const rhs = parseFactor();
+      if (op === '/') {
+        if (rhs === 0) throw new Error('div0');
+        val /= rhs;
+      } else {
+        val *= rhs;
+      }
+    }
+    return val;
+  }
+  function parseFactor() {
+    if (peek() === '+') { consume(); return parseFactor(); }
+    if (peek() === '-') { consume(); return -parseFactor(); }
+    if (peek() === '(') {
+      consume();
+      const val = parseExpr();
+      if (consume() !== ')') throw new Error('paren');
+      return val;
+    }
+    const tok = consume();
+    const num = Number(tok);
+    if (!Number.isFinite(num)) throw new Error('nan');
+    return num;
+  }
+
+  try {
+    const result = parseExpr();
+    if (pos !== tokens.length || !Number.isFinite(result)) return null;
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+function extractCalcAmounts(text) {
+  const normalized = String(text || '')
+    .replace(/\bref[-\s]?\d{1,2}\b/gi, ' ')
+    .replace(/\b(?:12|14)\s*pagas?\b/gi, ' ')
+    .replace(/\b[234]\s*(?:hab(?:itaciones)?|dorm(?:itorios)?)\b/gi, ' ')
+    .replace(/\b(?:entre|para)\s*\d+\s*(?:personas?|inquilinos?|titulares?|compa[nñ]eros?)?\b/gi, ' ')
+    .replace(/\b\d+\s*(?:personas?|inquilinos?|titulares?|meses)\b/gi, ' ')
+    .replace(/(\d)\.(\d{3})(?=\D|$)/g, '$1$2')
+    .replace(/(\d),(\d{1,2})(?=\D|$)/g, '$1.$2');
+  const matches = normalized.match(/\d+(?:\.\d+)?/g) || [];
+  return matches.map(Number).filter(n => Number.isFinite(n) && n > 0);
+}
+
+function fmtCalcNum(n) {
+  const rounded = Math.round(n * 100) / 100;
+  return rounded.toLocaleString('es-ES', { maximumFractionDigits: 2 });
+}
 
 function initFloatingChat() {
   const fab = $('chatFab');
@@ -4643,6 +4842,13 @@ function initFloatingChat() {
   const calcBody = $('calcBody');
   const calcForm = $('calcForm');
   const calcInput = $('calcInput');
+  const calcSimBox = $('calcSimBox');
+  const calcSimToggle = $('calcSimToggle');
+  const calcSimForm = $('calcSimForm');
+  const simIncome = $('simIncome');
+  const simPagas = $('simPagas');
+  const simPeople = $('simPeople');
+  const simHabs = $('simHabs');
   const body = $('chatBody');
   const form = $('chatForm');
   const nameIn = $('chatName');
@@ -4669,40 +4875,29 @@ function initFloatingChat() {
   let linkedRef = '';
   let unlinkedManually = false;
   let editingIdentity = true;
-  let isCalcBusy = false;
+  let lastCalcIncome = 0;
 
   const ALLOWED_CHAT_ROLES = new Set(['user', 'ok', 'err', 'bot']);
   const loadHistory = () => {
-    try {
-      const parsed = JSON.parse(sessionStorage.getItem(CHAT_STORAGE_KEY) || '[]');
-      if (!Array.isArray(parsed)) return [];
-      return parsed
-        .filter(item => item && typeof item.text === 'string' && ALLOWED_CHAT_ROLES.has(item.role))
-        .slice(-20)
-        .map(item => ({ role: item.role, text: item.text.slice(0, 1500), time: typeof item.time === 'string' ? item.time.slice(0, 16) : '' }));
-    } catch { return []; }
+    const parsed = safeGetJson(sessionStorage, CHAT_STORAGE_KEY, []);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(item => item && typeof item.text === 'string' && ALLOWED_CHAT_ROLES.has(item.role))
+      .slice(-20)
+      .map(item => ({ role: item.role, text: item.text.slice(0, 1500), time: typeof item.time === 'string' ? item.time.slice(0, 16) : '' }));
   };
   let history = loadHistory();
 
   const loadCalcHistory = () => {
-    try {
-      const parsed = JSON.parse(sessionStorage.getItem(CALC_STORAGE_KEY) || '[]');
-      if (!Array.isArray(parsed)) return [];
-      return parsed.filter(item => item && (item.role === 'user' || item.role === 'calc')).slice(-24);
-    } catch { return []; }
+    const parsed = safeGetJson(sessionStorage, CALC_STORAGE_KEY, []);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(item => item && (item.role === 'user' || item.role === 'calc')).slice(-24);
   };
   let calcHistory = loadCalcHistory();
 
-  const saveHistory = () => {
-    try { sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(history.slice(-20))); } catch {}
-  };
-  const saveCalcHistory = () => {
-    try { sessionStorage.setItem(CALC_STORAGE_KEY, JSON.stringify(calcHistory.slice(-24))); } catch {}
-  };
-
-  const loadSavedContact = () => {
-    try { return JSON.parse(sessionStorage.getItem(CHAT_USER_KEY) || '{}') || {}; } catch { return {}; }
-  };
+  const saveHistory = () => safeSetItem(sessionStorage, CHAT_STORAGE_KEY, JSON.stringify(history.slice(-20)));
+  const saveCalcHistory = () => safeSetItem(sessionStorage, CALC_STORAGE_KEY, JSON.stringify(calcHistory.slice(-24)));
+  const loadSavedContact = () => safeGetJson(sessionStorage, CHAT_USER_KEY, {});
 
   const prefillIdentity = () => {
     const saved = loadSavedContact();
@@ -4750,9 +4945,9 @@ function initFloatingChat() {
     tabMail.setAttribute('aria-selected', String(!isCalc));
     paneCalc.hidden = !isCalc;
     paneMail.hidden = isCalc;
-    titleEl.textContent = isCalc ? 'Calculadora IA · Móstoles' : 'Consultas · Móstoles';
+    titleEl.textContent = isCalc ? 'Calculadora · Móstoles' : 'Consultas · Móstoles';
     subEl.textContent = isCalc
-      ? 'Cálculos y solvencia con IA al instante'
+      ? 'Solvencia 3×, pagas, fianza y cuotas al instante'
       : 'Respuesta directa por correo · Obra nueva';
     syncClearButton();
     if (isOpen) {
@@ -4811,12 +5006,315 @@ function initFloatingChat() {
     setActiveTab('mail');
   };
 
+  /* Simulación completa por ingresos (soporta 12 pagas, 14 pagas, anual, personas y filtro habitaciones) */
+  function buildIncomeSimulation({ rawAmount, pagasMode = '12', people = 1, habFilter = 0, labelOverride = '' }) {
+    const availAll = V.filter(v => v.st === 'D').sort((a, b) => a.r - b.r);
+    const availUnits = habFilter ? availAll.filter(v => v.h === habFilter) : availAll;
+
+    let monthlyIncome = rawAmount;
+    let sourceLabel = labelOverride || 'Ingresos netos mensuales (12 pagas)';
+    if (pagasMode === '14') {
+      monthlyIncome = (rawAmount * 14) / 12;
+      sourceLabel = `${eur(Math.round(rawAmount))}/mes en 14 pagas (prorrateado)`;
+    } else if (pagasMode === 'anual') {
+      monthlyIncome = rawAmount / 12;
+      sourceLabel = `${eur(Math.round(rawAmount))}/año (÷ 12 meses)`;
+    }
+
+    const monthlyRounded = Math.round(monthlyIncome);
+    lastCalcIncome = monthlyRounded;
+
+    const maxDirect = Math.floor(monthlyRounded / 3);
+    const maxAval = Math.floor(monthlyRounded * 0.4);
+    const matching = availUnits.filter(v => v.r <= maxDirect);
+    const withAval = availUnits.filter(v => v.r > maxDirect && v.r <= maxAval);
+    const refRent = matching.length ? matching[matching.length - 1].r : (withAval.length ? withAval[0].r : maxDirect);
+
+    const rows = [
+      { label: sourceLabel, value: `${eur(monthlyRounded)}/mes` },
+      { label: 'Renta máxima directa (ratio 3×)', value: `${eur(maxDirect)}/mes`, em: true },
+      { label: 'Con aval o cotitular (hasta 40%)', value: `${eur(maxAval)}/mes` },
+      { label: 'Entrada estimada (1.er mes + fianza + garantía)', value: eur(refRent * 3) },
+      { label: 'Margen libre mensual tras renta máx.', value: `${eur(monthlyRounded - maxDirect)}/mes` }
+    ];
+
+    if (people > 1) {
+      rows.push({
+        label: `Cuota orientativa por persona (${people} pers.)`,
+        value: `${fmtCalcNum(refRent / people)} €/mes · entrada ${fmtCalcNum((refRent * 3) / people)} €`
+      });
+    }
+
+    rows.push({
+      label: habFilter ? `Disponibles de ${habFilter} hab. compatibles` : 'Viviendas disponibles compatibles',
+      value: `${matching.length} directas${withAval.length ? ` (+${withAval.length} con aval)` : ''}`
+    });
+
+    let status;
+    if (matching.length > 0) {
+      status = {
+        cls: 'ok',
+        text: `Solvencia directa OK: encajas en ${matching.length} ${matching.length === 1 ? 'vivienda disponible' : 'viviendas disponibles'}${habFilter ? ` de ${habFilter} hab.` : ''} (desde ${eur(matching[0].r)}/mes).`
+      };
+    } else if (withAval.length > 0) {
+      status = {
+        cls: 'warn',
+        text: `Tu máximo 3× es ${eur(maxDirect)}/mes. Con aval o cotitular puedes optar a ${withAval.length} ${withAval.length === 1 ? 'vivienda' : 'viviendas'} desde ${eur(withAval[0].r)}/mes.`
+      };
+    } else {
+      const cheapest = availUnits[0] || availAll[0];
+      status = {
+        cls: 'bad',
+        text: cheapest
+          ? `La vivienda libre más económica${habFilter && availUnits.length ? ` de ${habFilter} hab.` : ''} es ${cheapest.ref} (${eur(cheapest.r)}/mes), que requiere ${eur(cheapest.r * 3)}/mes en ratio 3×.`
+          : 'Actualmente no hay viviendas libres en ese rango.'
+      };
+    }
+
+    const bestUnits = (matching.length ? matching : withAval).slice(0, 4).map(u => ({ ref: u.ref, h: u.h, m2: u.m2, r: u.r }));
+    return {
+      title: habFilter ? `Simulación de solvencia · ${habFilter} habitaciones` : 'Simulación de solvencia y cuotas',
+      rows,
+      status,
+      units: bestUnits,
+      handoff: `Hola, con unos ingresos equivalentes a ${eur(monthlyRounded)}/mes (renta máxima 3× de ${eur(maxDirect)}/mes${people > 1 ? `, para ${people} personas` : ''}${habFilter ? `, buscando ${habFilter} habitaciones` : ''}) me gustaría consultar las viviendas disponibles que mejor encajan.`
+    };
+  }
+
+  /* Motor instantáneo de cálculos inmobiliarios y aritméticos (100% local, sin dependencias externas) */
+  function evaluateCalcQuery(rawQuery) {
+    const q = String(rawQuery || '').trim();
+    const low = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const activeUnit = linkedRef ? V.find(v => v.ref === linkedRef) : null;
+    const availUnits = V.filter(v => v.st === 'D').sort((a, b) => a.r - b.r);
+
+    // 1. Expresión aritmética pura o porcentaje (ej: "1200 * 12", "(1800 + 1600) / 3", "15% de 1200")
+    const mathVal = safeEvalMath(q);
+    if (mathVal !== null) {
+      const rows = [
+        { label: 'Operación', value: q },
+        { label: 'Resultado', value: fmtCalcNum(mathVal), em: true }
+      ];
+      if (mathVal >= 1500 && mathVal <= 25000) {
+        rows.push({ label: 'Si son ingresos/mes → renta máx. 3×', value: `${eur(Math.floor(mathVal / 3))}/mes` });
+        rows.push({ label: 'Con aval (hasta 40%)', value: `${eur(Math.floor(mathVal * 0.4))}/mes` });
+      } else if (mathVal >= 600 && mathVal < 1500) {
+        rows.push({ label: 'Coste anual (× 12 meses)', value: eur(Math.round(mathVal * 12)) });
+        rows.push({ label: 'Entrada a la firma (× 3 meses)', value: eur(Math.round(mathVal * 3)) });
+        rows.push({ label: 'Ingresos mínimos 3×', value: `${eur(Math.round(mathVal * 3))}/mes` });
+      }
+      return {
+        title: 'Resultado del cálculo',
+        rows,
+        handoff: `Hola, he realizado el cálculo (${q} = ${fmtCalcNum(mathVal)}) y me gustaría consultar opciones disponibles en Móstoles.`
+      };
+    }
+
+    // 2. Referencia concreta (REF-01 .. REF-45) y habitaciones solicitadas
+    const refMatch = q.match(/\bREF[-\s]?0?(\d{1,2})\b/i);
+    const matchedUnit = refMatch
+      ? V.find(v => v.ref === `REF-${String(refMatch[1]).padStart(2, '0')}`)
+      : null;
+    const habMatch = low.match(/\b([234])\s*(?:hab(?:itaciones)?|dorm(?:itorios)?|cuartos?)\b/);
+    const targetH = habMatch ? Number(habMatch[1]) : 0;
+    const has14Pagas = /\b14\s*pagas?\b/.test(low);
+    const isAnnual = /\b(anual|anuales|al ano|al año|por ano|por año)\b/.test(low);
+
+    // 3. Reparto entre varias personas (con soporte de gastos/suministros opcionales)
+    const splitMatch = low.match(/(?:entre|para|dividir\s+entre|compartir\s+entre)\s*(\d+)\b/);
+    if (splitMatch || /\b(dividir|compartir|por persona|compañer|companer)\b/.test(low)) {
+      const people = Math.min(8, Math.max(2, Number(splitMatch ? splitMatch[1] : 2)));
+      const nums = extractCalcAmounts(q);
+      const rentNums = nums.filter(n => n >= 400);
+      const extraNums = nums.filter(n => n >= 20 && n < 400);
+      const targetUnit = matchedUnit || activeUnit || availUnits[0];
+      const rent = rentNums[0] || (targetUnit ? targetUnit.r : 1150);
+      const extras = /\b(gasto|suministr|luz|agua|internet|wifi|factura)\b/.test(low) ? (extraNums[0] || 0) : 0;
+      const totalMonthly = rent + extras;
+      const perPerson = totalMonthly / people;
+      const totalEntry = rent * 3;
+      const entryPerPerson = totalEntry / people;
+      const rows = [
+        { label: 'Alquiler mensual total', value: `${eur(rent)}/mes` },
+        ...(extras ? [{ label: 'Suministros / gastos añadidos', value: `${eur(extras)}/mes` }] : []),
+        { label: `Cuota mensual por persona (${people} pers.)`, value: `${fmtCalcNum(perPerson)} €/mes`, em: true },
+        { label: 'Total a la firma (1.er mes + fianza + garantía)', value: eur(totalEntry) },
+        { label: 'Entrada inicial por persona', value: `${fmtCalcNum(entryPerPerson)} €` },
+        { label: 'Ingresos mínimos por persona (ratio 3×)', value: `${fmtCalcNum((rent / people) * 3)} €/mes` }
+      ];
+      return {
+        title: `Reparto de ${eur(rent)}/mes entre ${people} personas`,
+        rows,
+        units: targetUnit && !rentNums[0] ? [{ ref: targetUnit.ref, h: targetUnit.h, m2: targetUnit.m2, r: targetUnit.r }] : [],
+        handoff: `Hola, estamos valorando compartir un alquiler de ${eur(rent)}/mes entre ${people} personas (${fmtCalcNum(perPerson)} €/persona${extras ? ` incluyendo ${eur(extras)} de gastos` : ''}). ¿Qué viviendas disponibles nos recomendáis?`
+      };
+    }
+
+    // 4. Comparación directa ingresos vs alquiler concreto (ej: "gano 3000 y el piso cuesta 1050")
+    const allNums = extractCalcAmounts(q);
+    if (!matchedUnit && allNums.length >= 2 && /\b(sobra|queda|esfuerzo|cuesta|piso de|alquiler de|renta de)\b/.test(low)) {
+      const sorted = [...allNums].sort((a, b) => b - a);
+      const incomeRaw = sorted[0];
+      const rentVal = sorted[sorted.length - 1];
+      if (incomeRaw >= 1200 && rentVal >= 500 && rentVal < incomeRaw) {
+        const income = has14Pagas ? Math.round((incomeRaw * 14) / 12) : (isAnnual && incomeRaw > 12000 ? Math.round(incomeRaw / 12) : incomeRaw);
+        const pct = Math.round((rentVal / income) * 100);
+        const leftover = income - rentVal;
+        const req = rentVal * 3;
+        return {
+          title: `Esfuerzo financiero · ${eur(rentVal)}/mes`,
+          rows: [
+            { label: has14Pagas ? 'Ingresos mensuales prorrateados (14 pagas)' : 'Ingresos netos mensuales', value: `${eur(income)}/mes` },
+            { label: 'Renta mensual del alquiler', value: `${eur(rentVal)}/mes` },
+            { label: 'Porcentaje de esfuerzo', value: `${pct}% de tus ingresos`, em: true },
+            { label: 'Te sobra al mes tras alquiler', value: `${eur(leftover)}/mes`, em: true },
+            { label: 'Coste entrada a la firma (3 meses)', value: eur(rentVal * 3) },
+            { label: 'Ingresos mínimos 3× para esta renta', value: `${eur(req)}/mes` }
+          ],
+          status: pct <= 33
+            ? { cls: 'ok', text: `Solvencia directa OK (${pct}% ≤ 33%). Cumples el criterio 3×.` }
+            : pct <= 40
+              ? { cls: 'warn', text: `Esfuerzo ajustado (${pct}%). Recomendable aval o cotitular.` }
+              : { cls: 'bad', text: `Esfuerzo elevado (${pct}%). Para ${eur(rentVal)}/mes se recomiendan ${eur(req)}/mes.` },
+          handoff: `Hola, con unos ingresos de ${eur(income)}/mes estoy valorando un alquiler de ${eur(rentVal)}/mes (esfuerzo ${pct}%). ¿Qué viviendas disponibles encajan?`
+        };
+      }
+    }
+
+    // 5. Ficha o simulación de una referencia concreta (REF-XX o vivienda activa)
+    if (matchedUnit || (activeUnit && /\b(esta vivienda|este piso|ficha|encaj|solvencia|entrada|fianza|gano|cobro|sueldo|ingres)\b/.test(low))) {
+      const unit = matchedUnit || activeUnit;
+      const nums = extractCalcAmounts(q).filter(n => n >= 500);
+      let income = nums.length ? nums.reduce((a, b) => a + b, 0) : lastCalcIncome;
+      if (nums.length) {
+        if (has14Pagas) income = Math.round((income * 14) / 12);
+        else if (isAnnual && income > 10000) income = Math.round(income / 12);
+        lastCalcIncome = income;
+      }
+      const entrada = unit.r * 3;
+      const reqIncome = unit.r * 3;
+      const rows = [
+        { label: 'Vivienda', value: `${unit.portal} · Planta ${unit.pl} · ${unit.h} hab · ${unit.m2} m²` },
+        { label: 'Renta mensual (garaje incl.)', value: `${eur(unit.r)}/mes (${(unit.r / unit.m2).toFixed(1)} €/m²)`, em: true },
+        { label: 'Firma (1.er mes + fianza + garantía)', value: eur(entrada) },
+        { label: 'Coste anual (12 meses)', value: eur(unit.r * 12) },
+        { label: 'Ingresos mínimos (ratio 3×)', value: `${eur(reqIncome)}/mes` }
+      ];
+      let status = null;
+      if (income > 0) {
+        const pct = Math.round((unit.r / income) * 100);
+        rows.push({ label: `Esfuerzo con ${eur(income)}/mes`, value: `${pct}% · sobran ${eur(income - unit.r)}/mes`, em: true });
+        status = pct <= 33
+          ? { cls: 'ok', text: `Solvencia directa OK (${pct}%). Cumples el ratio 3×.` }
+          : pct <= 40
+            ? { cls: 'warn', text: `Ratio ajustado (${pct}%). Podría requerir aval o cotitular.` }
+            : { cls: 'bad', text: `Esfuerzo elevado (${pct}%). Se recomiendan ingresos ≥ ${eur(reqIncome)}/mes.` };
+      }
+      return {
+        title: `${unit.ref} · ${unit.st === 'D' ? 'Disponible' : unit.st === 'R' ? 'Reservada' : 'Alquilada'}`,
+        rows,
+        status,
+        units: [{ ref: unit.ref, h: unit.h, m2: unit.m2, r: unit.r }],
+        handoff: `Hola, he calculado las condiciones de ${unit.ref} (${eur(unit.r)}/mes, entrada ${eur(entrada)})${income ? ` con ingresos de ${eur(income)}/mes` : ''} y me gustaría recibir más información.`
+      };
+    }
+
+    // 6. Gastos de entrada, fianza, garantía o coste anual
+    if (/\b(entrada|fianza|garantia|firma|inicial|deposito|desembolso)\b/.test(low)) {
+      const nums = extractCalcAmounts(q).filter(n => n >= 400);
+      const unitForEntry = !nums.length ? (activeUnit || availUnits[0]) : null;
+      const rent = nums[0] || (unitForEntry ? unitForEntry.r : 1100);
+      const total = rent * 3;
+      const nearUnits = availUnits.filter(u => Math.abs(u.r - rent) <= 120).slice(0, 3).map(u => ({ ref: u.ref, h: u.h, m2: u.m2, r: u.r }));
+      return {
+        title: `Desglose de entrada para ${eur(rent)}/mes`,
+        rows: [
+          { label: '1.ª mensualidad', value: eur(rent) },
+          { label: 'Fianza legal (1 mes · AVS Madrid)', value: eur(rent) },
+          { label: 'Garantía adicional (1 mes)', value: eur(rent) },
+          { label: 'Total estimado a la firma (3 meses)', value: eur(total), em: true },
+          { label: 'Coste anual de renta (12 meses)', value: eur(rent * 12) },
+          { label: 'Ingresos mínimos recomendados (3×)', value: `${eur(rent * 3)}/mes`, em: true }
+        ],
+        units: unitForEntry ? [{ ref: unitForEntry.ref, h: unitForEntry.h, m2: unitForEntry.m2, r: unitForEntry.r }] : nearUnits,
+        handoff: `Hola, he calculado los gastos de entrada para una renta de ${eur(rent)}/mes (total estimado ${eur(total)}) y me gustaría confirmar condiciones.`
+      };
+    }
+
+    // 7. Comparativa de viviendas disponibles por habitaciones (cuando no se indica salario)
+    if ((targetH || /\b(habitacion|dormitorio|precio|barat|disponible|catalogo|compar)\b/.test(low)) && !allNums.some(n => n >= 600)) {
+      const groups = targetH ? [targetH] : [2, 3, 4];
+      const rows = [];
+      groups.forEach(h => {
+        const list = availUnits.filter(v => v.h === h);
+        if (list.length) {
+          const minR = list[0].r;
+          const maxR = list[list.length - 1].r;
+          const avgR = Math.round(list.reduce((s, u) => s + u.r, 0) / list.length);
+          const range = minR === maxR ? `${eur(minR)}/mes` : `${eur(minR)} – ${eur(maxR)}/mes`;
+          rows.push({
+            label: `${h} hab. (${list.length} libres · media ${eur(avgR)})`,
+            value: `${range} · 3× desde ${eur(minR * 3)}`
+          });
+        } else {
+          rows.push({ label: `${h} hab.`, value: 'Sin unidades libres ahora' });
+        }
+      });
+      const sample = (targetH ? availUnits.filter(v => v.h === targetH) : availUnits)
+        .slice(0, 4)
+        .map(u => ({ ref: u.ref, h: u.h, m2: u.m2, r: u.r }));
+      return {
+        title: targetH ? `Disponibles de ${targetH} habitaciones` : 'Comparativa de viviendas disponibles',
+        text: 'Precios en vivo de la promoción de Móstoles (garaje y terraza incluidos):',
+        rows,
+        units: sample,
+        handoff: `Hola, he revisado los precios de viviendas ${targetH ? `de ${targetH} habitaciones` : 'disponibles'} en Móstoles y me gustaría consultar disponibilidad.`
+      };
+    }
+
+    // 8. Ingresos mensuales / 14 pagas / salario anual -> Simulación completa de solvencia 3×
+    if (allNums.length > 0) {
+      const totalRaw = allNums.reduce((sum, n) => sum + n, 0);
+      if (totalRaw < 400) {
+        return {
+          title: 'Indica tus ingresos o una renta',
+          text: 'Usa el simulador superior o escribe tus ingresos netos (ej: "2.400 en 14 pagas", "3.200 €" o "1.800 + 1.500").'
+        };
+      }
+      const pagasMode = has14Pagas ? '14' : (isAnnual || totalRaw >= 15000 ? 'anual' : '12');
+      const labelOverride = allNums.length > 1 && pagasMode === '12'
+        ? `Ingresos sumados (${allNums.map(eur).join(' + ')})`
+        : '';
+      return buildIncomeSimulation({
+        rawAmount: totalRaw,
+        pagasMode,
+        people: allNums.length > 1 ? allNums.length : 1,
+        habFilter: targetH,
+        labelOverride
+      });
+    }
+
+    // 9. Guía rápida de ejemplos
+    return {
+      title: '¿Qué puedes calcular aquí?',
+      text: 'Usa el simulador rápido de arriba o escribe cualquier consulta:',
+      rows: [
+        { label: 'Ingresos 12 o 14 pagas', value: '"2.400 en 14 pagas" o "36.000 anual"' },
+        { label: 'Varios titulares', value: '"1.800 + 1.500" o "3.300 € 3 hab"' },
+        { label: 'Gastos de entrada', value: '"Entrada para 1.100 €"' },
+        { label: 'Compartir piso', value: '"1.250 entre 2 con 140 gastos"' },
+        { label: 'Vivienda concreta', value: '"REF-05 con 3.400 €"' },
+        { label: 'Cuentas y porcentajes', value: '"(1800+1500)/3" o "15% de 1200"' }
+      ]
+    };
+  }
+
   const renderCalcMessages = () => {
     calcBody.textContent = '';
 
     const welcome = document.createElement('div');
     welcome.className = 'chat-msg bot';
-    welcome.textContent = 'Hola. Soy tu calculadora con IA para la promoción de Móstoles. Pregunta en lenguaje natural sobre tu renta máxima (ratio 3×), fianza, pagas extras, gastos compartidos o qué pisos disponibles encajan contigo.';
+    welcome.textContent = 'Calcula al instante tu renta máxima (ratio 3×), prorrateo de 14 pagas, gastos de entrada, cuota por persona o cualquier operación para las viviendas de Móstoles.';
     calcBody.appendChild(welcome);
 
     calcHistory.forEach(item => {
@@ -4887,25 +5385,15 @@ function initFloatingChat() {
         });
         card.appendChild(links);
       }
-      if (data.handoff || data.retryQuery) {
+      if (data.handoff) {
         const acts = document.createElement('div');
         acts.className = 'calc-actions';
-        if (data.retryQuery) {
-          const retryBtn = document.createElement('button');
-          retryBtn.type = 'button';
-          retryBtn.className = 'chat-link-btn';
-          retryBtn.textContent = 'Reintentar cálculo ↻';
-          retryBtn.onclick = () => runCalcPrompt(data.retryQuery);
-          acts.appendChild(retryBtn);
-        }
-        if (data.handoff) {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'chat-link-btn';
-          btn.textContent = 'Consultar esto por correo →';
-          btn.onclick = () => handoffToMail(data.handoff);
-          acts.appendChild(btn);
-        }
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chat-link-btn';
+        btn.textContent = 'Consultar esto por correo →';
+        btn.onclick = () => handoffToMail(data.handoff);
+        acts.appendChild(btn);
         card.appendChild(acts);
       }
       if (item.time) {
@@ -4917,19 +5405,12 @@ function initFloatingChat() {
       calcBody.appendChild(card);
     });
 
-    if (isCalcBusy) {
-      const loadingEl = document.createElement('div');
-      loadingEl.className = 'calc-loading';
-      loadingEl.textContent = 'Calculando con IA…';
-      calcBody.appendChild(loadingEl);
-    }
-
-    if (!calcHistory.length && !isCalcBusy) {
+    if (!calcHistory.length) {
       const quickWrap = document.createElement('div');
       quickWrap.className = 'chat-quick';
       const lbl = document.createElement('span');
       lbl.className = 'chat-quick-lbl';
-      lbl.textContent = 'Cálculos rápidos con IA';
+      lbl.textContent = 'Cálculos rápidos';
       const grid = document.createElement('div');
       grid.className = 'chat-quick-grid';
 
@@ -4955,99 +5436,51 @@ function initFloatingChat() {
     calcBody.scrollTop = calcBody.scrollHeight;
   };
 
-  const runCalcPrompt = async text => {
-    const clean = String(text || '').trim();
-    if (!clean || isCalcBusy) return;
-
+  const pushCalcEntry = (userLabel, resultData) => {
     const now = formatNow();
-    calcHistory.push({ role: 'user', text: clean, time: now });
-    isCalcBusy = true;
-    const calcBtn = $('calcSubmitBtn');
-    if (calcBtn) { calcBtn.disabled = true; calcBtn.textContent = '…'; }
+    calcHistory.push({ role: 'user', text: userLabel, time: now });
+    calcHistory.push({ role: 'calc', data: resultData, time: now });
     saveCalcHistory();
     renderCalcMessages();
-
-    const compactCatalog = V.map(v => ({
-      ref: v.ref, portal: v.portal, pl: v.pl, h: v.h, m2: v.m2, r: v.r, st: v.st, t: v.t, g: v.g, tr: v.tr
-    }));
-    const recentTurns = calcHistory
-      .slice(-7, -1)
-      .map(item => ({
-        role: item.role === 'user' ? 'user' : 'model',
-        text: item.role === 'user'
-          ? item.text
-          : [item.data?.title, item.data?.text, ...(item.data?.rows || []).map(r => `${r.label}: ${r.value}`)].filter(Boolean).join(' · ')
-      }));
-
-    try {
-      const resp = await fetch('/api/calc-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: clean,
-          activeRef: linkedRef || '',
-          history: recentTurns,
-          catalog: compactCatalog
-        })
-      });
-      const payload = await resp.json().catch(() => ({}));
-      if (!resp.ok || !payload.ok || !payload.result) {
-        const err = new Error(
-          payload.error ||
-          (resp.status === 404
-            ? 'La calculadora IA necesita el servidor backend activo (no está disponible en GitHub Pages estático).'
-            : resp.status === 503 || resp.status === 429
-              ? 'El servicio de IA está recibiendo alta demanda temporal. Inténtalo de nuevo en unos segundos.'
-              : `No se pudo obtener respuesta de la IA (HTTP ${resp.status}).`)
-        );
-        err.code = payload.code || (resp.status === 404 ? 'NO_BACKEND' : resp.status === 503 ? 'HIGH_DEMAND' : 'HTTP_ERROR');
-        throw err;
-      }
-      const r = payload.result;
-      const units = (r.recommendedRefs || [])
-        .map(ref => V.find(v => v.ref === ref))
-        .filter(Boolean)
-        .map(u => ({ ref: u.ref, h: u.h, m2: u.m2, r: u.r }));
-
-      calcHistory.push({
-        role: 'calc',
-        data: {
-          title: r.title,
-          text: r.text,
-          rows: r.rows || [],
-          status: r.status || null,
-          units,
-          handoff: r.handoff || ''
-        },
-        time: formatNow()
-      });
-    } catch (err) {
-      const code = err?.code || '';
-      const isKeyErr = code === 'MISSING_API_KEY' || code === 'API_KEY_ERROR';
-      const isTransient = code === 'HIGH_DEMAND' || code === 'RATE_LIMIT' || code === 'UPSTREAM_ERROR';
-      calcHistory.push({
-        role: 'calc',
-        data: {
-          title: isTransient ? 'IA ocupada temporalmente' : 'Error en la calculadora IA',
-          text: err?.message || 'No se pudo conectar con el servicio de IA. Inténtalo de nuevo.',
-          status: isKeyErr
-            ? { cls: 'bad', text: 'Revisa GEMINI_API_KEY en Settings > Secrets.' }
-            : isTransient
-              ? { cls: 'warn', text: 'Pico temporal de demanda en el modelo de IA. Pulsa «Reintentar cálculo» en unos segundos.' }
-              : code === 'NO_BACKEND'
-                ? { cls: 'warn', text: 'Ábrela desde la URL con servidor activo en lugar de GitHub Pages.' }
-                : { cls: 'bad', text: 'Comprueba la conexión e inténtalo de nuevo.' },
-          retryQuery: code === 'NO_BACKEND' ? '' : clean
-        },
-        time: formatNow()
-      });
-    } finally {
-      isCalcBusy = false;
-      if (calcBtn) { calcBtn.disabled = false; calcBtn.textContent = 'Calcular'; }
-      saveCalcHistory();
-      renderCalcMessages();
-    }
   };
+
+  const runCalcPrompt = text => {
+    const clean = String(text || '').trim();
+    if (!clean) return;
+    const result = evaluateCalcQuery(clean);
+    pushCalcEntry(clean, result);
+  };
+
+  if (calcSimToggle && calcSimBox) {
+    calcSimToggle.onclick = () => {
+      const collapsed = calcSimBox.dataset.collapsed === 'true';
+      calcSimBox.dataset.collapsed = String(!collapsed);
+      calcSimToggle.textContent = collapsed ? 'Ocultar' : 'Mostrar';
+    };
+  }
+
+  if (calcSimForm) {
+    calcSimForm.onsubmit = e => {
+      e.preventDefault();
+      const rawVal = Number(simIncome?.value || 0);
+      if (!Number.isFinite(rawVal) || rawVal < 300) {
+        notify('Introduce unos ingresos válidos (mínimo 300 €)');
+        simIncome?.focus();
+        return;
+      }
+      const pagasMode = simPagas?.value || '12';
+      const people = Math.max(1, Number(simPeople?.value || 1));
+      const habFilter = Number(simHabs?.value || 0);
+      const pagasTxt = pagasMode === '14' ? 'en 14 pagas' : pagasMode === 'anual' ? 'anuales' : 'al mes';
+      const summaryLabel = `Simulación: ${eur(rawVal)} ${pagasTxt}${people > 1 ? ` · ${people} pers.` : ''}${habFilter ? ` · ${habFilter} hab.` : ''}`;
+      const result = buildIncomeSimulation({ rawAmount: rawVal, pagasMode, people, habFilter });
+      pushCalcEntry(summaryLabel, result);
+      if (calcSimBox) {
+        calcSimBox.dataset.collapsed = 'true';
+        if (calcSimToggle) calcSimToggle.textContent = 'Mostrar';
+      }
+    };
+  }
 
   const renderMessages = () => {
     body.textContent = '';
@@ -5132,9 +5565,13 @@ function initFloatingChat() {
 
   clearBtn.onclick = () => {
     if (activeTab === 'calc') {
-      if (isCalcBusy) return;
       calcHistory = [];
+      lastCalcIncome = 0;
       saveCalcHistory();
+      if (calcSimBox) {
+        calcSimBox.dataset.collapsed = 'false';
+        if (calcSimToggle) calcSimToggle.textContent = 'Ocultar';
+      }
       renderCalcMessages();
       calcInput.focus();
     } else {
