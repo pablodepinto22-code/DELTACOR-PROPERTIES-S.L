@@ -431,6 +431,77 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .alz-floor-tbl tbody tr:hover{background:var(--card2)}
 .alz-floor-tbl tbody tr.on{background:rgba(0,126,194,.09)}
 
+/* Floating Quick-Inquiry Chat Widget (Web3Forms) */
+.chat-fab{position:fixed;right:20px;bottom:20px;z-index:88;display:inline-flex;align-items:center;gap:9px;min-height:46px;padding:10px 18px;border:1px solid var(--b1);border-radius:var(--radius);background:var(--b1);color:#fff;font:600 .86rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;box-shadow:var(--shadow-lg);transition:transform .16s cubic-bezier(0.16,1,0.3,1),background .16s,border-color .16s,opacity .16s}
+.chat-fab:hover{background:var(--b3);border-color:var(--b3);transform:translateY(-2px)}
+.chat-fab:active{transform:translateY(0)}
+.chat-fab:focus-visible,.chat-close:focus-visible,.chat-quick-btn:focus-visible,.chat-link-btn:focus-visible{outline:2px solid var(--b2);outline-offset:2px}
+.chat-fab svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.chat-fab .chat-fab-lbl{white-space:nowrap}
+.chat-fab.has-cmp{bottom:76px}
+
+.chat-panel{position:fixed;right:20px;bottom:78px;z-index:89;width:min(380px,calc(100vw - 24px));max-height:min(580px,calc(100vh - 104px));background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateY(10px) scale(.98);pointer-events:none;transition:opacity .18s cubic-bezier(0.16,1,0.3,1),transform .18s cubic-bezier(0.16,1,0.3,1)}
+.chat-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.chat-panel.has-cmp{bottom:134px}
+.chat-panel[hidden]{display:none}
+
+.chat-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--tx);color:var(--bg);border-bottom:1px solid var(--line)}
+.chat-hd-info{display:flex;align-items:center;gap:10px;min-width:0}
+.chat-hd-logo{width:28px;height:30px;flex-shrink:0;display:grid;place-items:center;background:#fff;border-radius:4px;padding:3px}
+.chat-hd-logo svg{width:100%;height:100%;display:block}
+.chat-hd-txt{min-width:0}
+.chat-hd-txt b{display:block;font-family:'Playfair Display',Georgia,serif;font-size:.98rem;line-height:1.2;letter-spacing:.01em}
+.chat-hd-txt small{display:block;font-size:.73rem;opacity:.82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-hd-acts{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.chat-close{width:34px;height:34px;border-radius:4px;border:1px solid rgba(255,255,255,.18);background:transparent;color:inherit;display:grid;place-items:center;cursor:pointer;transition:background .14s}
+.chat-close:hover{background:rgba(255,255,255,.14)}
+
+.chat-ctx{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 16px;background:var(--card2);border-bottom:1px solid var(--line);font-size:.76rem;color:var(--mut)}
+.chat-ctx[hidden]{display:none}
+.chat-ctx b{color:var(--tx);font-weight:700}
+.chat-link-btn{background:none;border:0;color:var(--b1);font:600 .75rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;padding:2px 4px;border-radius:3px;white-space:nowrap}
+.chat-link-btn:hover{text-decoration:underline}
+
+.chat-body{flex:1;min-height:140px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--bg)}
+.chat-msg{max-width:88%;padding:10px 12px;border-radius:6px;font-size:.84rem;line-height:1.5;word-wrap:break-word;white-space:pre-wrap}
+.chat-msg.bot{align-self:flex-start;background:var(--card);border:1px solid var(--line);color:var(--tx)}
+.chat-msg.user{align-self:flex-end;background:var(--b1);color:#fff;border:1px solid var(--b1)}
+.chat-msg.ok{align-self:flex-start;background:var(--ok-bg);color:var(--ok-tx);border:1px solid rgba(16,185,129,.28)}
+.chat-msg.err{align-self:flex-start;background:var(--bad-bg);color:var(--bad-tx);border:1px solid rgba(239,68,68,.28)}
+.chat-msg-meta{display:block;font-size:.69rem;margin-top:5px;opacity:.76;font-variant-numeric:tabular-nums}
+
+.chat-quick{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.chat-quick-lbl{font-size:.72rem;color:var(--mut);font-weight:600}
+.chat-quick-grid{display:grid;grid-template-columns:1fr;gap:6px}
+.chat-quick-btn{text-align:left;padding:8px 11px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--tx);font:500 .79rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;transition:border-color .14s,background .14s,color .14s;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.chat-quick-btn:hover{border-color:var(--b1);color:var(--b1);background:var(--card2)}
+.chat-quick-btn span:last-child{color:var(--b1);font-weight:700;flex-shrink:0}
+
+.chat-form{padding:14px 16px 16px;background:var(--card);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:9px}
+.chat-id-summary{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.76rem;color:var(--mut);padding:6px 9px;background:var(--card2);border:1px solid var(--line);border-radius:4px}
+.chat-id-summary[hidden]{display:none}
+.chat-id-summary span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-id-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chat-id-fields[hidden]{display:none}
+.chat-field{margin:0;display:flex;flex-direction:column;gap:3px;font-size:.74rem;font-weight:600;color:var(--mut)}
+.chat-field input,.chat-field textarea{margin-top:0;padding:8px 10px;font-size:.84rem;border-radius:4px}
+.chat-field textarea{resize:none;min-height:60px;max-height:110px;line-height:1.45}
+.chat-field.full{grid-column:1/-1}
+.chat-err{font-size:.75rem;color:var(--bad-tx);font-weight:600;min-height:0}
+.chat-err[hidden]{display:none}
+.chat-foot-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.chat-note{font-size:.71rem;color:var(--mut);line-height:1.35}
+.chat-send{min-height:38px;padding:8px 16px;white-space:nowrap;flex-shrink:0}
+
+@media(max-width:540px){
+  .chat-fab{right:14px;bottom:14px;width:48px;height:48px;padding:0;justify-content:center}
+  .chat-fab .chat-fab-lbl{display:none}
+  .chat-panel{right:12px;left:12px;bottom:70px;width:auto;max-height:min(76vh,540px)}
+  .chat-id-fields{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .chat-fab,.chat-panel{transition:none}
+}
 </style>
 </head>
 <body>
@@ -474,6 +545,66 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 </footer>
 
 <dialog id="dlg"></dialog>
+
+<!-- Floating Quick-Inquiry Chat Widget (Web3Forms) -->
+<button class="chat-fab" id="chatFab" type="button" aria-expanded="false" aria-controls="chatPanel" aria-label="Abrir chat de consultas rápidas sobre la promoción de Móstoles">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  <span class="chat-fab-lbl">Consulta rápida</span>
+</button>
+
+<aside class="chat-panel" id="chatPanel" role="dialog" aria-label="Consultas rápidas sobre la promoción de Móstoles" hidden>
+  <div class="chat-hd">
+    <div class="chat-hd-info">
+      <span class="chat-hd-logo" id="chatLogo" aria-hidden="true"></span>
+      <div class="chat-hd-txt">
+        <b>Consultas · Móstoles</b>
+        <small>Respuesta por correo · Obra nueva</small>
+      </div>
+    </div>
+    <div class="chat-hd-acts">
+      <button class="chat-close" id="chatClear" type="button" title="Reiniciar conversación" aria-label="Reiniciar conversación" hidden>
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
+      <button class="chat-close" id="chatClose" type="button" title="Cerrar" aria-label="Cerrar chat">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="chat-ctx" id="chatCtx" hidden>
+    <span id="chatCtxText"></span>
+    <button class="chat-link-btn" id="chatCtxUnlink" type="button">Quitar</button>
+  </div>
+
+  <div class="chat-body" id="chatBody" aria-live="polite"></div>
+
+  <form class="chat-form" id="chatForm" novalidate>
+    <input type="text" name="botcheck" id="chatBotcheck" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div class="chat-id-summary" id="chatIdSummary" hidden>
+      <span id="chatIdSummaryText"></span>
+      <button class="chat-link-btn" id="chatEditId" type="button">Editar datos</button>
+    </div>
+    <div class="chat-id-fields" id="chatIdFields">
+      <label class="chat-field">Nombre *
+        <input id="chatName" type="text" maxlength="120" required autocomplete="name" placeholder="Tu nombre">
+      </label>
+      <label class="chat-field">Email *
+        <input id="chatEmail" type="email" maxlength="180" required autocomplete="email" placeholder="tu@email.com">
+      </label>
+      <label class="chat-field full">Teléfono (opcional)
+        <input id="chatPhone" type="tel" maxlength="30" autocomplete="tel" placeholder="+34 600 000 000">
+      </label>
+    </div>
+    <label class="chat-field">Tu pregunta *
+      <textarea id="chatMsg" rows="2" maxlength="1500" required placeholder="Pregúntanos sobre precios, requisitos, garaje o visitas…"></textarea>
+    </label>
+    <div class="chat-err" id="chatErr" role="alert" hidden></div>
+    <div class="chat-foot-row">
+      <span class="chat-note">Envío directo al equipo de INVERCOR</span>
+      <button class="btn sm chat-send" id="chatSend" type="submit">Enviar</button>
+    </div>
+  </form>
+</aside>
 
 <script type="module">
 /* ==========================================================================
@@ -3550,6 +3681,14 @@ $('dlHtmlBtn').onclick = e => {
   if (ck) ck.hidden = true;
   const dlgEl = docClone.querySelector('#dlg');
   if (dlgEl) { dlgEl.removeAttribute('open'); dlgEl.className = ''; dlgEl.innerHTML = ''; }
+  const cpEl = docClone.querySelector('#chatPanel');
+  if (cpEl) { cpEl.classList.remove('open', 'has-cmp'); cpEl.hidden = true; }
+  const cfEl = docClone.querySelector('#chatFab');
+  if (cfEl) { cfEl.setAttribute('aria-expanded', 'false'); cfEl.classList.remove('has-cmp'); }
+  const cbBody = docClone.querySelector('#chatBody');
+  if (cbBody) cbBody.innerHTML = '';
+  const cLogo = docClone.querySelector('#chatLogo');
+  if (cLogo) cLogo.innerHTML = '';
   const fullHtml = '<!DOCTYPE html>\n' + docClone.outerHTML;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([fullHtml], { type: 'text/html;charset=utf-8' }));
@@ -3559,9 +3698,370 @@ $('dlHtmlBtn').onclick = e => {
   notify('Archivo INVERCOR_PATRIMONIO.html descargado');
 };
 
+/* ==========================================================================
+   CHAT FLOTANTE DE CONSULTAS RÁPIDAS (WEB3FORMS)
+   ========================================================================== */
+const CHAT_STORAGE_KEY = 'inv-chat-history-v1';
+const CHAT_USER_KEY = 'inv-chat-user-v1';
+const CHAT_QUICK_PROMPTS = [
+  '¿Cuáles son los requisitos de solvencia y documentación para alquilar?',
+  '¿Las viviendas de Móstoles incluyen plaza de garaje y terraza?',
+  '¿Cuándo son las próximas visitas y la fecha prevista de entrega?',
+  '¿Qué pisos de 2 o 3 habitaciones siguen disponibles ahora mismo?'
+];
+
+function initFloatingChat() {
+  const fab = $('chatFab');
+  const panel = $('chatPanel');
+  const closeBtn = $('chatClose');
+  const clearBtn = $('chatClear');
+  const body = $('chatBody');
+  const form = $('chatForm');
+  const nameIn = $('chatName');
+  const emailIn = $('chatEmail');
+  const phoneIn = $('chatPhone');
+  const msgIn = $('chatMsg');
+  const sendBtn = $('chatSend');
+  const errBox = $('chatErr');
+  const idSummary = $('chatIdSummary');
+  const idSummaryText = $('chatIdSummaryText');
+  const editIdBtn = $('chatEditId');
+  const idFields = $('chatIdFields');
+  const ctxBar = $('chatCtx');
+  const ctxText = $('chatCtxText');
+  const ctxUnlink = $('chatCtxUnlink');
+  const chatLogo = $('chatLogo');
+  if (!fab || !panel || !form) return;
+
+  if (chatLogo) chatLogo.innerHTML = LOGO();
+
+  let isOpen = false;
+  let isSending = false;
+  let linkedRef = '';
+  let unlinkedManually = false;
+  let editingIdentity = true;
+
+  const ALLOWED_CHAT_ROLES = new Set(['user', 'ok', 'err', 'bot']);
+  const loadHistory = () => {
+    try {
+      const parsed = JSON.parse(sessionStorage.getItem(CHAT_STORAGE_KEY) || '[]');
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter(item => item && typeof item.text === 'string' && ALLOWED_CHAT_ROLES.has(item.role))
+        .slice(-20)
+        .map(item => ({ role: item.role, text: item.text.slice(0, 1500), time: typeof item.time === 'string' ? item.time.slice(0, 16) : '' }));
+    } catch { return []; }
+  };
+  let history = loadHistory();
+
+  const saveHistory = () => {
+    try { sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(history.slice(-20))); } catch {}
+  };
+
+  const loadSavedContact = () => {
+    try { return JSON.parse(sessionStorage.getItem(CHAT_USER_KEY) || '{}') || {}; } catch { return {}; }
+  };
+
+  const prefillIdentity = () => {
+    const saved = loadSavedContact();
+    if (!nameIn.value.trim()) {
+      nameIn.value = saved.name || (CURRENT_USER?.name || '');
+    }
+    if (!emailIn.value.trim()) {
+      emailIn.value = saved.email || (CURRENT_USER?.email || '');
+    }
+    if (!phoneIn.value.trim() && saved.phone) {
+      phoneIn.value = saved.phone;
+    }
+    if (history.some(m => m.role === 'user') && nameIn.value.trim() && emailIn.value.trim()) {
+      editingIdentity = false;
+    }
+    syncIdentityView();
+  };
+
+  const syncIdentityView = () => {
+    const hasContact = Boolean(nameIn.value.trim() && emailIn.value.trim());
+    const compact = !editingIdentity && hasContact;
+    idSummary.hidden = !compact;
+    idFields.hidden = compact;
+    if (compact) {
+      idSummaryText.textContent = `${nameIn.value.trim()} · ${emailIn.value.trim()}`;
+    }
+  };
+
+  const formatNow = () => {
+    const d = new Date();
+    return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const syncCompareOffset = () => {
+    const cmpBar = $('compareBar');
+    const active = Boolean(cmpBar && !cmpBar.hidden);
+    fab.classList.toggle('has-cmp', active);
+    panel.classList.toggle('has-cmp', active);
+  };
+
+  const syncRouteContext = () => {
+    const raw = location.hash.slice(1) || 'inicio';
+    const [routeName, param] = raw.split('/');
+    if (routeName === 'ficha' && param) {
+      const unit = V.find(v => v.ref === param);
+      if (unit && (!unlinkedManually || linkedRef !== unit.ref)) {
+        if (linkedRef !== unit.ref) unlinkedManually = false;
+        linkedRef = unit.ref;
+        ctxText.textContent = '';
+        const prefix = document.createTextNode('Sobre ');
+        const strong = document.createElement('b');
+        strong.textContent = `${unit.ref} · ${unit.h} hab. (${eur(unit.r)}/mes)`;
+        ctxText.append(prefix, strong);
+        ctxBar.hidden = false;
+        return;
+      }
+    }
+    if (routeName !== 'ficha') {
+      linkedRef = '';
+      unlinkedManually = false;
+      ctxBar.hidden = true;
+    }
+  };
+
+  const setError = msg => {
+    if (!msg) {
+      errBox.textContent = '';
+      errBox.hidden = true;
+    } else {
+      errBox.textContent = msg;
+      errBox.hidden = false;
+    }
+  };
+
+  const renderMessages = () => {
+    body.textContent = '';
+
+    const welcome = document.createElement('div');
+    welcome.className = 'chat-msg bot';
+    welcome.textContent = 'Hola. Escríbenos cualquier duda rápida sobre las 45 viviendas de obra nueva en Móstoles y te responderemos directamente por correo electrónico.';
+    body.appendChild(welcome);
+
+    history.forEach(item => {
+      const el = document.createElement('div');
+      el.className = `chat-msg ${item.role}`;
+      el.textContent = item.text;
+      if (item.time) {
+        const meta = document.createElement('span');
+        meta.className = 'chat-msg-meta';
+        meta.textContent = item.time;
+        el.appendChild(meta);
+      }
+      body.appendChild(el);
+    });
+
+    if (!history.some(m => m.role === 'user')) {
+      const quickWrap = document.createElement('div');
+      quickWrap.className = 'chat-quick';
+      const lbl = document.createElement('span');
+      lbl.className = 'chat-quick-lbl';
+      lbl.textContent = 'Preguntas frecuentes rápidas';
+      const grid = document.createElement('div');
+      grid.className = 'chat-quick-grid';
+
+      CHAT_QUICK_PROMPTS.forEach(promptText => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chat-quick-btn';
+        const txt = document.createElement('span');
+        txt.textContent = promptText;
+        const arrow = document.createElement('span');
+        arrow.setAttribute('aria-hidden', 'true');
+        arrow.textContent = '→';
+        btn.append(txt, arrow);
+        btn.onclick = () => {
+          msgIn.value = promptText;
+          setError('');
+          if (!nameIn.value.trim()) nameIn.focus();
+          else if (!emailIn.value.trim()) emailIn.focus();
+          else msgIn.focus();
+        };
+        grid.appendChild(btn);
+      });
+
+      quickWrap.append(lbl, grid);
+      body.appendChild(quickWrap);
+    }
+
+    clearBtn.hidden = history.length === 0;
+    body.scrollTop = body.scrollHeight;
+  };
+
+  const openChat = () => {
+    isOpen = true;
+    prefillIdentity();
+    syncRouteContext();
+    syncCompareOffset();
+    panel.hidden = false;
+    requestAnimationFrame(() => panel.classList.add('open'));
+    fab.setAttribute('aria-expanded', 'true');
+    setTimeout(() => {
+      if (!editingIdentity) msgIn.focus();
+      else if (!nameIn.value.trim()) nameIn.focus();
+      else if (!emailIn.value.trim()) emailIn.focus();
+      else msgIn.focus();
+    }, 60);
+  };
+
+  const closeChat = () => {
+    isOpen = false;
+    panel.classList.remove('open');
+    fab.setAttribute('aria-expanded', 'false');
+    setTimeout(() => { if (!isOpen) panel.hidden = true; }, 190);
+  };
+
+  fab.onclick = () => (isOpen ? closeChat() : openChat());
+  closeBtn.onclick = closeChat;
+
+  clearBtn.onclick = () => {
+    history = [];
+    saveHistory();
+    editingIdentity = true;
+    syncIdentityView();
+    setError('');
+    renderMessages();
+  };
+
+  editIdBtn.onclick = () => {
+    editingIdentity = true;
+    syncIdentityView();
+    nameIn.focus();
+  };
+
+  ctxUnlink.onclick = () => {
+    linkedRef = '';
+    unlinkedManually = true;
+    ctxBar.hidden = true;
+  };
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && isOpen) {
+      closeChat();
+      fab.focus();
+    }
+  });
+
+  msgIn.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
+  form.onsubmit = async e => {
+    e.preventDefault();
+    if (isSending) return;
+    setError('');
+
+    if ($('chatBotcheck')?.value) return;
+
+    const name = nameIn.value.trim();
+    const email = emailIn.value.trim();
+    const phone = phoneIn.value.trim();
+    const message = msgIn.value.trim();
+
+    if (name.length < 2 || name.length > 120) {
+      editingIdentity = true;
+      syncIdentityView();
+      setError('Indica tu nombre para poder dirigirnos a ti.');
+      nameIn.focus();
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || email.length > 180) {
+      editingIdentity = true;
+      syncIdentityView();
+      setError('Introduce un correo electrónico válido para recibir respuesta.');
+      emailIn.focus();
+      return;
+    }
+    if (message.length < 5 || message.length > 1500) {
+      setError('Escribe tu consulta (mínimo 5 caracteres).');
+      msgIn.focus();
+      return;
+    }
+
+    isSending = true;
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Enviando…';
+
+    try {
+      sessionStorage.setItem(CHAT_USER_KEY, JSON.stringify({ name, email, phone }));
+    } catch {}
+
+    const activeUnit = linkedRef ? V.find(v => v.ref === linkedRef) : null;
+    const unitTag = activeUnit ? ` [${activeUnit.ref}]` : '';
+    const unitDetails = activeUnit
+      ? `${activeUnit.ref} · ${activeUnit.portal}, ${activeUnit.pl} · ${activeUnit.h} hab. · ${eur(activeUnit.r)}/mes`
+      : 'Consulta general promoción Móstoles';
+
+    history.push({ role: 'user', text: message, time: formatNow() });
+    saveHistory();
+    renderMessages();
+
+    const res = await sendWeb3Forms({
+      subject: `Chat rápido Móstoles${unitTag} - ${name}`,
+      name,
+      email,
+      replyto: email,
+      telefono: phone || 'No indicado',
+      vivienda_consultada: unitDetails,
+      origen: 'Chat flotante · Promoción Obra Nueva Móstoles',
+      seccion_web: location.hash || '#inicio',
+      message
+    });
+
+    isSending = false;
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Enviar';
+
+    if (res.ok) {
+      msgIn.value = '';
+      editingIdentity = false;
+      syncIdentityView();
+      history.push({
+        role: 'ok',
+        text: `Consulta recibida. Te responderemos al correo ${email} lo antes posible.`,
+        time: formatNow()
+      });
+      saveHistory();
+      renderMessages();
+      notify('Consulta enviada por correo al equipo de INVERCOR');
+    } else {
+      history.push({
+        role: 'err',
+        text: 'No se pudo completar el envío ahora mismo. Comprueba tu conexión o inténtalo de nuevo en unos segundos.',
+        time: formatNow()
+      });
+      saveHistory();
+      renderMessages();
+      setError('Error al enviar con Web3Forms. Puedes volver a intentarlo.');
+    }
+  };
+
+  addEventListener('hashchange', syncRouteContext);
+  const cmpObserver = $('compareBar')
+    ? new MutationObserver(syncCompareOffset)
+    : null;
+  if (cmpObserver && $('compareBar')) {
+    cmpObserver.observe($('compareBar'), { attributes: true, attributeFilter: ['hidden'] });
+  }
+
+  renderMessages();
+  syncRouteContext();
+  syncCompareOffset();
+  window.__syncFloatingChatUser = prefillIdentity;
+}
+
 renderApp();
 updateUserHeader();
 route();
+initFloatingChat();
 syncPublicData();
 
 onAuthStateChanged(fbAuth, async fbUser => {
@@ -3577,6 +4077,7 @@ onAuthStateChanged(fbAuth, async fbUser => {
   }
   const role = await resolveUserRoleFast(em);
   setSession({ uid: fbUser.uid, email: em, name: fbUser.displayName || em.split('@')[0], role, isFirebase: true });
+  if (window.__syncFloatingChatUser) window.__syncFloatingChatUser();
   triggerBackgroundSync();
   route();
 });
