@@ -360,9 +360,11 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .alz-building{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);overflow:hidden}
 .alz-roof{background:linear-gradient(90deg,var(--b3),var(--b1));color:#fff;padding:8px 14px;border-radius:4px 4px 0 0;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .alz-portals{display:grid;gap:14px;padding:14px 0;background:linear-gradient(180deg,var(--card2) 0%,var(--card) 100%);border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.alz-portals.cols-4{grid-template-columns:repeat(auto-fit,minmax(230px,1fr));padding:14px 10px}
 .alz-portals.cols-3{grid-template-columns:repeat(3,minmax(0,1fr));padding:14px 10px}
+.alz-portals.cols-2{grid-template-columns:repeat(2,minmax(0,1fr));padding:14px 12px}
 .alz-portals.cols-1{grid-template-columns:1fr;padding:14px}
-@media(max-width:740px){.alz-portals.cols-3{grid-template-columns:1fr}}
+@media(max-width:740px){.alz-portals.cols-3,.alz-portals.cols-2,.alz-portals.cols-4{grid-template-columns:1fr}}
 
 .alz-portal-col{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:10px;display:flex;flex-direction:column;gap:6px}
 .alz-portal-hd{display:flex;justify-content:space-between;align-items:center;padding-bottom:7px;border-bottom:2px solid var(--line);margin-bottom:2px}
@@ -370,36 +372,39 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .alz-portal-hd small{font-size:.71rem;color:var(--mut);font-weight:600}
 
 .alz-floor-row{display:grid;grid-template-columns:54px 1fr;gap:7px;align-items:stretch}
-.alz-portals.cols-3 .alz-floor-row{grid-template-columns:36px 1fr;gap:5px}
+.alz-portals.cols-3 .alz-floor-row,.alz-portals.cols-4 .alz-floor-row{grid-template-columns:36px 1fr;gap:5px}
 .alz-fl-tag{background:var(--card2);border:1px solid var(--line);border-radius:3px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:.67rem;font-weight:800;color:var(--mut);padding:4px 2px;cursor:pointer;transition:.14s;text-align:center;line-height:1.15}
 .alz-fl-tag:hover,.alz-fl-tag.on{border-color:var(--b1);color:var(--b1);background:rgba(0,126,194,.08)}
 .alz-fl-tag small{font-size:.58rem;font-weight:700;opacity:.85}
 .alz-fl-units{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:5px}
-.alz-portals.cols-3 .alz-fl-units{grid-template-columns:repeat(auto-fit,minmax(66px,1fr));gap:4px}
+.alz-portals.cols-3 .alz-fl-units,.alz-portals.cols-4 .alz-fl-units{grid-template-columns:repeat(auto-fit,minmax(66px,1fr));gap:4px}
 
 .alz-unit{border:1px solid var(--line);background:var(--card2);color:var(--tx);padding:7px 8px;border-radius:4px;cursor:pointer;text-align:left;font-family:inherit;display:flex;flex-direction:column;gap:2px;transition:transform .14s,border-color .14s,box-shadow .14s,opacity .16s;position:relative}
-.alz-portals.cols-3 .alz-unit{padding:5px 6px}
+.alz-portals.cols-3 .alz-unit,.alz-portals.cols-4 .alz-unit{padding:5px 6px}
 .alz-unit:hover{transform:translateY(-1px);border-color:var(--b1);box-shadow:0 4px 12px -4px rgba(0,126,194,.28);z-index:2}
 .alz-unit.sel{border-color:var(--b1);box-shadow:0 0 0 2px rgba(0,126,194,.32);background:rgba(0,126,194,.11);z-index:3}
 .alz-unit.dim{opacity:.23;filter:grayscale(.65)}
 .alz-unit.dim:hover{opacity:.75;filter:none}
 .alz-unit-top{display:flex;justify-content:space-between;align-items:center;gap:4px}
 .alz-unit-top b{font-size:.75rem;line-height:1.1;letter-spacing:.01em}
-.alz-portals.cols-3 .alz-unit-top b{font-size:.69rem}
+.alz-portals.cols-3 .alz-unit-top b,.alz-portals.cols-4 .alz-unit-top b{font-size:.69rem}
 .alz-unit-mid{font-size:.69rem;color:var(--mut);font-weight:600;line-height:1.2}
-.alz-portals.cols-3 .alz-unit-mid{font-size:.63rem}
+.alz-portals.cols-3 .alz-unit-mid,.alz-portals.cols-4 .alz-unit-mid{font-size:.63rem}
 .alz-unit-bot{display:flex;justify-content:space-between;align-items:center;gap:4px;margin-top:2px;font-size:.71rem;font-weight:800;color:var(--tx)}
-.alz-portals.cols-3 .alz-unit-bot{font-size:.65rem}
+.alz-portals.cols-3 .alz-unit-bot,.alz-portals.cols-4 .alz-unit-bot{font-size:.65rem}
 .alz-badges{display:inline-flex;gap:2px}
 .alz-badges i{font-style:normal;font-size:.58rem;font-weight:800;padding:1px 3px;border-radius:2px;background:var(--card);border:1px solid var(--line);color:var(--mut)}
+.alz-badges i.b-tr{border-color:rgba(0,126,194,.45);color:var(--b1)}
 
 /* Color modes */
 .alz-unit.m-st-D{border-left:4px solid #10b981}
 .alz-unit.m-st-R{border-left:4px solid #f59e0b;background:rgba(245,158,11,.07)}
 .alz-unit.m-st-A{border-left:4px solid #ef4444;background:rgba(239,68,68,.06);opacity:.62}
+.alz-unit.m-h-1{border-left:4px solid #38bdf8}
 .alz-unit.m-h-2{border-left:4px solid #2bb3f0}
 .alz-unit.m-h-3{border-left:4px solid #007ec2}
 .alz-unit.m-h-4{border-left:4px solid #0e3268}
+.alz-unit.m-h-5{border-left:4px solid #312e81}
 .alz-unit.m-p-low{border-left:4px solid #10b981}
 .alz-unit.m-p-mid{border-left:4px solid #007ec2}
 .alz-unit.m-p-high{border-left:4px solid #7c3aed}
@@ -2232,9 +2237,7 @@ async function syncPublicData() {
       SITE_CONTENT = mergeSiteContent(scSnap.data());
       saveSiteContent();
     }
-    if (window.applySiteContent) window.applySiteContent();
-    const navViv = document.querySelector('#nl a[data-r="viviendas"]');
-    if (navViv) navViv.textContent = `Viviendas (${V.length})`;
+    refreshAllPropertyViews();
     route();
   } catch (_) {
     FB_DB_ONLINE = false;
@@ -2723,7 +2726,7 @@ let previewRef = 'REF-01';
 let alzadoColorMode = 'status';
 let alzadoInspTab = 'specs';
 let alzadoIncome = '';
-let alzadoFilters = { st: 'ALL', h: 0, ori: 'ALL', maxR: 0, fl: 0, t: false, g: false, tr: false };
+let alzadoFilters = { st: 'ALL', h: 0, ori: 'ALL', maxR: 0, fl: null, t: false, g: false, tr: false };
 let adminTab = 'inventario';
 
 function buildPlanSvg(v) {
@@ -2763,6 +2766,8 @@ function buildPlanSvg(v) {
 }
 
 const stLabel = s => ({ D: 'Disponible', R: 'Reservada', A: 'Alquilada' }[s] || 'Disponible');
+const floorShortLabel = fl => Number(fl) === 0 ? 'PB' : `P${fl}`;
+const floorFullLabel = fl => Number(fl) === 0 ? 'Planta Baja' : `Planta ${fl}`;
 
 const propertyCard = v => {
   const photos = getUnitPhotos(v);
@@ -2774,11 +2779,11 @@ const propertyCard = v => {
       <img src="${cover.src}" alt="${esc(v.ref)} · ${esc(cover.caption)}" loading="lazy">
     </a>
     <div class="card-top">
-      <span class="ref-badge">${v.ref} · ${v.portal}</span>
+      <span class="ref-badge">${esc(v.ref)} · ${esc(v.portal)}</span>
       <span class="st ${v.st}">${stLabel(v.st)}</span>
     </div>
     <div class="card-media-bot">
-      <span>Planta ${v.pl} · Orientación ${v.ori}</span>
+      <span>${floorFullLabel(v.pl)} · Orientación ${esc(v.ori)}</span>
       <span>${photos.length} fotos · CEE ${v.cee}</span>
     </div>
   </div>
@@ -3151,12 +3156,13 @@ function renderApp() {
         <button class="chip" data-h="4">4 habitaciones</button>
         <button class="chip" data-x="t">${ICO('sun')} Con terraza</button>
         <button class="chip" data-x="g">${ICO('car')} Con garaje</button>
+        <button class="chip" data-x="tr">${ICO('box')} Con trastero</button>
         <button class="chip" data-x="onlyD">${ICO('check')} Solo disponibles</button>
       </div>
       <div class="filter-inputs">
         <label style="margin:0">Buscar referencia<input id="q" placeholder="Ej. REF-14"></label>
-        <label style="margin:0">Planta<select id="fPl"><option value="0">Todas las plantas</option>${[1,2,3,4,5,6].map(p=>`<option value="${p}">Planta ${p}</option>`).join('')}</select></label>
-        <label style="margin:0">Precio máximo<select id="mx"><option value="9999">Sin límite</option><option value="1000">Hasta 1.000 €/mes</option><option value="1250">Hasta 1.250 €/mes</option><option value="1500">Hasta 1.500 €/mes</option></select></label>
+        <label style="margin:0">Planta<select id="fPl"><option value="ALL">Todas las plantas</option></select></label>
+        <label style="margin:0">Precio máximo<select id="mx"><option value="9999">Sin límite</option><option value="1000">Hasta 1.000 €/mes</option><option value="1250">Hasta 1.250 €/mes</option><option value="1500">Hasta 1.500 €/mes</option><option value="2000">Hasta 2.000 €/mes</option></select></label>
       </div>
     </div>
     <div class="grid" id="gr"></div>
@@ -3278,16 +3284,19 @@ function renderApp() {
     'Sureste': 'Sol de mañana y mediodía',
     'Suroeste': 'Sol de tarde y atardeceres',
     'Este': 'Sol directo por la mañana',
-    'Oeste': 'Sol directo por la tarde'
+    'Oeste': 'Sol directo por la tarde',
+    'Norte': 'Luz indirecta uniforme y gran confort térmico',
+    'Noreste': 'Sol suave a primera hora y frescor por la tarde',
+    'Noroeste': 'Luz estable y sol de última hora'
   }[ori] || 'Buena ventilación cruzada');
 
   const unitMatchesAlzado = v => {
     const f = alzadoFilters;
     if (f.st !== 'ALL' && v.st !== f.st) return false;
-    if (f.h && v.h !== f.h) return false;
-    if (f.ori !== 'ALL' && v.ori !== f.ori) return false;
-    if (f.maxR && v.r > f.maxR) return false;
-    if (f.fl && v.pl !== f.fl) return false;
+    if (f.h && Number(v.h) !== f.h) return false;
+    if (f.ori !== 'ALL' && String(v.ori || '') !== f.ori) return false;
+    if (f.maxR && Number(v.r) > f.maxR) return false;
+    if (f.fl !== null && f.fl !== undefined && Number(v.pl) !== Number(f.fl)) return false;
     if (f.t && !v.t) return false;
     if (f.g && !v.g) return false;
     if (f.tr && !v.tr) return false;
@@ -3295,8 +3304,11 @@ function renderApp() {
   };
 
   const alzadoColorClass = v => {
-    if (alzadoColorMode === 'rooms') return `m-h-${v.h}`;
-    if (alzadoColorMode === 'price') return v.r <= 1050 ? 'm-p-low' : v.r <= 1350 ? 'm-p-mid' : 'm-p-high';
+    if (alzadoColorMode === 'rooms') {
+      const h = Math.max(1, Math.min(5, Number(v.h) || 2));
+      return `m-h-${h}`;
+    }
+    if (alzadoColorMode === 'price') return Number(v.r) <= 1050 ? 'm-p-low' : Number(v.r) <= 1350 ? 'm-p-mid' : 'm-p-high';
     return `m-st-${v.st}`;
   };
 
@@ -3304,15 +3316,54 @@ function renderApp() {
     const root = $('alzadoApp');
     if (!root) return;
 
-    const portals = ['Portal A', 'Portal B', 'Portal C'];
+    const isAdmin = CURRENT_USER?.role === 'admin';
+    if (!V.length) {
+      root.innerHTML = `<div class="panel" style="text-align:center;padding:30px">
+        <p class="m">No hay viviendas cargadas en el inventario.</p>
+        ${isAdmin ? `<button type="button" class="btn sm" id="alzAddFirstBtn" style="margin-top:12px">${ICO('plus')} Añadir primera vivienda</button>` : ''}
+      </div>`;
+      if ($('alzAddFirstBtn')) {
+        $('alzAddFirstBtn').onclick = () => openUnitEditorModal(null, saved => { previewRef = saved.ref; activePortal = 'ALL'; renderAlzadoPage(); });
+      }
+      return;
+    }
+
+    const portals = [...new Set(V.map(v => String(v.portal || 'Portal A').trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+    if (activePortal !== 'ALL' && !portals.includes(activePortal)) {
+      activePortal = 'ALL';
+    }
     const visiblePortals = activePortal === 'ALL' ? portals : [activePortal];
-    const scopeUnits = V.filter(v => visiblePortals.includes(v.portal));
+    const scopeUnits = V.filter(v => visiblePortals.includes(String(v.portal || 'Portal A').trim()));
+
+    const allFloors = [...new Set(scopeUnits.map(v => Number(v.pl)).filter(Number.isFinite))].sort((a, b) => b - a);
+    const maxFloor = allFloors.length ? Math.max(...allFloors) : 6;
+    if (alzadoFilters.fl !== null && !allFloors.includes(Number(alzadoFilters.fl))) {
+      alzadoFilters.fl = null;
+    }
+
+    const roomCounts = [...new Set(V.map(v => Number(v.h)).filter(n => Number.isFinite(n) && n > 0))].sort((a, b) => a - b);
+    if (alzadoFilters.h && !roomCounts.includes(alzadoFilters.h)) {
+      alzadoFilters.h = 0;
+    }
+
+    const orientations = [...new Set(V.map(v => String(v.ori || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+    if (alzadoFilters.ori !== 'ALL' && !orientations.includes(alzadoFilters.ori)) {
+      alzadoFilters.ori = 'ALL';
+    }
+
+    const highestRent = Math.max(...V.map(v => Number(v.r) || 0), 1500);
+    const rentThresholds = [1050, 1250, 1500];
+    if (highestRent > 1500) rentThresholds.push(1800);
+    if (highestRent > 1800) rentThresholds.push(2200);
+    if (highestRent > 2200) rentThresholds.push(3000);
+
     const matchedUnits = scopeUnits.filter(unitMatchesAlzado);
 
     if (!scopeUnits.some(v => v.ref === previewRef)) {
       previewRef = (matchedUnits.find(v => v.st === 'D') || matchedUnits[0] || scopeUnits[0] || V[0]).ref;
     }
-    const cur = V.find(v => v.ref === previewRef) || V[0];
+    const cur = V.find(v => v.ref === previewRef) || scopeUnits[0] || V[0];
     const photos = getUnitPhotos(cur);
     const inCmp = CMP.includes(cur.ref);
 
@@ -3324,9 +3375,8 @@ function renderApp() {
     const pctR = (cntR / tot * 100).toFixed(1);
     const pctA = (cntA / tot * 100).toFixed(1);
 
-    const hasFilters = alzadoFilters.st !== 'ALL' || alzadoFilters.h || alzadoFilters.ori !== 'ALL' || alzadoFilters.maxR || alzadoFilters.fl || alzadoFilters.t || alzadoFilters.g || alzadoFilters.tr;
-    const allFloors = [6, 5, 4, 3, 2, 1];
-    const priceM2 = (cur.r / cur.m2).toFixed(1);
+    const hasFilters = alzadoFilters.st !== 'ALL' || alzadoFilters.h || alzadoFilters.ori !== 'ALL' || alzadoFilters.maxR || alzadoFilters.fl !== null || alzadoFilters.t || alzadoFilters.g || alzadoFilters.tr;
+    const priceM2 = cur.m2 > 0 ? (cur.r / cur.m2).toFixed(1) : '0.0';
     const fianza = cur.r;
     const garantia = cur.r;
     const entrada = cur.r + fianza + garantia;
@@ -3341,23 +3391,28 @@ function renderApp() {
             : `Por encima del ratio (${ratioPct}% de tus ingresos): recomendamos ingresos conjuntos ≥ ${eur(cur.r * 3)}/mes.`)
       : `Introduce tus ingresos netos mensuales para comprobar el esfuerzo sobre esta vivienda (mínimo orientativo: ${eur(cur.r * 3)}/mes).`;
 
+    const roomPalette = { 1: '#38bdf8', 2: '#2bb3f0', 3: '#007ec2', 4: '#0e3268', 5: '#312e81' };
     const legendHtml = alzadoColorMode === 'status'
       ? `<span><i class="dot ok"></i>Disponible (${cntD})</span><span><i class="dot warn"></i>Reservada (${cntR})</span><span><i class="dot bad"></i>Alquilada (${cntA})</span>`
       : alzadoColorMode === 'rooms'
-        ? `<span><i class="dot" style="background:#2bb3f0"></i>2 Dormitorios</span><span><i class="dot" style="background:#007ec2"></i>3 Dormitorios</span><span><i class="dot" style="background:#0e3268"></i>4 Dormitorios</span>`
+        ? roomCounts.map(n => `<span><i class="dot" style="background:${roomPalette[Math.min(5, n)] || '#0e3268'}"></i>${n} Dormitorio${n > 1 ? 's' : ''}</span>`).join('')
         : `<span><i class="dot ok"></i>Hasta 1.050 €/mes</span><span><i class="dot" style="background:#007ec2"></i>1.051 – 1.350 €/mes</span><span><i class="dot" style="background:#7c3aed"></i>Más de 1.350 €/mes</span>`;
+
+    const colsCls = visiblePortals.length === 1 ? 'cols-1' : visiblePortals.length === 2 ? 'cols-2' : visiblePortals.length === 3 ? 'cols-3' : 'cols-4';
+    const hasCustomPlan = Boolean(cur.customPlanUrl && isSafeImageSrc(cur.customPlanUrl));
+    const salonM2Show = Number(cur.planSalonM2) > 0 ? Number(cur.planSalonM2) : Math.round(cur.m2 * 0.34);
 
     const renderInspectorBody = () => {
       if (alzadoInspTab === 'plan') {
         return `
           <div style="text-align:center;margin-bottom:10px">${buildPlanSvg(cur)}</div>
           <div class="alz-spec-mini">
-            <div><small>Salón-comedor aprox.</small><b>${Math.round(cur.m2 * 0.34)} m²</b></div>
+            <div><small>Salón-comedor aprox.</small><b>${salonM2Show} m²</b></div>
             <div><small>Dormitorio suite</small><b>${Math.round(cur.m2 * 0.17)} m²</b></div>
             <div><small>Cocina y zona día</small><b>${Math.round(cur.m2 * 0.14)} m²</b></div>
-            <div><small>${cur.t ? 'Terraza privada' : 'Distribución total'}</small><b>${cur.t ? 'Exterior ' + cur.ori : cur.m2 + ' m² construidos'}</b></div>
+            <div><small>${cur.t ? 'Terraza privada' : 'Distribución total'}</small><b>${cur.t ? 'Exterior ' + esc(cur.ori) : cur.m2 + ' m² construidos'}</b></div>
           </div>
-          <p class="m" style="font-size:.77rem">Plano esquemático orientativo de la tipología <b>${esc(cur.nombre)}</b>. Solicita el dossier acotado en tu visita o candidatura.</p>`;
+          <p class="m" style="font-size:.77rem">${cur.planNote ? esc(cur.planNote) : `${hasCustomPlan ? 'Plano técnico de' : 'Plano esquemático orientativo de'} <b>${esc(cur.nombre)}</b>. Solicita el dossier acotado en tu visita o candidatura.`}</p>`;
       }
       if (alzadoInspTab === 'sim') {
         return `
@@ -3377,10 +3432,10 @@ function renderApp() {
         <div class="alz-spec-mini">
           <div><small>Superficie</small><b>${cur.m2} m² (${priceM2} €/m²)</b></div>
           <div><small>Distribución</small><b>${cur.h} dorm. · ${cur.b} baño${cur.b > 1 ? 's' : ''}</b></div>
-          <div><small>Ubicación</small><b>${cur.portal} · Planta ${cur.pl}</b></div>
-          <div><small>Orientación</small><b>${cur.ori}</b></div>
+          <div><small>Ubicación</small><b>${esc(cur.portal)} · ${floorFullLabel(cur.pl)}</b></div>
+          <div><small>Orientación</small><b>${esc(cur.ori)} · CEE ${esc(cur.cee || 'A')}</b></div>
           <div><small>Luz natural</small><b>${sunProfile(cur.ori)}</b></div>
-          <div><small>Equipamiento</small><b>${[cur.t ? 'Terraza' : '', cur.g ? 'Garaje' : '', cur.tr ? 'Trastero' : ''].filter(Boolean).join(' · ') || 'Estándar'}</b></div>
+          <div><small>Equipamiento</small><b>${[cur.t ? 'Terraza' : '', cur.g ? 'Garaje' : '', cur.tr ? 'Trastero' : ''].filter(Boolean).join(' · ') || 'Sin extras'}</b></div>
         </div>
         <p class="m" style="font-size:.82rem;line-height:1.55">${esc(cur.desc)}</p>`;
     };
@@ -3389,16 +3444,19 @@ function renderApp() {
       <div class="alz-toolbar">
         <div class="alz-top-row">
           <div class="alz-seg" role="tablist" aria-label="Seleccionar vista de portal">
-            <button type="button" class="${activePortal === 'ALL' ? 'on' : ''}" data-alz-portal="ALL">Edificio completo (45)</button>
+            <button type="button" class="${activePortal === 'ALL' ? 'on' : ''}" data-alz-portal="ALL">Edificio completo (${V.length})</button>
             ${portals.map(p => {
-              const free = V.filter(v => v.portal === p && v.st === 'D').length;
-              return `<button type="button" class="${activePortal === p ? 'on' : ''}" data-alz-portal="${p}">${p} (${free} libres)</button>`;
+              const free = V.filter(v => String(v.portal || 'Portal A').trim() === p && v.st === 'D').length;
+              return `<button type="button" class="${activePortal === p ? 'on' : ''}" data-alz-portal="${esc(p)}">${esc(p)} (${free} libres)</button>`;
             }).join('')}
           </div>
-          <div class="alz-seg" aria-label="Modo de visualización">
-            <button type="button" class="${alzadoColorMode === 'status' ? 'on' : ''}" data-alz-mode="status">Por estado</button>
-            <button type="button" class="${alzadoColorMode === 'rooms' ? 'on' : ''}" data-alz-mode="rooms">Por dormitorios</button>
-            <button type="button" class="${alzadoColorMode === 'price' ? 'on' : ''}" data-alz-mode="price">Mapa de renta</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <div class="alz-seg" aria-label="Modo de visualización">
+              <button type="button" class="${alzadoColorMode === 'status' ? 'on' : ''}" data-alz-mode="status">Por estado</button>
+              <button type="button" class="${alzadoColorMode === 'rooms' ? 'on' : ''}" data-alz-mode="rooms">Por dormitorios</button>
+              <button type="button" class="${alzadoColorMode === 'price' ? 'on' : ''}" data-alz-mode="price">Mapa de renta</button>
+            </div>
+            ${isAdmin ? `<button type="button" class="btn sm" id="alzAddUnitBtn">${ICO('plus')} Añadir vivienda</button>` : ''}
           </div>
         </div>
 
@@ -3414,23 +3472,19 @@ function renderApp() {
           <label>Dormitorios
             <select id="alzFH">
               <option value="0" ${alzadoFilters.h === 0 ? 'selected' : ''}>Cualquiera</option>
-              <option value="2" ${alzadoFilters.h === 2 ? 'selected' : ''}>2 Habitaciones</option>
-              <option value="3" ${alzadoFilters.h === 3 ? 'selected' : ''}>3 Habitaciones</option>
-              <option value="4" ${alzadoFilters.h === 4 ? 'selected' : ''}>4 Habitaciones</option>
+              ${roomCounts.map(n => `<option value="${n}" ${alzadoFilters.h === n ? 'selected' : ''}>${n} Habitaci${n === 1 ? 'ón' : 'ones'}</option>`).join('')}
             </select>
           </label>
           <label>Orientación
             <select id="alzFOri">
               <option value="ALL" ${alzadoFilters.ori === 'ALL' ? 'selected' : ''}>Todas</option>
-              ${['Sur', 'Sureste', 'Suroeste', 'Este', 'Oeste'].map(o => `<option value="${o}" ${alzadoFilters.ori === o ? 'selected' : ''}>${o}</option>`).join('')}
+              ${orientations.map(o => `<option value="${esc(o)}" ${alzadoFilters.ori === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
             </select>
           </label>
           <label>Renta máxima
             <select id="alzFMaxR">
               <option value="0" ${alzadoFilters.maxR === 0 ? 'selected' : ''}>Sin límite</option>
-              <option value="1050" ${alzadoFilters.maxR === 1050 ? 'selected' : ''}>Hasta 1.050 €/mes</option>
-              <option value="1250" ${alzadoFilters.maxR === 1250 ? 'selected' : ''}>Hasta 1.250 €/mes</option>
-              <option value="1500" ${alzadoFilters.maxR === 1500 ? 'selected' : ''}>Hasta 1.500 €/mes</option>
+              ${rentThresholds.map(rt => `<option value="${rt}" ${alzadoFilters.maxR === rt ? 'selected' : ''}>Hasta ${eur(rt)}/mes</option>`).join('')}
             </select>
           </label>
           <div class="alz-extras">
@@ -3444,7 +3498,7 @@ function renderApp() {
         <div class="alz-occ">
           <div class="alz-occ-meta">
             <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">${legendHtml}</div>
-            <span class="st ${matchedUnits.length ? 'D' : 'R'}">${matchedUnits.length} de ${scopeUnits.length} viviendas resaltadas${alzadoFilters.fl ? ' · Planta ' + alzadoFilters.fl : ''}</span>
+            <span class="st ${matchedUnits.length ? 'D' : 'R'}">${matchedUnits.length} de ${scopeUnits.length} viviendas resaltadas${alzadoFilters.fl !== null ? ' · ' + floorFullLabel(alzadoFilters.fl) : ''}</span>
           </div>
           <div class="alz-occ-bar" title="Disponibles ${pctD}% · Reservadas ${pctR}% · Alquiladas ${pctA}%">
             <div class="seg-d" style="width:${pctD}%"></div>
@@ -3458,42 +3512,45 @@ function renderApp() {
         <div>
           <div class="alz-building">
             <div class="alz-roof">
-              <span>${ICO('building')} CUBIERTA · AEROTERMIA Y PANELES SOLARES</span>
-              <span>PAU-4 MÓSTOLES · CEE A</span>
+              <span>${ICO('building')} CUBIERTA · ${esc(SITE_CONTENT.promoName.toUpperCase())}</span>
+              <span>${esc(SITE_CONTENT.heroBadge)} · ${portals.length} PORTAL${portals.length === 1 ? '' : 'ES'}</span>
             </div>
-            <div class="alz-portals ${visiblePortals.length === 3 ? 'cols-3' : 'cols-1'}">
+            <div class="alz-portals ${colsCls}">
               ${visiblePortals.map(portal => {
-                const pAll = V.filter(v => v.portal === portal);
+                const pAll = V.filter(v => String(v.portal || 'Portal A').trim() === portal);
                 const pFree = pAll.filter(v => v.st === 'D').length;
                 return `
                 <div class="alz-portal-col">
                   <div class="alz-portal-hd">
-                    <b>${portal}</b>
+                    <b>${esc(portal)}</b>
                     <small>${pFree}/${pAll.length} libres</small>
                   </div>
                   ${allFloors.map(fl => {
-                    const fUnits = pAll.filter(v => v.pl === fl);
+                    const fUnits = pAll
+                      .filter(v => Number(v.pl) === fl)
+                      .sort((a, b) => String(a.ref || '').localeCompare(String(b.ref || ''), 'es', { numeric: true }));
                     if (!fUnits.length) return '';
+                    const isAttic = fl === maxFloor && maxFloor >= 4 && fUnits.some(u => /ático|atico/i.test(u.nombre || '') || fl >= 6);
                     return `
                     <div class="alz-floor-row">
-                      <button type="button" class="alz-fl-tag ${alzadoFilters.fl === fl ? 'on' : ''}" data-alz-fl="${fl}" title="Filtrar Planta ${fl}">
-                        <span>P${fl}</span>
-                        ${fl === 6 ? '<small>Ático</small>' : ''}
+                      <button type="button" class="alz-fl-tag ${alzadoFilters.fl === fl ? 'on' : ''}" data-alz-fl="${fl}" title="Filtrar ${floorFullLabel(fl)}">
+                        <span>${floorShortLabel(fl)}</span>
+                        ${fl === 0 ? '<small>Bajo</small>' : (isAttic ? '<small>Ático</small>' : '')}
                       </button>
                       <div class="alz-fl-units">
                         ${fUnits.map(v => {
                           const match = unitMatchesAlzado(v);
                           const sel = v.ref === cur.ref;
                           return `
-                          <button type="button" class="alz-unit ${alzadoColorClass(v)} ${sel ? 'sel' : ''} ${match ? '' : 'dim'}" data-alz-ref="${v.ref}" title="${esc(v.ref)} · ${esc(v.nombre)} · ${v.m2} m² · ${eur(v.r)}/mes (${stLabel(v.st)})">
+                          <button type="button" class="alz-unit ${alzadoColorClass(v)} ${sel ? 'sel' : ''} ${match ? '' : 'dim'}" data-alz-ref="${esc(v.ref)}" title="${esc(v.ref)} · ${esc(v.nombre)} · ${v.m2} m² · ${eur(v.r)}/mes (${stLabel(v.st)})${v.t ? ' · Terraza' : ''}${v.g ? ' · Garaje' : ''}${v.tr ? ' · Trastero' : ''}">
                             <div class="alz-unit-top">
-                              <b>${v.ref}</b>
+                              <b>${esc(v.ref)}</b>
                               <span style="font-size:.63rem;font-weight:800;color:var(--mut)">${v.h}D</span>
                             </div>
-                            <div class="alz-unit-mid">${v.m2} m² · ${v.ori}</div>
+                            <div class="alz-unit-mid">${v.m2} m² · ${esc(v.ori)}</div>
                             <div class="alz-unit-bot">
                               <span>${eur(v.r)}</span>
-                              <span class="alz-badges">${v.t ? '<i title="Terraza">T</i>' : ''}${v.g ? '<i title="Garaje">G</i>' : ''}${v.tr ? '<i title="Trastero">Tr</i>' : ''}</span>
+                              <span class="alz-badges">${v.t ? '<i class="b-t" title="Terraza">T</i>' : ''}${v.g ? '<i class="b-g" title="Garaje">G</i>' : ''}${v.tr ? '<i class="b-tr" title="Trastero">Tr</i>' : ''}</span>
                             </div>
                           </button>`;
                         }).join('')}
@@ -3508,14 +3565,14 @@ function renderApp() {
               <span class="m" style="font-size:.71rem">Accesibilidad universal · Ascensores</span>
             </div>
             <div class="alz-basement">
-              <span>SÓTANO -1 / -2 · PLAZAS DE GARAJE CON PREINSTALACIÓN VE Y TRASTEROS</span>
+              <span>SÓTANO -1 / -2 · ${scopeUnits.filter(v => v.g).length} PLAZAS DE GARAJE · ${scopeUnits.filter(v => v.tr).length} TRASTEROS</span>
               <span>Acceso directo por ascensor</span>
             </div>
           </div>
 
           <div class="panel alz-floor-tbl">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-              <h3 style="font-size:1.1rem">Resumen por altura (${activePortal === 'ALL' ? 'Todo el edificio' : activePortal})</h3>
+              <h3 style="font-size:1.1rem">Resumen por altura (${activePortal === 'ALL' ? 'Todo el edificio' : esc(activePortal)})</h3>
               <span class="m" style="font-size:.77rem">Pulsa una planta para resaltarla en el alzado</span>
             </div>
             <div class="tbl-wrap">
@@ -3525,20 +3582,21 @@ function renderApp() {
                 </thead>
                 <tbody>
                   ${allFloors.map(fl => {
-                    const flAll = scopeUnits.filter(v => v.pl === fl);
+                    const flAll = scopeUnits.filter(v => Number(v.pl) === fl);
                     if (!flAll.length) return '';
                     const flFree = flAll.filter(v => v.st === 'D');
                     const minR = Math.min(...flAll.map(v => v.r));
                     const maxR = Math.max(...flAll.map(v => v.r));
                     const avgM2 = Math.round(flAll.reduce((a, b) => a + b.m2, 0) / flAll.length);
-                    const avgPm2 = (flAll.reduce((a, b) => a + b.r / b.m2, 0) / flAll.length).toFixed(1);
-                    const rooms = [...new Set(flAll.map(v => v.h + 'D'))].sort().join(' · ');
+                    const avgPm2 = (flAll.reduce((a, b) => a + (b.m2 > 0 ? b.r / b.m2 : 0), 0) / flAll.length).toFixed(1);
+                    const rooms = [...new Set(flAll.map(v => v.h + 'D'))].sort((a, b) => parseInt(a, 10) - parseInt(b, 10)).join(' · ');
+                    const isAttic = fl === maxFloor && maxFloor >= 4 && flAll.some(u => /ático|atico/i.test(u.nombre || '') || fl >= 6);
                     return `
                     <tr class="${alzadoFilters.fl === fl ? 'on' : ''}" data-alz-fl="${fl}">
-                      <td><b>Planta ${fl}</b> ${fl === 6 ? '<span class="st D" style="margin-left:4px">Áticos</span>' : ''}</td>
+                      <td><b>${floorFullLabel(fl)}</b> ${isAttic ? '<span class="st D" style="margin-left:4px">Áticos</span>' : ''}</td>
                       <td><b>${flFree.length}</b> / ${flAll.length}</td>
                       <td>${rooms}</td>
-                      <td>${eur(minR)} – ${eur(maxR)}</td>
+                      <td>${minR === maxR ? eur(minR) : `${eur(minR)} – ${eur(maxR)}`}</td>
                       <td>${avgM2} m²</td>
                       <td>${avgPm2} €/m²</td>
                     </tr>`;
@@ -3551,17 +3609,17 @@ function renderApp() {
 
         <aside class="alz-inspector" aria-label="Detalle de vivienda seleccionada">
           <div class="alz-insp-media" id="alzInspMedia">
-            <img src="${photos[0].src}" alt="${esc(cur.ref)} · ${esc(cur.nombre)}">
+            <img src="${esc(photos[0].src)}" alt="${esc(cur.ref)} · ${esc(cur.nombre)}">
             <div class="alz-insp-top">
-              <span class="ref-badge">${cur.ref} · ${cur.portal} · P${cur.pl}</span>
+              <span class="ref-badge">${esc(cur.ref)} · ${esc(cur.portal)} · ${floorShortLabel(cur.pl)}</span>
               <span class="st ${cur.st}">${stLabel(cur.st)}</span>
             </div>
             <div class="alz-insp-bot">
               <div>
                 <b>${esc(cur.nombre)}</b>
-                <small>${cur.h} dormitorios · ${cur.m2} m² · Orientación ${cur.ori}</small>
+                <small>${cur.h} dormitorios · ${cur.m2} m² · Orientación ${esc(cur.ori)}</small>
               </div>
-              <span class="ref-badge">${photos.length} fotos</span>
+              <span class="ref-badge">${photos.length} foto${photos.length === 1 ? '' : 's'}</span>
             </div>
           </div>
           <div class="alz-insp-body">
@@ -3576,10 +3634,11 @@ function renderApp() {
             </div>
             ${renderInspectorBody()}
             <div class="alz-insp-actions">
-              <a class="btn g sm" href="#ficha/${cur.ref}">Ver ficha completa</a>
-              <button type="button" class="btn g sm btn-cmp ${inCmp ? 'on' : ''}" data-cmp="${cur.ref}">${ICO('columns')} ${inCmp ? 'En comparador' : 'Comparar'}</button>
+              <a class="btn g sm" href="#ficha/${esc(cur.ref)}">Ver ficha completa</a>
+              <button type="button" class="btn g sm btn-cmp ${inCmp ? 'on' : ''}" data-cmp="${esc(cur.ref)}">${ICO('columns')} ${inCmp ? 'En comparador' : 'Comparar'}</button>
+              ${isAdmin ? `<button type="button" class="btn g sm full" id="alzEditUnitBtn">${ICO('edit')} Editar ${esc(cur.ref)} (piso, extras, fotos, plano)</button>` : ''}
               ${cur.st === 'D'
-                ? `<button type="button" class="btn sm full" data-quick-apply="${cur.ref}">Solicitar ${cur.ref} ahora →</button>`
+                ? `<button type="button" class="btn sm full" data-quick-apply="${esc(cur.ref)}">Solicitar ${esc(cur.ref)} ahora →</button>`
                 : `<button type="button" class="btn g sm full" disabled style="opacity:.6;cursor:not-allowed">Vivienda ${stLabel(cur.st).toLowerCase()}</button>`}
             </div>
           </div>
@@ -3587,6 +3646,22 @@ function renderApp() {
       </div>`;
 
     root.onclick = e => {
+      if (e.target.closest('#alzAddUnitBtn')) {
+        openUnitEditorModal(null, saved => {
+          previewRef = saved.ref;
+          if (activePortal !== 'ALL' && activePortal !== saved.portal) activePortal = 'ALL';
+          renderAlzadoPage();
+        });
+        return;
+      }
+      if (e.target.closest('#alzEditUnitBtn')) {
+        openUnitEditorModal(cur, saved => {
+          previewRef = saved.ref;
+          if (activePortal !== 'ALL' && activePortal !== saved.portal) activePortal = 'ALL';
+          renderAlzadoPage();
+        });
+        return;
+      }
       const pBtn = e.target.closest('[data-alz-portal]');
       if (pBtn) { activePortal = pBtn.dataset.alzPortal; renderAlzadoPage(); return; }
       const mBtn = e.target.closest('[data-alz-mode]');
@@ -3596,7 +3671,7 @@ function renderApp() {
       const flBtn = e.target.closest('[data-alz-fl]');
       if (flBtn) {
         const fl = Number(flBtn.dataset.alzFl);
-        alzadoFilters.fl = alzadoFilters.fl === fl ? 0 : fl;
+        alzadoFilters.fl = alzadoFilters.fl === fl ? null : fl;
         renderAlzadoPage();
         return;
       }
@@ -3605,7 +3680,7 @@ function renderApp() {
       const itab = e.target.closest('[data-alz-itab]');
       if (itab) { alzadoInspTab = itab.dataset.alzItab; renderAlzadoPage(); return; }
       if (e.target.closest('#alzResetBtn')) {
-        alzadoFilters = { st: 'ALL', h: 0, ori: 'ALL', maxR: 0, fl: 0, t: false, g: false, tr: false };
+        alzadoFilters = { st: 'ALL', h: 0, ori: 'ALL', maxR: 0, fl: null, t: false, g: false, tr: false };
         renderAlzadoPage();
         return;
       }
@@ -3720,12 +3795,14 @@ function renderApp() {
     const promoPhotos = getPromoPhotos();
     const dispNow = V.filter(v => v.st === 'D');
     const minNow = dispNow.length ? Math.min(...dispNow.map(v => v.r)) : 890;
+    const roomCounts = [...new Set(V.map(v => Number(v.h)).filter(n => n > 0))].sort((a, b) => a - b);
+    const portals = [...new Set(V.map(v => String(v.portal || 'Portal A').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
     if ($('heroBtnUnits')) $('heroBtnUnits').textContent = `Explorar las ${V.length} viviendas`;
     if ($('homeStats')) {
       $('homeStats').innerHTML = `
         <div><b>${V.length}</b><span>Viviendas en promoción</span></div>
         <div><b>${dispNow.length}</b><span>Disponibles ahora</span></div>
-        <div><b>2 · 3 · 4</b><span>Habitaciones</span></div>
+        <div><b>${roomCounts.length ? roomCounts.join(' · ') : '2 · 3 · 4'}</b><span>Habitaciones</span></div>
         <div><b>desde ${eur(minNow)}</b><span>Renta mensual</span></div>`;
     }
     if ($('homeFeatured')) {
@@ -3769,7 +3846,7 @@ function renderApp() {
         </div>
         <div class="hero-visual-foot">
           <div class="hero-visual-meta">
-            <span>${ICO('building')} Portales A, B y C</span>
+            <span>${ICO('building')} ${esc(portals.length <= 3 ? portals.join(', ') : `${portals.length} Portales`)}</span>
             <span>${ICO('sun')} Terrazas y Áticos</span>
             <span>${ICO('car')} Garaje + Trastero</span>
           </div>
@@ -3877,19 +3954,29 @@ function renderApp() {
     }
   };
 
-  const F = { h: 0, t: false, g: false, onlyD: false };
+  const F = { h: 0, t: false, g: false, tr: false, onlyD: false };
   window.renderCatalog = () => {
+    const fPlEl = $('fPl');
+    if (fPlEl) {
+      const prevVal = fPlEl.value || 'ALL';
+      const dynFloors = [...new Set(V.map(v => Number(v.pl)).filter(Number.isFinite))].sort((a, b) => a - b);
+      fPlEl.innerHTML = `<option value="ALL">Todas las plantas</option>` +
+        dynFloors.map(p => `<option value="${p}">${p === 0 ? 'Planta Baja (0)' : `Planta ${p}`}</option>`).join('');
+      fPlEl.value = prevVal === 'ALL' || dynFloors.includes(Number(prevVal)) ? prevVal : 'ALL';
+    }
     const q = ($('q')?.value || '').trim().toUpperCase();
     const mx = Number($('mx')?.value || 9999);
-    const pl = Number($('fPl')?.value || 0);
+    const plRaw = $('fPl')?.value ?? 'ALL';
+    const plFilter = plRaw === 'ALL' ? null : Number(plRaw);
     const res = V.filter(v =>
-      (!F.h || v.h === F.h) &&
+      (!F.h || Number(v.h) === F.h) &&
       (!F.t || v.t) &&
       (!F.g || v.g) &&
+      (!F.tr || v.tr) &&
       (!F.onlyD || v.st === 'D') &&
-      (!pl || v.pl === pl) &&
-      v.r <= mx &&
-      (v.ref.includes(q) || v.portal.toUpperCase().includes(q))
+      (plFilter === null || Number(v.pl) === plFilter) &&
+      Number(v.r) <= mx &&
+      (String(v.ref || '').toUpperCase().includes(q) || String(v.portal || '').toUpperCase().includes(q) || String(v.nombre || '').toUpperCase().includes(q))
     );
     $('gr').innerHTML = res.length ? res.map(propertyCard).join('') : '<div class="panel"><p class="m">No hay viviendas que coincidan con esos filtros.</p></div>';
   };
@@ -4165,7 +4252,7 @@ function renderFicha(ref) {
         <div class="gallery-main" id="galMain" title="Pulsa para ampliar en pantalla completa">
           <img id="galImg" src="${photos[0].src}" alt="${esc(photos[0].caption)}">
           <div class="gallery-overlay">
-            <span class="ref-badge">${v.ref} · ${v.portal} · Planta ${v.pl}</span>
+            <span class="ref-badge">${esc(v.ref)} · ${esc(v.portal)} · ${floorFullLabel(v.pl)}</span>
             <span class="st ${v.st}">${stLabel(v.st)}</span>
           </div>
         </div>
@@ -4194,12 +4281,12 @@ function renderFicha(ref) {
     <div class="panel">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
         <div>
-          <span class="tag" style="margin-bottom:6px">${v.portal} · PLANTA ${v.pl}</span>
-          <h2 style="font-size:1.72rem">${v.ref} · ${esc(v.nombre || (v.h + ' Habitaciones'))}</h2>
+          <span class="tag" style="margin-bottom:6px">${esc(v.portal)} · ${floorFullLabel(v.pl).toUpperCase()}</span>
+          <h2 style="font-size:1.72rem">${esc(v.ref)} · ${esc(v.nombre || (v.h + ' Habitaciones'))}</h2>
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div class="price" style="font-size:1.7rem">${eur(v.r)}<small class="m">/mes</small></div>
-          <span class="cee-badge">CEE: ${v.cee}</span>
+          <span class="cee-badge">CEE: ${esc(v.cee)}</span>
         </div>
       </div>
 
@@ -4208,7 +4295,7 @@ function renderFicha(ref) {
       <div class="specs-grid">
         <div class="spec-box"><small>Superficie</small><b>${v.m2} m²</b></div>
         <div class="spec-box"><small>Distribución</small><b>${v.h} hab · ${v.b} baño${v.b > 1 ? 's' : ''}</b></div>
-        <div class="spec-box"><small>Planta / Ascensor</small><b>Planta ${v.pl} · Sí</b></div>
+        <div class="spec-box"><small>Planta / Ascensor</small><b>${floorFullLabel(v.pl)} · Sí</b></div>
         <div class="spec-box"><small>Orientación</small><b>${v.ori}</b></div>
         <div class="spec-box"><small>Terraza</small><b>${v.t ? 'Sí, incluida' : 'No'}</b></div>
         <div class="spec-box"><small>Garaje y Trastero</small><b>${v.g ? 'Garaje sí' : 'Sin garaje'} · ${v.tr ? 'Trastero sí' : 'Sin trastero'}</b></div>
@@ -4260,7 +4347,7 @@ function renderFicha(ref) {
     } else {
       currentSlide = Number(s);
       const ph = photos[currentSlide];
-      $('galMain').innerHTML = `<img id="galImg" src="${ph.src}" alt="${esc(ph.caption)}"><div class="gallery-overlay"><span class="ref-badge">${v.ref} · ${v.portal} · Planta ${v.pl}</span><span class="st ${v.st}">${stLabel(v.st)}</span></div>`;
+      $('galMain').innerHTML = `<img id="galImg" src="${ph.src}" alt="${esc(ph.caption)}"><div class="gallery-overlay"><span class="ref-badge">${esc(v.ref)} · ${esc(v.portal)} · ${floorFullLabel(v.pl)}</span><span class="st ${v.st}">${stLabel(v.st)}</span></div>`;
       $('galCaption').textContent = ph.caption;
       $('galFile').textContent = ph.file;
     }
@@ -4761,6 +4848,8 @@ function openUnitEditorModal(existingUnit = null, onSaved = null) {
     } else {
       Object.assign(existingUnit, updatedUnit);
     }
+    previewRef = ref;
+    if (activePortal !== 'ALL' && activePortal !== portal) activePortal = 'ALL';
 
     closeModal();
     trackBgOp(cloudSaveUnit(isNew ? updatedUnit : existingUnit));
@@ -6056,8 +6145,7 @@ function renderAdmin(subTab) {
         dlg.close();
         SITE_CONTENT = mergeSiteContent(DEFAULT_SITE_CONTENT);
         saveSiteContent();
-        applySiteContent();
-        refreshInicio();
+        refreshAllPropertyViews();
         trackBgOp(cloudSaveSiteContent(SITE_CONTENT));
         renderAdmin('web');
         notify('Contenido web restaurado a valores originales');
@@ -6121,8 +6209,7 @@ function renderAdmin(subTab) {
 
       SITE_CONTENT = nextContent;
       saveSiteContent();
-      applySiteContent();
-      refreshInicio();
+      refreshAllPropertyViews();
       trackBgOp(cloudSaveSiteContent(SITE_CONTENT));
       notify('Contenido de la web guardado y publicado');
     };
