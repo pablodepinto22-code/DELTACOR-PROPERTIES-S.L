@@ -456,19 +456,44 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .chat-close{width:34px;height:34px;border-radius:4px;border:1px solid rgba(255,255,255,.18);background:transparent;color:inherit;display:grid;place-items:center;cursor:pointer;transition:background .14s}
 .chat-close:hover{background:rgba(255,255,255,.14)}
 
+.chat-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:6px 12px;background:var(--card2);border-bottom:1px solid var(--line)}
+.chat-tab{border:1px solid transparent;background:transparent;color:var(--mut);padding:7px 10px;border-radius:4px;font:600 .78rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;transition:background .14s,color .14s,border-color .14s;white-space:nowrap}
+.chat-tab:hover{color:var(--tx)}
+.chat-tab.on{background:var(--card);color:var(--tx);border-color:var(--line);box-shadow:0 1px 2px rgba(10,31,54,.06)}
+.chat-tab:focus-visible{outline:2px solid var(--b2);outline-offset:1px}
+.chat-pane{display:flex;flex-direction:column;flex:1;min-height:0}
+.chat-pane[hidden]{display:none}
+
 .chat-ctx{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 16px;background:var(--card2);border-bottom:1px solid var(--line);font-size:.76rem;color:var(--mut)}
 .chat-ctx[hidden]{display:none}
 .chat-ctx b{color:var(--tx);font-weight:700}
 .chat-link-btn{background:none;border:0;color:var(--b1);font:600 .75rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;padding:2px 4px;border-radius:3px;white-space:nowrap}
 .chat-link-btn:hover{text-decoration:underline}
 
-.chat-body{flex:1;min-height:140px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--bg)}
-.chat-msg{max-width:88%;padding:10px 12px;border-radius:6px;font-size:.84rem;line-height:1.5;word-wrap:break-word;white-space:pre-wrap}
+.chat-body{flex:1;min-height:160px;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.chat-msg{max-width:92%;padding:10px 12px;border-radius:6px;font-size:.84rem;line-height:1.5;word-wrap:break-word;white-space:pre-wrap}
 .chat-msg.bot{align-self:flex-start;background:var(--card);border:1px solid var(--line);color:var(--tx)}
 .chat-msg.user{align-self:flex-end;background:var(--b1);color:#fff;border:1px solid var(--b1)}
 .chat-msg.ok{align-self:flex-start;background:var(--ok-bg);color:var(--ok-tx);border:1px solid rgba(16,185,129,.28)}
 .chat-msg.err{align-self:flex-start;background:var(--bad-bg);color:var(--bad-tx);border:1px solid rgba(239,68,68,.28)}
 .chat-msg-meta{display:block;font-size:.69rem;margin-top:5px;opacity:.76;font-variant-numeric:tabular-nums}
+
+.calc-title{font-weight:700;font-size:.83rem;color:var(--tx);margin-bottom:6px;display:block}
+.calc-rows{display:flex;flex-direction:column;gap:4px;margin:6px 0;font-variant-numeric:tabular-nums}
+.calc-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:.8rem;padding:4px 0;border-bottom:1px dashed var(--line)}
+.calc-row:last-child{border-bottom:0}
+.calc-row span{color:var(--mut)}
+.calc-row b{color:var(--tx);font-weight:700;text-align:right}
+.calc-row.em b{color:var(--b1);font-size:.88rem}
+.calc-status{margin-top:6px;padding:7px 9px;border-radius:4px;font-size:.77rem;font-weight:600;border:1px solid var(--line)}
+.calc-status.ok{background:var(--ok-bg);color:var(--ok-tx);border-color:rgba(16,185,129,.3)}
+.calc-status.warn{background:var(--warn-bg);color:var(--warn-tx);border-color:rgba(245,158,11,.3)}
+.calc-status.bad{background:var(--bad-bg);color:var(--bad-tx);border-color:rgba(239,68,68,.3)}
+.calc-links{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.calc-unit-link{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 9px;border:1px solid var(--line);border-radius:4px;background:var(--card2);color:var(--tx);text-decoration:none;font-size:.78rem;font-weight:600;transition:border-color .14s,color .14s}
+.calc-unit-link:hover{border-color:var(--b1);color:var(--b1)}
+.calc-unit-link small{color:var(--mut);font-weight:500;font-variant-numeric:tabular-nums}
+.calc-actions{display:flex;justify-content:flex-end;margin-top:7px}
 
 .chat-quick{display:flex;flex-direction:column;gap:6px;margin-top:2px}
 .chat-quick-lbl{font-size:.72rem;color:var(--mut);font-weight:600}
@@ -476,6 +501,11 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .chat-quick-btn{text-align:left;padding:8px 11px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--tx);font:500 .79rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;transition:border-color .14s,background .14s,color .14s;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .chat-quick-btn:hover{border-color:var(--b1);color:var(--b1);background:var(--card2)}
 .chat-quick-btn span:last-child{color:var(--b1);font-weight:700;flex-shrink:0}
+
+.calc-form{padding:12px 14px;background:var(--card);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:7px}
+.calc-input-row{display:flex;gap:8px;align-items:center}
+.calc-input-row input{margin-top:0;flex:1;padding:9px 11px;font-size:.84rem;min-height:38px}
+.calc-hint{font-size:.71rem;color:var(--mut);line-height:1.35}
 
 .chat-form{padding:14px 16px 16px;background:var(--card);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:9px}
 .chat-id-summary{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.76rem;color:var(--mut);padding:6px 9px;background:var(--card2);border:1px solid var(--line);border-radius:4px}
@@ -496,7 +526,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 @media(max-width:540px){
   .chat-fab{right:14px;bottom:14px;width:48px;height:48px;padding:0;justify-content:center}
   .chat-fab .chat-fab-lbl{display:none}
-  .chat-panel{right:12px;left:12px;bottom:70px;width:auto;max-height:min(76vh,540px)}
+  .chat-panel{right:12px;left:12px;bottom:70px;width:auto;max-height:min(78vh,560px)}
   .chat-id-fields{grid-template-columns:1fr}
 }
 @media(prefers-reduced-motion:reduce){
@@ -545,29 +575,34 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 
 <dialog id="dlg"></dialog>
 
-<!-- Floating Quick-Inquiry Chat Widget (Web3Forms) -->
-<button class="chat-fab" id="chatFab" type="button" aria-expanded="false" aria-controls="chatPanel" aria-label="Abrir chat de consultas rápidas sobre la promoción de Móstoles">
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-  <span class="chat-fab-lbl">Consulta rápida</span>
+<!-- Floating Calculator Chatbot & Quick-Inquiry Widget (Web3Forms) -->
+<button class="chat-fab" id="chatFab" type="button" aria-expanded="false" aria-controls="chatPanel" aria-label="Abrir calculadora y chat de consultas sobre la promoción de Móstoles">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
+  <span class="chat-fab-lbl">Calculadora y chat</span>
 </button>
 
-<aside class="chat-panel" id="chatPanel" role="dialog" aria-label="Consultas rápidas sobre la promoción de Móstoles" hidden>
+<aside class="chat-panel" id="chatPanel" role="dialog" aria-label="Calculadora y consultas de la promoción de Móstoles" hidden>
   <div class="chat-hd">
     <div class="chat-hd-info">
       <span class="chat-hd-logo" id="chatLogo" aria-hidden="true"></span>
       <div class="chat-hd-txt">
-        <b>Consultas · Móstoles</b>
-        <small>Respuesta por correo · Obra nueva</small>
+        <b id="chatTitle">Calculadora · Móstoles</b>
+        <small id="chatSubtitle">Solvencia 3×, fianza y cuotas al instante</small>
       </div>
     </div>
     <div class="chat-hd-acts">
       <button class="chat-close" id="chatClear" type="button" title="Reiniciar conversación" aria-label="Reiniciar conversación" hidden>
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
       </button>
-      <button class="chat-close" id="chatClose" type="button" title="Cerrar" aria-label="Cerrar chat">
+      <button class="chat-close" id="chatClose" type="button" title="Cerrar" aria-label="Cerrar asistente">
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
+  </div>
+
+  <div class="chat-tabs" role="tablist" aria-label="Modo del asistente">
+    <button class="chat-tab on" id="chatTabCalc" type="button" role="tab" aria-selected="true" aria-controls="chatPaneCalc">Calculadora</button>
+    <button class="chat-tab" id="chatTabMail" type="button" role="tab" aria-selected="false" aria-controls="chatPaneMail">Enviar consulta</button>
   </div>
 
   <div class="chat-ctx" id="chatCtx" hidden>
@@ -575,34 +610,48 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
     <button class="chat-link-btn" id="chatCtxUnlink" type="button">Quitar</button>
   </div>
 
-  <div class="chat-body" id="chatBody" aria-live="polite"></div>
+  <!-- Tab 1: Chatbot Calculadora -->
+  <div class="chat-pane" id="chatPaneCalc" role="tabpanel" aria-labelledby="chatTabCalc">
+    <div class="chat-body" id="calcBody" aria-live="polite"></div>
+    <form class="calc-form" id="calcForm" novalidate>
+      <div class="calc-input-row">
+        <input id="calcInput" type="text" maxlength="200" autocomplete="off" placeholder="Ej: 3200€, REF-04, 1200 entre 2, 1150*12…">
+        <button class="btn sm chat-send" type="submit">Calcular</button>
+      </div>
+      <span class="calc-hint">Introduce tus ingresos, una referencia (REF-01…45), fianza o una operación.</span>
+    </form>
+  </div>
 
-  <form class="chat-form" id="chatForm" novalidate>
-    <input type="text" name="botcheck" id="chatBotcheck" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <div class="chat-id-summary" id="chatIdSummary" hidden>
-      <span id="chatIdSummaryText"></span>
-      <button class="chat-link-btn" id="chatEditId" type="button">Editar datos</button>
-    </div>
-    <div class="chat-id-fields" id="chatIdFields">
-      <label class="chat-field">Nombre *
-        <input id="chatName" type="text" maxlength="120" required autocomplete="name" placeholder="Tu nombre">
+  <!-- Tab 2: Consulta por correo (Web3Forms) -->
+  <div class="chat-pane" id="chatPaneMail" role="tabpanel" aria-labelledby="chatTabMail" hidden>
+    <div class="chat-body" id="chatBody" aria-live="polite"></div>
+    <form class="chat-form" id="chatForm" novalidate>
+      <input type="text" name="botcheck" id="chatBotcheck" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="chat-id-summary" id="chatIdSummary" hidden>
+        <span id="chatIdSummaryText"></span>
+        <button class="chat-link-btn" id="chatEditId" type="button">Editar datos</button>
+      </div>
+      <div class="chat-id-fields" id="chatIdFields">
+        <label class="chat-field">Nombre *
+          <input id="chatName" type="text" maxlength="120" required autocomplete="name" placeholder="Tu nombre">
+        </label>
+        <label class="chat-field">Email *
+          <input id="chatEmail" type="email" maxlength="180" required autocomplete="email" placeholder="tu@email.com">
+        </label>
+        <label class="chat-field full">Teléfono (opcional)
+          <input id="chatPhone" type="tel" maxlength="30" autocomplete="tel" placeholder="+34 600 000 000">
+        </label>
+      </div>
+      <label class="chat-field">Tu pregunta *
+        <textarea id="chatMsg" rows="2" maxlength="1500" required placeholder="Pregúntanos sobre precios, requisitos, garaje o visitas…"></textarea>
       </label>
-      <label class="chat-field">Email *
-        <input id="chatEmail" type="email" maxlength="180" required autocomplete="email" placeholder="tu@email.com">
-      </label>
-      <label class="chat-field full">Teléfono (opcional)
-        <input id="chatPhone" type="tel" maxlength="30" autocomplete="tel" placeholder="+34 600 000 000">
-      </label>
-    </div>
-    <label class="chat-field">Tu pregunta *
-      <textarea id="chatMsg" rows="2" maxlength="1500" required placeholder="Pregúntanos sobre precios, requisitos, garaje o visitas…"></textarea>
-    </label>
-    <div class="chat-err" id="chatErr" role="alert" hidden></div>
-    <div class="chat-foot-row">
-      <span class="chat-note">Envío directo al equipo de INVERCOR</span>
-      <button class="btn sm chat-send" id="chatSend" type="submit">Enviar</button>
-    </div>
-  </form>
+      <div class="chat-err" id="chatErr" role="alert" hidden></div>
+      <div class="chat-foot-row">
+        <span class="chat-note">Envío directo al equipo de INVERCOR</span>
+        <button class="btn sm chat-send" id="chatSend" type="submit">Enviar</button>
+      </div>
+    </form>
+  </div>
 </aside>
 
 <script type="module">
@@ -3777,42 +3826,35 @@ function renderAdmin(subTab) {
   if (adminTab === 'config') {
     const c = getCfg();
     body.innerHTML = `
-    <div class="split">
-      <div class="panel">
-        <h3>Google Sheets y Dominio del Portal</h3>
-        <form id="cfgForm" style="margin-top:12px">
-          <label>Enlace de tu hoja de Google Sheets (resumen de candidaturas)
-            <input id="cfgSheetUrl" type="url" value="${esc(c.googleSheetUrl)}" placeholder="https://docs.google.com/spreadsheets/d/...">
-          </label>
-          <label>Conexión automática con Google Sheets (URL de Apps Script, opcional)
-            <input id="cfgSheets" type="url" value="${esc(c.appsScriptUrl)}" placeholder="https://script.google.com/macros/s/XXXXX/exec">
-          </label>
-          <label>Dominio web público (para generar los Códigos QR)
-            <input id="cfgUrl" type="url" value="${esc(c.baseUrl)}" required>
-          </label>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <button class="btn sm" type="submit">Guardar configuración</button>
-            ${c.googleSheetUrl ? `<a class="btn ok sm" href="${esc(c.googleSheetUrl)}" target="_blank" rel="noopener">${ICO('file')} Abrir Google Sheets</a>` : ''}
+    <div class="panel" style="max-width:680px">
+      <h3>Integraciones</h3>
+      <form id="cfgForm" style="margin-top:14px">
+        <label>Hoja de Google Sheets
+          <input id="cfgSheetUrl" type="url" value="${esc(c.googleSheetUrl)}" placeholder="https://docs.google.com/spreadsheets/d/...">
+        </label>
+        <label>Dominio web para Códigos QR
+          <input id="cfgUrl" type="url" value="${esc(c.baseUrl)}" required>
+        </label>
+        <details style="margin:12px 0 16px;padding:10px 14px;box-shadow:none;background:var(--card2)">
+          <summary style="font-size:.82rem;color:var(--mut)">Ajustes avanzados de sincronización</summary>
+          <div style="margin-top:12px">
+            <label>URL de Apps Script
+              <input id="cfgSheets" type="url" value="${esc(c.appsScriptUrl)}" placeholder="https://script.google.com/macros/s/XXXXX/exec">
+            </label>
+            <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v2</button>
           </div>
-        </form>
-      </div>
-
-      <div class="panel">
-        <h3>Sincronización incremental con Google Sheets (v2)</h3>
-        <p class="m" style="margin:6px 0 10px">Optimizado para miles de candidaturas: actualiza únicamente la celda o fila modificada mediante búsqueda directa (<code>TextFinder</code>) y lotes agrupados, sin borrar ni recargar el resto de filas.</p>
-        <ol class="m" style="padding-left:18px;display:grid;gap:6px;margin-bottom:14px">
-          <li>Crea o abre tu hoja en <b>Google Sheets</b> y pega su enlace en <b>Enlace de tu hoja de Google Sheets</b>.</li>
-          <li>Dentro de esa hoja ve a <b>Extensiones → Apps Script</b>, sustituye el código por la versión v2 del botón inferior y guarda.</li>
-          <li>Pulsa <b>Implementar → Administrar implementaciones</b> (o <i>Nueva implementación → Aplicación web</i>, acceso: <i>Cualquier usuario</i>) y actualiza la URL en <b>Conexión automática</b> si cambió.</li>
-        </ol>
-        <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v2 (Incremental)</button>
-      </div>
+        </details>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn sm" type="submit">Guardar cambios</button>
+          ${c.googleSheetUrl ? `<a class="btn ok sm" href="${esc(c.googleSheetUrl)}" target="_blank" rel="noopener">${ICO('file')} Abrir Google Sheets</a>` : ''}
+        </div>
+      </form>
     </div>`;
 
     $('copyAppsScriptBtn').onclick = async () => {
       try {
         await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-        notify('Código de Google Apps Script v2 (incremental) copiado al portapapeles');
+        notify('Código de Apps Script v2 copiado al portapapeles');
       } catch (_) {
         notify('No se pudo copiar automáticamente');
       }
@@ -3898,22 +3940,119 @@ $('bur').onclick = () => $('nl').classList.toggle('open');
 addEventListener('hashchange', route);
 
 /* ==========================================================================
-   CHAT FLOTANTE DE CONSULTAS RÁPIDAS (WEB3FORMS)
+   ASISTENTE FLOTANTE: CHATBOT CALCULADORA + CONSULTAS RÁPIDAS (WEB3FORMS)
    ========================================================================== */
 const CHAT_STORAGE_KEY = 'inv-chat-history-v1';
 const CHAT_USER_KEY = 'inv-chat-user-v1';
+const CALC_STORAGE_KEY = 'inv-calc-history-v1';
 const CHAT_QUICK_PROMPTS = [
   '¿Cuáles son los requisitos de solvencia y documentación para alquilar?',
   '¿Las viviendas de Móstoles incluyen plaza de garaje y terraza?',
   '¿Cuándo son las próximas visitas y la fecha prevista de entrega?',
   '¿Qué pisos de 2 o 3 habitaciones siguen disponibles ahora mismo?'
 ];
+const CALC_QUICK_ACTIONS = [
+  { label: 'Calcular renta máxima con 3.300 €/mes', query: 'Ingresos 3300€' },
+  { label: 'Gastos de entrada y fianza (1.100 €/mes)', query: 'Entrada para 1100€' },
+  { label: 'Dividir un alquiler de 1.200 € entre 2', query: '1200 entre 2' },
+  { label: 'Ver precios por 2, 3 y 4 habitaciones', query: 'Precios por habitaciones' }
+];
+
+/* Evaluador aritmético seguro (sin eval / Function) */
+function safeEvalMath(raw) {
+  const cleaned = String(raw || '')
+    .replace(/€/g, '')
+    .replace(/×/g, '*')
+    .replace(/÷/g, '/')
+    .replace(/(\d)\.(\d{3})(?=\D|$)/g, '$1$2')
+    .replace(/,/g, '.')
+    .trim();
+  if (!cleaned || !/^[0-9+\-*/().\s]+$/.test(cleaned)) return null;
+  if (!/[+\-*/]/.test(cleaned)) return null;
+
+  const tokens = cleaned.match(/\d+(?:\.\d+)?|[+\-*/()]/g);
+  if (!tokens || tokens.join('') !== cleaned.replace(/\s+/g, '')) return null;
+
+  let pos = 0;
+  const peek = () => tokens[pos];
+  const consume = () => tokens[pos++];
+
+  function parseExpr() {
+    let val = parseTerm();
+    while (peek() === '+' || peek() === '-') {
+      const op = consume();
+      const rhs = parseTerm();
+      val = op === '+' ? val + rhs : val - rhs;
+    }
+    return val;
+  }
+  function parseTerm() {
+    let val = parseFactor();
+    while (peek() === '*' || peek() === '/') {
+      const op = consume();
+      const rhs = parseFactor();
+      if (op === '/') {
+        if (rhs === 0) throw new Error('div0');
+        val /= rhs;
+      } else {
+        val *= rhs;
+      }
+    }
+    return val;
+  }
+  function parseFactor() {
+    if (peek() === '+') { consume(); return parseFactor(); }
+    if (peek() === '-') { consume(); return -parseFactor(); }
+    if (peek() === '(') {
+      consume();
+      const val = parseExpr();
+      if (consume() !== ')') throw new Error('paren');
+      return val;
+    }
+    const tok = consume();
+    const num = Number(tok);
+    if (!Number.isFinite(num)) throw new Error('nan');
+    return num;
+  }
+
+  try {
+    const result = parseExpr();
+    if (pos !== tokens.length || !Number.isFinite(result)) return null;
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+function extractAmounts(text) {
+  const normalized = String(text || '')
+    .replace(/\bref[-\s]?\d{1,2}\b/gi, ' ')
+    .replace(/\b[234]\s*(?:hab(?:itaciones)?|dorm(?:itorios)?)\b/gi, ' ')
+    .replace(/(\d)\.(\d{3})(?=\D|$)/g, '$1$2')
+    .replace(/(\d),(\d{1,2})(?=\D|$)/g, '$1.$2');
+  const matches = normalized.match(/\d+(?:\.\d+)?/g) || [];
+  return matches.map(Number).filter(n => Number.isFinite(n) && n > 0);
+}
+
+function fmtNum(n) {
+  const rounded = Math.round(n * 100) / 100;
+  return rounded.toLocaleString('es-ES', { maximumFractionDigits: 2 });
+}
 
 function initFloatingChat() {
   const fab = $('chatFab');
   const panel = $('chatPanel');
   const closeBtn = $('chatClose');
   const clearBtn = $('chatClear');
+  const titleEl = $('chatTitle');
+  const subEl = $('chatSubtitle');
+  const tabCalc = $('chatTabCalc');
+  const tabMail = $('chatTabMail');
+  const paneCalc = $('chatPaneCalc');
+  const paneMail = $('chatPaneMail');
+  const calcBody = $('calcBody');
+  const calcForm = $('calcForm');
+  const calcInput = $('calcInput');
   const body = $('chatBody');
   const form = $('chatForm');
   const nameIn = $('chatName');
@@ -3930,15 +4069,17 @@ function initFloatingChat() {
   const ctxText = $('chatCtxText');
   const ctxUnlink = $('chatCtxUnlink');
   const chatLogo = $('chatLogo');
-  if (!fab || !panel || !form) return;
+  if (!fab || !panel || !form || !calcForm) return;
 
   if (chatLogo) chatLogo.innerHTML = LOGO();
 
   let isOpen = false;
+  let activeTab = 'calc';
   let isSending = false;
   let linkedRef = '';
   let unlinkedManually = false;
   let editingIdentity = true;
+  let lastCalcIncome = 0;
 
   const ALLOWED_CHAT_ROLES = new Set(['user', 'ok', 'err', 'bot']);
   const loadHistory = () => {
@@ -3953,8 +4094,20 @@ function initFloatingChat() {
   };
   let history = loadHistory();
 
+  const loadCalcHistory = () => {
+    try {
+      const parsed = JSON.parse(sessionStorage.getItem(CALC_STORAGE_KEY) || '[]');
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(item => item && (item.role === 'user' || item.role === 'calc')).slice(-24);
+    } catch { return []; }
+  };
+  let calcHistory = loadCalcHistory();
+
   const saveHistory = () => {
     try { sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(history.slice(-20))); } catch {}
+  };
+  const saveCalcHistory = () => {
+    try { sessionStorage.setItem(CALC_STORAGE_KEY, JSON.stringify(calcHistory.slice(-24))); } catch {}
   };
 
   const loadSavedContact = () => {
@@ -3963,15 +4116,9 @@ function initFloatingChat() {
 
   const prefillIdentity = () => {
     const saved = loadSavedContact();
-    if (!nameIn.value.trim()) {
-      nameIn.value = saved.name || (CURRENT_USER?.name || '');
-    }
-    if (!emailIn.value.trim()) {
-      emailIn.value = saved.email || (CURRENT_USER?.email || '');
-    }
-    if (!phoneIn.value.trim() && saved.phone) {
-      phoneIn.value = saved.phone;
-    }
+    if (!nameIn.value.trim()) nameIn.value = saved.name || (CURRENT_USER?.name || '');
+    if (!emailIn.value.trim()) emailIn.value = saved.email || (CURRENT_USER?.email || '');
+    if (!phoneIn.value.trim() && saved.phone) phoneIn.value = saved.phone;
     if (history.some(m => m.role === 'user') && nameIn.value.trim() && emailIn.value.trim()) {
       editingIdentity = false;
     }
@@ -4000,6 +4147,40 @@ function initFloatingChat() {
     panel.classList.toggle('has-cmp', active);
   };
 
+  const syncClearButton = () => {
+    clearBtn.hidden = activeTab === 'calc' ? calcHistory.length === 0 : history.length === 0;
+  };
+
+  const setActiveTab = tab => {
+    activeTab = tab === 'mail' ? 'mail' : 'calc';
+    const isCalc = activeTab === 'calc';
+    tabCalc.classList.toggle('on', isCalc);
+    tabMail.classList.toggle('on', !isCalc);
+    tabCalc.setAttribute('aria-selected', String(isCalc));
+    tabMail.setAttribute('aria-selected', String(!isCalc));
+    paneCalc.hidden = !isCalc;
+    paneMail.hidden = isCalc;
+    titleEl.textContent = isCalc ? 'Calculadora · Móstoles' : 'Consultas · Móstoles';
+    subEl.textContent = isCalc
+      ? 'Solvencia 3×, fianza y cuotas al instante'
+      : 'Respuesta directa por correo · Obra nueva';
+    syncClearButton();
+    if (isOpen) {
+      setTimeout(() => {
+        if (isCalc) {
+          calcBody.scrollTop = calcBody.scrollHeight;
+          calcInput.focus();
+        } else {
+          body.scrollTop = body.scrollHeight;
+          if (!editingIdentity) msgIn.focus();
+          else if (!nameIn.value.trim()) nameIn.focus();
+          else if (!emailIn.value.trim()) emailIn.focus();
+          else msgIn.focus();
+        }
+      }, 40);
+    }
+  };
+
   const syncRouteContext = () => {
     const raw = location.hash.slice(1) || 'inicio';
     const [routeName, param] = raw.split('/');
@@ -4009,7 +4190,7 @@ function initFloatingChat() {
         if (linkedRef !== unit.ref) unlinkedManually = false;
         linkedRef = unit.ref;
         ctxText.textContent = '';
-        const prefix = document.createTextNode('Sobre ');
+        const prefix = document.createTextNode('Vivienda activa: ');
         const strong = document.createElement('b');
         strong.textContent = `${unit.ref} · ${unit.h} hab. (${eur(unit.r)}/mes)`;
         ctxText.append(prefix, strong);
@@ -4032,6 +4213,338 @@ function initFloatingChat() {
       errBox.textContent = msg;
       errBox.hidden = false;
     }
+  };
+
+  const handoffToMail = summaryText => {
+    msgIn.value = summaryText;
+    setError('');
+    setActiveTab('mail');
+  };
+
+  /* Motor conversacional de cálculos inmobiliarios y aritméticos */
+  function evaluateCalcQuery(rawQuery) {
+    const q = String(rawQuery || '').trim();
+    const low = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const activeUnit = linkedRef ? V.find(v => v.ref === linkedRef) : null;
+    const availUnits = V.filter(v => v.st === 'D').sort((a, b) => a.r - b.r);
+
+    // 1. Expresión aritmética pura (ej: 1200 * 12, (1800 + 1600) / 3)
+    const mathVal = safeEvalMath(q);
+    if (mathVal !== null) {
+      const rows = [{ label: 'Operación', value: q }, { label: 'Resultado', value: fmtNum(mathVal), em: true }];
+      if (mathVal >= 1500 && mathVal <= 20000) {
+        rows.push({ label: 'Si son ingresos/mes (ratio 3×)', value: `hasta ${eur(Math.floor(mathVal / 3))}/mes` });
+      } else if (mathVal >= 600 && mathVal < 1500) {
+        rows.push({ label: 'Si es renta mensual (× 12 meses)', value: eur(Math.round(mathVal * 12)) });
+        rows.push({ label: 'Ingresos mínimos 3×', value: `${eur(Math.round(mathVal * 3))}/mes` });
+      }
+      return {
+        title: 'Resultado del cálculo',
+        rows,
+        handoff: `Hola, he realizado el cálculo (${q} = ${fmtNum(mathVal)}) y me gustaría consultar opciones en la promoción de Móstoles.`
+      };
+    }
+
+    // 2. Referencia concreta (REF-01 .. REF-45)
+    const refMatch = q.match(/\bREF[-\s]?0?(\d{1,2})\b/i);
+    const matchedUnit = refMatch
+      ? V.find(v => v.ref === `REF-${String(refMatch[1]).padStart(2, '0')}`)
+      : null;
+
+    // 3. Dividir alquiler entre personas (ej: "1200 entre 2", "REF-04 entre 3")
+    const splitMatch = low.match(/(?:entre|para|dividir\s+entre|compartir\s+entre)\s*(\d+)\b/);
+    if (splitMatch || /\b(dividir|compartir|por persona)\b/.test(low)) {
+      const people = Math.min(10, Math.max(2, Number(splitMatch ? splitMatch[1] : 2)));
+      const nums = extractAmounts(q).filter(n => n >= 400);
+      const targetUnit = matchedUnit || activeUnit || availUnits[0];
+      const rent = nums[0] || (targetUnit ? targetUnit.r : 1100);
+      const perPerson = rent / people;
+      const totalEntry = rent * 3;
+      const entryPerPerson = totalEntry / people;
+      return {
+        title: `Alquiler de ${eur(rent)}/mes entre ${people} personas`,
+        rows: [
+          { label: 'Cuota mensual por persona', value: `${fmtNum(perPerson)} €/mes`, em: true },
+          { label: 'Entrada total a la firma (3 meses)', value: eur(totalEntry) },
+          { label: 'Entrada inicial por persona', value: `${fmtNum(entryPerPerson)} €` },
+          { label: 'Ingresos mínimos por persona (3×)', value: `${fmtNum(perPerson * 3)} €/mes` }
+        ],
+        units: targetUnit && !nums[0] ? [targetUnit] : [],
+        handoff: `Hola, estamos valorando compartir un piso de ${eur(rent)}/mes entre ${people} personas (${fmtNum(perPerson)} €/persona). ¿Qué viviendas disponibles nos recomendáis?`
+      };
+    }
+
+    // 4. Ficha o simulación de una referencia concreta
+    if (matchedUnit) {
+      const nums = extractAmounts(q).filter(n => n >= 500);
+      const income = nums[0] || lastCalcIncome;
+      if (nums[0]) lastCalcIncome = nums[0];
+      const fianza = matchedUnit.r;
+      const garantia = matchedUnit.r;
+      const entrada = matchedUnit.r + fianza + garantia;
+      const reqIncome = matchedUnit.r * 3;
+      const rows = [
+        { label: 'Vivienda', value: `${matchedUnit.portal} · Planta ${matchedUnit.pl} · ${matchedUnit.h} hab · ${matchedUnit.m2} m²` },
+        { label: 'Renta mensual', value: `${eur(matchedUnit.r)}/mes (${(matchedUnit.r / matchedUnit.m2).toFixed(1)} €/m²)`, em: true },
+        { label: '1.er mes + fianza + garantía', value: eur(entrada) },
+        { label: 'Ingresos mínimos (ratio 3×)', value: `${eur(reqIncome)}/mes` }
+      ];
+      let status = null;
+      if (income > 0) {
+        const pct = Math.round((matchedUnit.r / income) * 100);
+        rows.push({ label: `Esfuerzo con ${eur(income)}/mes`, value: `${pct}% de tus ingresos` });
+        status = pct <= 33
+          ? { cls: 'ok', text: `Solvencia directa OK (${pct}%). Cumples el ratio 3×.` }
+          : pct <= 40
+            ? { cls: 'warn', text: `Ratio ajustado (${pct}%). Podría requerir aval o cotitular.` }
+            : { cls: 'bad', text: `Esfuerzo elevado (${pct}%). Se recomiendan ingresos ≥ ${eur(reqIncome)}/mes.` };
+      }
+      return {
+        title: `Cálculo para ${matchedUnit.ref} (${matchedUnit.st === 'D' ? 'Disponible' : matchedUnit.st === 'R' ? 'Reservada' : 'Alquilada'})`,
+        rows,
+        status,
+        units: [matchedUnit],
+        handoff: `Hola, he calculado los costes de ${matchedUnit.ref} (${eur(matchedUnit.r)}/mes, entrada ${eur(entrada)}) y me gustaría recibir más información.`
+      };
+    }
+
+    // 5. Gastos de entrada, fianza o firma
+    if (/\b(entrada|fianza|garantia|firma|inicial|deposito)\b/.test(low)) {
+      const nums = extractAmounts(q).filter(n => n >= 400);
+      const unitForEntry = !nums.length ? (activeUnit || availUnits[0]) : null;
+      const rent = nums[0] || (unitForEntry ? unitForEntry.r : 1100);
+      const total = rent * 3;
+      return {
+        title: `Desglose de entrada para ${eur(rent)}/mes`,
+        rows: [
+          { label: '1.ª mensualidad', value: eur(rent) },
+          { label: 'Fianza legal (1 mes · AVS Madrid)', value: eur(rent) },
+          { label: 'Garantía adicional (1 mes)', value: eur(rent) },
+          { label: 'Total estimado a la firma', value: eur(total), em: true },
+          { label: 'Coste anual de renta (12 meses)', value: eur(rent * 12) },
+          { label: 'Ingresos mínimos recomendados (3×)', value: `${eur(rent * 3)}/mes` }
+        ],
+        units: unitForEntry ? [unitForEntry] : [],
+        handoff: `Hola, he calculado los gastos de entrada para una renta de ${eur(rent)}/mes (total estimado ${eur(total)}) y tengo una duda sobre las garantías.`
+      };
+    }
+
+    // 6. Consulta de precios por habitaciones o disponibles
+    const habMatch = low.match(/\b([234])\s*(?:hab|dorm|cuart)/);
+    if (habMatch || /\b(habitacion|dormitorio|precio|barat|disponible|catalogo)\b/.test(low)) {
+      const targetH = habMatch ? Number(habMatch[1]) : 0;
+      const groups = targetH ? [targetH] : [2, 3, 4];
+      const rows = [];
+      groups.forEach(h => {
+        const list = availUnits.filter(v => v.h === h);
+        if (list.length) {
+          const minR = list[0].r;
+          const maxR = list[list.length - 1].r;
+          const range = minR === maxR ? `${eur(minR)}/mes` : `${eur(minR)} – ${eur(maxR)}/mes`;
+          rows.push({ label: `${h} hab. (${list.length} disp.)`, value: `${range} · 3× desde ${eur(minR * 3)}` });
+        } else {
+          rows.push({ label: `${h} hab.`, value: 'Sin unidades libres ahora' });
+        }
+      });
+      const sample = (targetH ? availUnits.filter(v => v.h === targetH) : availUnits).slice(0, 3);
+      return {
+        title: targetH ? `Viviendas de ${targetH} habitaciones en Móstoles` : 'Precios y solvencia por tipología',
+        rows,
+        units: sample,
+        handoff: `Hola, he revisado los precios de viviendas ${targetH ? `de ${targetH} habitaciones` : 'disponibles'} en Móstoles y me gustaría consultar disponibilidad.`
+      };
+    }
+
+    // 7. Ingresos mensuales -> Solvencia 3x + viviendas compatibles en vivo
+    const amounts = extractAmounts(q);
+    if (amounts.length) {
+      const totalIncome = amounts.reduce((sum, n) => sum + n, 0);
+      if (totalIncome < 300) {
+        return {
+          title: 'Indica un importe mensual mayor',
+          text: 'Para calcular tu solvencia escribe tus ingresos netos mensuales (por ejemplo: 3200 o 1800 + 1500), o indica una referencia como REF-04.'
+        };
+      }
+      lastCalcIncome = totalIncome;
+      const maxDirect = Math.floor(totalIncome / 3);
+      const maxAval = Math.floor(totalIncome * 0.4);
+      const matching = availUnits.filter(v => v.r <= maxDirect);
+      const withAval = availUnits.filter(v => v.r > maxDirect && v.r <= maxAval);
+      const rows = [
+        { label: amounts.length > 1 ? `Ingresos sumados (${amounts.length} titulares)` : 'Ingresos netos mensuales', value: `${eur(totalIncome)}/mes` },
+        { label: 'Renta máxima directa (ratio 3×)', value: `${eur(maxDirect)}/mes`, em: true },
+        { label: 'Con aval / cotitular (hasta 40%)', value: `${eur(maxAval)}/mes` },
+        { label: 'Margen mensual libre tras renta 3×', value: `${eur(totalIncome - maxDirect)}/mes` },
+        { label: 'Viviendas disponibles compatibles', value: `${matching.length} directas${withAval.length ? ` (+${withAval.length} con aval)` : ''}` }
+      ];
+      let status;
+      if (matching.length > 0) {
+        status = { cls: 'ok', text: `Tienes ${matching.length} ${matching.length === 1 ? 'vivienda disponible' : 'viviendas disponibles'} con solvencia directa.` };
+      } else if (withAval.length > 0) {
+        status = { cls: 'warn', text: `No alcanzas 3× directa, pero encajas en ${withAval.length} viviendas aportando aval.` };
+      } else {
+        const minAvail = availUnits[0];
+        status = {
+          cls: 'bad',
+          text: minAvail
+            ? `La vivienda libre más económica parte de ${eur(minAvail.r)}/mes (requiere ${eur(minAvail.r * 3)}/mes en ratio 3×).`
+            : 'Actualmente no hay viviendas libres en ese rango.'
+        };
+      }
+      const bestUnits = (matching.length ? matching : withAval).slice(0, 3);
+      return {
+        title: 'Estudio orientativo de solvencia',
+        rows,
+        status,
+        units: bestUnits,
+        handoff: `Hola, con unos ingresos netos de ${eur(totalIncome)}/mes (renta máxima 3× de ${eur(maxDirect)}/mes) me gustaría consultar qué viviendas disponibles encajan mejor.`
+      };
+    }
+
+    // 8. Ayuda contextual
+    return {
+      title: '¿Qué puedes calcular aquí?',
+      text: 'Escribe cualquiera de estos ejemplos:\n• Tus ingresos: "3200€" o "1800 y 1500"\n• Una vivienda concreta: "REF-04" o "REF-04 con 3500€"\n• Gastos iniciales: "entrada para 1100€"\n• Compartir piso: "1200 entre 2"\n• Operaciones: "(1800 + 1500) / 3" o "1150 * 12"'
+    };
+  }
+
+  const renderCalcMessages = () => {
+    calcBody.textContent = '';
+
+    const welcome = document.createElement('div');
+    welcome.className = 'chat-msg bot';
+    welcome.textContent = 'Hola. Calcula al instante tu renta máxima (ratio 3×), gastos de entrada y fianza, cuota por persona o cualquier operación para las viviendas de Móstoles.';
+    calcBody.appendChild(welcome);
+
+    calcHistory.forEach(item => {
+      if (item.role === 'user') {
+        const el = document.createElement('div');
+        el.className = 'chat-msg user';
+        el.textContent = item.text;
+        if (item.time) {
+          const meta = document.createElement('span');
+          meta.className = 'chat-msg-meta';
+          meta.textContent = item.time;
+          el.appendChild(meta);
+        }
+        calcBody.appendChild(el);
+        return;
+      }
+
+      const card = document.createElement('div');
+      card.className = 'chat-msg bot';
+      const data = item.data || {};
+      if (data.title) {
+        const t = document.createElement('span');
+        t.className = 'calc-title';
+        t.textContent = data.title;
+        card.appendChild(t);
+      }
+      if (data.text) {
+        const p = document.createElement('div');
+        p.textContent = data.text;
+        card.appendChild(p);
+      }
+      if (Array.isArray(data.rows) && data.rows.length) {
+        const rowsWrap = document.createElement('div');
+        rowsWrap.className = 'calc-rows';
+        data.rows.forEach(r => {
+          const rowEl = document.createElement('div');
+          rowEl.className = 'calc-row' + (r.em ? ' em' : '');
+          const lbl = document.createElement('span');
+          lbl.textContent = r.label;
+          const val = document.createElement('b');
+          val.textContent = r.value;
+          rowEl.append(lbl, val);
+          rowsWrap.appendChild(rowEl);
+        });
+        card.appendChild(rowsWrap);
+      }
+      if (data.status && data.status.text) {
+        const st = document.createElement('div');
+        const cls = ['ok', 'warn', 'bad'].includes(data.status.cls) ? data.status.cls : 'ok';
+        st.className = `calc-status ${cls}`;
+        st.textContent = data.status.text;
+        card.appendChild(st);
+      }
+      if (Array.isArray(data.units) && data.units.length) {
+        const links = document.createElement('div');
+        links.className = 'calc-links';
+        data.units.forEach(u => {
+          if (!u || !u.ref) return;
+          const a = document.createElement('a');
+          a.className = 'calc-unit-link';
+          a.href = `#ficha/${encodeURIComponent(u.ref)}`;
+          const left = document.createElement('span');
+          left.textContent = `${u.ref} · ${u.h} hab. · ${u.m2} m²`;
+          const right = document.createElement('small');
+          right.textContent = `${eur(u.r)}/mes →`;
+          a.append(left, right);
+          links.appendChild(a);
+        });
+        card.appendChild(links);
+      }
+      if (data.handoff) {
+        const acts = document.createElement('div');
+        acts.className = 'calc-actions';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chat-link-btn';
+        btn.textContent = 'Consultar esto por correo →';
+        btn.onclick = () => handoffToMail(data.handoff);
+        acts.appendChild(btn);
+        card.appendChild(acts);
+      }
+      if (item.time) {
+        const meta = document.createElement('span');
+        meta.className = 'chat-msg-meta';
+        meta.textContent = item.time;
+        card.appendChild(meta);
+      }
+      calcBody.appendChild(card);
+    });
+
+    if (!calcHistory.length) {
+      const quickWrap = document.createElement('div');
+      quickWrap.className = 'chat-quick';
+      const lbl = document.createElement('span');
+      lbl.className = 'chat-quick-lbl';
+      lbl.textContent = 'Cálculos rápidos';
+      const grid = document.createElement('div');
+      grid.className = 'chat-quick-grid';
+
+      CALC_QUICK_ACTIONS.forEach(act => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chat-quick-btn';
+        const txt = document.createElement('span');
+        txt.textContent = act.label;
+        const arrow = document.createElement('span');
+        arrow.setAttribute('aria-hidden', 'true');
+        arrow.textContent = '→';
+        btn.append(txt, arrow);
+        btn.onclick = () => runCalcPrompt(act.query);
+        grid.appendChild(btn);
+      });
+
+      quickWrap.append(lbl, grid);
+      calcBody.appendChild(quickWrap);
+    }
+
+    syncClearButton();
+    calcBody.scrollTop = calcBody.scrollHeight;
+  };
+
+  const runCalcPrompt = text => {
+    const clean = String(text || '').trim();
+    if (!clean) return;
+    const now = formatNow();
+    const res = evaluateCalcQuery(clean);
+    const compactUnits = (res.units || []).map(u => ({ ref: u.ref, h: u.h, m2: u.m2, r: u.r }));
+    calcHistory.push({ role: 'user', text: clean, time: now });
+    calcHistory.push({ role: 'calc', data: { ...res, units: compactUnits }, time: now });
+    saveCalcHistory();
+    renderCalcMessages();
   };
 
   const renderMessages = () => {
@@ -4088,7 +4601,7 @@ function initFloatingChat() {
       body.appendChild(quickWrap);
     }
 
-    clearBtn.hidden = history.length === 0;
+    syncClearButton();
     body.scrollTop = body.scrollHeight;
   };
 
@@ -4100,12 +4613,7 @@ function initFloatingChat() {
     panel.hidden = false;
     requestAnimationFrame(() => panel.classList.add('open'));
     fab.setAttribute('aria-expanded', 'true');
-    setTimeout(() => {
-      if (!editingIdentity) msgIn.focus();
-      else if (!nameIn.value.trim()) nameIn.focus();
-      else if (!emailIn.value.trim()) emailIn.focus();
-      else msgIn.focus();
-    }, 60);
+    setActiveTab(activeTab);
   };
 
   const closeChat = () => {
@@ -4117,14 +4625,24 @@ function initFloatingChat() {
 
   fab.onclick = () => (isOpen ? closeChat() : openChat());
   closeBtn.onclick = closeChat;
+  tabCalc.onclick = () => setActiveTab('calc');
+  tabMail.onclick = () => setActiveTab('mail');
 
   clearBtn.onclick = () => {
-    history = [];
-    saveHistory();
-    editingIdentity = true;
-    syncIdentityView();
-    setError('');
-    renderMessages();
+    if (activeTab === 'calc') {
+      calcHistory = [];
+      lastCalcIncome = 0;
+      saveCalcHistory();
+      renderCalcMessages();
+      calcInput.focus();
+    } else {
+      history = [];
+      saveHistory();
+      editingIdentity = true;
+      syncIdentityView();
+      setError('');
+      renderMessages();
+    }
   };
 
   editIdBtn.onclick = () => {
@@ -4145,6 +4663,15 @@ function initFloatingChat() {
       fab.focus();
     }
   });
+
+  calcForm.onsubmit = e => {
+    e.preventDefault();
+    const val = calcInput.value.trim();
+    if (!val) return;
+    calcInput.value = '';
+    runCalcPrompt(val);
+    calcInput.focus();
+  };
 
   msgIn.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -4251,6 +4778,7 @@ function initFloatingChat() {
     cmpObserver.observe($('compareBar'), { attributes: true, attributeFilter: ['hidden'] });
   }
 
+  renderCalcMessages();
   renderMessages();
   syncRouteContext();
   syncCompareOffset();
