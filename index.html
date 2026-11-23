@@ -1916,11 +1916,115 @@ function getUnitPhotos(v) {
 }
 
 function refreshAllPropertyViews() {
+  const navViv = document.querySelector('#nl a[data-r="viviendas"]');
+  if (navViv) navViv.textContent = `Viviendas (${V.length})`;
+  if (CURRENT_USER?.role === 'admin' && typeof updateUserHeader === 'function') updateUserHeader();
+  if (window.applySiteContent) window.applySiteContent();
   if (window.renderCatalog) window.renderCatalog();
   if (window.refreshInicio) window.refreshInicio();
   if (window.renderBuildingExplorer) window.renderBuildingExplorer();
   if (window.renderAlzadoPage) window.renderAlzadoPage();
   if (window.renderCompareBar) window.renderCompareBar();
+}
+
+const DEFAULT_SITE_CONTENT = {
+  heroTag: 'PROMOCIÓN OBRA NUEVA · MÓSTOLES (MADRID)',
+  heroTitle: 'Tu nuevo hogar en Móstoles, con la garantía de INVERCOR',
+  heroSubtitle: 'Viviendas de alquiler a estrenar de 2, 3 y 4 dormitorios con terraza, garaje, trastero y máxima eficiencia energética. Consulta el alzado interactivo en tiempo real, compara hasta 3 pisos y postúlate con un único formulario.',
+  promoName: 'Residencial Los Álamos',
+  promoSubtitle: 'Imágenes arquitectónicas y especificaciones comunes de las viviendas de la promoción.',
+  heroBadge: 'PAU-4 · MÓSTOLES',
+  heroCardCaption: '3 Portales · 6 Plantas · Obra nueva con CEE A',
+  promoPhotos: [
+    { src: '', caption: 'Fachada Residencial Los Álamos · PAU-4 Móstoles', file: 'fachada_principal.jpg' },
+    { src: '', caption: 'Salón comedor exterior con terraza', file: 'salon_comedor.jpg' },
+    { src: '', caption: 'Cocina de diseño equipada con electrodomésticos', file: 'cocina_equipada.jpg' }
+  ],
+  calidades: [
+    { icon: 'pin', title: 'Ubicación PAU-4 Móstoles', text: 'Av. de los Álamos 14–18, junto a MetroSur, Cercanías C-5, Hospital Rey Juan Carlos y parques.' },
+    { icon: 'thermo', title: 'Aerotermia y confort', text: 'Climatización frío/calor por suelo radiante-refrescante y carpintería con rotura de puente térmico.' },
+    { icon: 'shield', title: 'Zonas comunes privadas', text: 'Control de acceso, zonas ajardinadas, ascensores de última generación y garaje subterráneo.' },
+    { icon: 'file', title: 'Certificación Energética A', text: 'Edificio de consumo energético casi nulo con certificado general y específico por inmueble.' }
+  ],
+  condiciones: [
+    { title: '1. Solvencia económica mínima (Ratio 3x)', text: 'La suma de ingresos netos mensuales demostrables de los titulares del contrato debe ser igual o superior a 3 veces la renta mensual de la vivienda elegida.' },
+    { title: '2. Fianza legal y garantías adicionales', text: 'Se solicita 1 mensualidad de fianza legal (depositada en la Agencia de Vivienda Social de la Comunidad de Madrid). En caso de no alcanzar el ratio de solvencia, valoramos positivamente la presentación de aval bancario o avalista personal de acreditada solvencia.' },
+    { title: '3. Documentación necesaria (solo tras pre-aprobación)', text: 'No pedimos documentación sensible en el primer paso. Únicamente si tu candidatura pasa a estado Pre-aprobada te habilitaremos el enlace seguro de Rentger para adjuntar DNI/NIE, últimas 3 nóminas, contrato laboral y vida laboral.' },
+    { title: '4. Fases hasta la firma y entrega de llaves', text: '① Envío de solicitud única → ② Estudio preliminar → ③ Pre-aprobación y subida documental en Rentger → ④ Visita presencial a la vivienda → ⑤ Firma de contrato y entrega.' }
+  ],
+  aboutTitle: 'INVERCOR PATRIMONIO S.L.',
+  aboutP1: 'Somos una sociedad patrimonialista especializada en el desarrollo, gestión y arrendamiento directo de promociones residenciales de obra nueva en la Comunidad de Madrid.',
+  aboutP2: 'Comercializamos nuestras viviendas bajo un modelo digital ágil: sin comisiones de agencia para el inquilino, con información técnica completa desde el primer minuto y seguimiento online del estado de cada candidatura.',
+  aboutBullets: [
+    { lead: 'Trato directo con la propiedad:', text: 'Sin honorarios de intermediación.' },
+    { lead: 'Viviendas a estrenar:', text: 'Entrega revisada con garantías de obra nueva.' },
+    { lead: 'Transparencia total:', text: 'Conoces desde el inicio la renta, condiciones y estado real de disponibilidad.' },
+    { lead: 'Escalabilidad:', text: 'Preparados para incorporar nuevas promociones residenciales.' }
+  ],
+  officeTitle: 'Oficina de atención · Móstoles',
+  officeAddress: 'Promoción Residencial INVERCOR, Móstoles (28931, Madrid)',
+  officeHours: 'Lunes a Viernes de 9:30 a 14:00 y de 16:30 a 19:30',
+  officeEmail: 'alquileres@invercorpatrimonio.es',
+  officePhone: '',
+  mapUrl: 'https://www.openstreetmap.org/export/embed.html?bbox=-3.8820%2C40.3120%2C-3.8500%2C40.3320&layer=mapnik&marker=40.3223%2C-3.8649',
+  legalTitular: 'En cumplimiento de la Ley 34/2002 (LSSI-CE), se informa que el presente sitio web es titularidad de INVERCOR PATRIMONIO S.L., con domicilio en Móstoles (Madrid).',
+  legalRgpd: 'Responsable: INVERCOR PATRIMONIO S.L. · Finalidad: Gestionar las solicitudes de arrendamiento, evaluar preliminarmente la solvencia económica y habilitar el acceso al área privada y plataforma documental Rentger. · Legitimación: Consentimiento expreso del interesado y aplicación de medidas precontractuales (art. 6.1.a y 6.1.b RGPD). · Destinatarios: Herramientas de gestión interna (Google Workspace/Sheets) y plataforma de validación documental Rentger únicamente en caso de pre-aprobación. · Derechos: Acceso, rectificación, supresión y oposición mediante solicitud escrita al responsable.',
+  legalCookies: 'Este sitio emplea almacenamiento técnico local necesario para conservar la sesión del candidato y analítica básica agregada de accesos desde cartelería QR.'
+};
+
+function mergeSiteContent(raw) {
+  const src = raw && typeof raw === 'object' ? raw : {};
+  const d = DEFAULT_SITE_CONTENT;
+  return {
+    ...d,
+    ...src,
+    promoPhotos: d.promoPhotos.map((defItem, i) => {
+      const incoming = Array.isArray(src.promoPhotos) ? src.promoPhotos[i] : null;
+      return {
+        src: incoming && isSafeImageSrc(incoming.src) ? String(incoming.src).trim() : '',
+        caption: incoming?.caption !== undefined ? String(incoming.caption) : defItem.caption,
+        file: incoming?.file || defItem.file
+      };
+    }),
+    calidades: d.calidades.map((defItem, i) => {
+      const incoming = Array.isArray(src.calidades) ? src.calidades[i] : null;
+      return {
+        icon: defItem.icon,
+        title: incoming?.title !== undefined ? String(incoming.title) : defItem.title,
+        text: incoming?.text !== undefined ? String(incoming.text) : defItem.text
+      };
+    }),
+    condiciones: d.condiciones.map((defItem, i) => {
+      const incoming = Array.isArray(src.condiciones) ? src.condiciones[i] : null;
+      return {
+        title: incoming?.title !== undefined ? String(incoming.title) : defItem.title,
+        text: incoming?.text !== undefined ? String(incoming.text) : defItem.text
+      };
+    }),
+    aboutBullets: d.aboutBullets.map((defItem, i) => {
+      const incoming = Array.isArray(src.aboutBullets) ? src.aboutBullets[i] : null;
+      return {
+        lead: incoming?.lead !== undefined ? String(incoming.lead) : defItem.lead,
+        text: incoming?.text !== undefined ? String(incoming.text) : defItem.text
+      };
+    })
+  };
+}
+
+let SITE_CONTENT = mergeSiteContent(safeGetJson('inv-site-content', null));
+const saveSiteContent = () => {
+  try { localStorage.setItem('inv-site-content', JSON.stringify(SITE_CONTENT)); } catch (_) {}
+};
+
+function getPromoPhotos() {
+  return SITE_CONTENT.promoPhotos.map((ph, idx) => {
+    const fallback = DEMO_PHOTOS[idx] || DEMO_PHOTOS[0];
+    return {
+      src: ph.src && isSafeImageSrc(ph.src) ? ph.src : fallback.src,
+      caption: ph.caption || fallback.caption,
+      file: ph.file || fallback.file
+    };
+  });
 }
 
 const DEFAULT_BLOG = [
@@ -2002,6 +2106,11 @@ async function cloudSaveConfig(cfg) {
   saveCfg(cfg);
   try { await setDoc(doc(fbDb, 'config', 'general'), cfg, { merge: true }); FB_DB_ONLINE = true; } catch (_) {}
 }
+async function cloudSaveSiteContent(content) {
+  SITE_CONTENT = mergeSiteContent(content);
+  saveSiteContent();
+  try { await setDoc(doc(fbDb, 'config', 'siteContent'), SITE_CONTENT); FB_DB_ONLINE = true; } catch (_) {}
+}
 async function cloudAddAdmin(email, name) {
   const em = email.trim().toLowerCase();
   const data = { email: em, name: name.trim() || em.split('@')[0], role: 'admin', createdAt: new Date().toISOString() };
@@ -2053,10 +2162,11 @@ async function cloudSeedAll() {
 
 async function syncPublicData() {
   try {
-    const [vSnap, bSnap, cSnap] = await Promise.all([
+    const [vSnap, bSnap, cSnap, scSnap] = await Promise.all([
       getDocs(collection(fbDb, 'viviendas')),
       getDocs(collection(fbDb, 'consejos')),
-      getDoc(doc(fbDb, 'config', 'general'))
+      getDoc(doc(fbDb, 'config', 'general')),
+      getDoc(doc(fbDb, 'config', 'siteContent'))
     ]);
     FB_DB_ONLINE = true;
     if (!vSnap.empty) {
@@ -2087,6 +2197,13 @@ async function syncPublicData() {
         web3formsKey: remote.web3formsKey || getCfg().web3formsKey || DEFAULT_CFG.web3formsKey
       });
     }
+    if (scSnap.exists()) {
+      SITE_CONTENT = mergeSiteContent(scSnap.data());
+      saveSiteContent();
+    }
+    if (window.applySiteContent) window.applySiteContent();
+    const navViv = document.querySelector('#nl a[data-r="viviendas"]');
+    if (navViv) navViv.textContent = `Viviendas (${V.length})`;
     route();
   } catch (_) {
     FB_DB_ONLINE = false;
@@ -2415,11 +2532,12 @@ function updateUserHeader() {
         <small>${esc(CURRENT_USER.email)}</small>
         <span class="role-tag">Administrador</span>
       </div>
-      <a href="#admin/inventario" data-menu-close>${ICO('building')} Inventario (45 Viviendas)</a>
+      <a href="#admin/inventario" data-menu-close>${ICO('building')} Inventario (${V.length} Viviendas)</a>
       <a href="#admin/candidatos" data-menu-close>${ICO('users')} Candidaturas y Solvencia</a>
       <a href="#admin/archivo" data-menu-close>${ICO('file')} Archivo</a>
       <a href="#admin/qrs" data-menu-close>${ICO('qr')} Generador Códigos QR</a>
       <a href="#admin/blog" data-menu-close>${ICO('edit')} Consejos / Blog</a>
+      <a href="#admin/web" data-menu-close>${ICO('file')} Contenido Web y Textos</a>
       <a href="#admin/usuarios" data-menu-close>${ICO('lock')} Usuarios y Roles</a>
       <a href="#admin/config" data-menu-close>${ICO('sliders')} Integraciones y Google Sheets</a>
       <hr>
@@ -2557,7 +2675,7 @@ document.addEventListener('click', e => {
    ========================================================================== */
 const NAV_ITEMS = [
   ['inicio', 'Inicio'],
-  ['viviendas', 'Viviendas (45)'],
+  ['viviendas', `Viviendas (${V.length})`],
   ['alzado', 'Alzado interactivo'],
   ['condiciones', 'Condiciones'],
   ['quienes', 'Quiénes somos'],
@@ -2578,19 +2696,39 @@ let alzadoFilters = { st: 'ALL', h: 0, ori: 'ALL', maxR: 0, fl: 0, t: false, g: 
 let adminTab = 'inventario';
 
 function buildPlanSvg(v) {
-  return `<svg viewBox="0 0 420 220" style="width:100%;max-width:410px;background:#ffffff;border:1px solid #cbd5e1;border-radius:4px;padding:10px">
-    <rect x="14" y="14" width="392" height="192" fill="#f8fafc" stroke="#0a1f36" stroke-width="3"/>
-    <line x1="175" y1="14" x2="175" y2="206" stroke="#0a1f36" stroke-width="2"/>
-    <line x1="175" y1="110" x2="406" y2="110" stroke="#0a1f36" stroke-width="2"/>
-    <line x1="14" y1="145" x2="175" y2="145" stroke="#0a1f36" stroke-width="1.5" stroke-dasharray="4 3"/>
-    <text x="94" y="82" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#007ec2">SALÓN - COMEDOR</text>
-    <text x="94" y="98" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5a6b7e">${Math.round(v.m2 * 0.34)} m² · Orientación ${v.ori}</text>
-    <text x="94" y="179" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#0a1f36">${v.t ? 'TERRAZA EXTERIOR' : 'COCINA EQUIPADA'}</text>
-    <text x="290" y="62" text-anchor="middle" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#0a1f36">DORMITORIO SUITE</text>
-    <text x="290" y="78" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5a6b7e">Armario empotrado · Baño</text>
-    <text x="290" y="158" text-anchor="middle" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#0a1f36">${v.h - 1} DORMITORIO(S) + ${v.b} BAÑO(S)</text>
-    <text x="290" y="174" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5a6b7e">Total construido: ${v.m2} m² · ${v.ref}</text>
-  </svg>`;
+  if (!v) return '';
+  if (v.customPlanUrl && isSafeImageSrc(v.customPlanUrl)) {
+    return `<div class="custom-plan-box" style="display:flex;flex-direction:column;align-items:center;gap:6px;width:100%">
+      <img src="${esc(v.customPlanUrl)}" alt="Plano técnico ${esc(v.ref)}" style="width:100%;max-width:560px;max-height:390px;object-fit:contain;background:#ffffff;border:1px solid #cbd5e1;border-radius:4px;padding:6px;display:block;margin:auto">
+      ${v.planNote ? `<div class="m" style="font-size:.78rem;text-align:center">${esc(v.planNote)}</div>` : ''}
+    </div>`;
+  }
+  const m2 = Number(v.m2) || 75;
+  const h = Number(v.h) || 2;
+  const b = Number(v.b) || 1;
+  const salonM2 = Number(v.planSalonM2) > 0 ? Number(v.planSalonM2) : Math.round(m2 * 0.34);
+  const leftLabel = String(v.planLeftLabel || (v.t ? 'TERRAZA EXTERIOR' : 'COCINA EQUIPADA')).trim().toUpperCase();
+  const suiteLabel = String(v.planSuiteLabel || 'DORMITORIO SUITE').trim().toUpperCase();
+  const extraDorms = Math.max(0, h - 1);
+  const dormLine = extraDorms > 0
+    ? `${extraDorms} DORMITORIO${extraDorms > 1 ? 'S' : ''} + ${b} BAÑO${b > 1 ? 'S' : ''}`
+    : `${b} BAÑO${b > 1 ? 'S' : ''} · ZONA SERVICIO`;
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:100%">
+    <svg viewBox="0 0 420 220" style="width:100%;max-width:410px;background:#ffffff;border:1px solid #cbd5e1;border-radius:4px;padding:10px">
+      <rect x="14" y="14" width="392" height="192" fill="#f8fafc" stroke="#0a1f36" stroke-width="3"/>
+      <line x1="175" y1="14" x2="175" y2="206" stroke="#0a1f36" stroke-width="2"/>
+      <line x1="175" y1="110" x2="406" y2="110" stroke="#0a1f36" stroke-width="2"/>
+      <line x1="14" y1="145" x2="175" y2="145" stroke="#0a1f36" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="94" y="82" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#007ec2">SALÓN - COMEDOR</text>
+      <text x="94" y="98" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5a6b7e">${esc(salonM2)} m² · Orientación ${esc(v.ori || 'Sur')}</text>
+      <text x="94" y="179" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#0a1f36">${esc(leftLabel)}</text>
+      <text x="290" y="62" text-anchor="middle" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#0a1f36">${esc(suiteLabel)}</text>
+      <text x="290" y="78" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5a6b7e">Armario empotrado · Baño</text>
+      <text x="290" y="158" text-anchor="middle" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#0a1f36">${esc(dormLine)}</text>
+      <text x="290" y="174" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5a6b7e">Total construido: ${esc(m2)} m² · ${esc(v.ref || '')}</text>
+    </svg>
+    ${v.planNote ? `<div class="m" style="font-size:.78rem;text-align:center">${esc(v.planNote)}</div>` : ''}
+  </div>`;
 }
 
 const stLabel = s => ({ D: 'Disponible', R: 'Reservada', A: 'Alquilada' }[s] || 'Disponible');
@@ -2921,11 +3059,11 @@ function renderApp() {
   <section class="view" id="v-inicio">
     <div class="hero">
       <div class="hero-copy">
-        <span class="tag">PROMOCIÓN OBRA NUEVA · MÓSTOLES (MADRID)</span>
-        <h1>Tu nuevo hogar en <em>Móstoles</em>, con la garantía de INVERCOR</h1>
-        <p>45 viviendas de alquiler a estrenar de 2, 3 y 4 dormitorios con terraza, garaje, trastero y máxima eficiencia energética. Consulta el alzado interactivo en tiempo real, compara hasta 3 pisos y postúlate con un único formulario.</p>
+        <span class="tag" id="heroTag">PROMOCIÓN OBRA NUEVA · MÓSTOLES (MADRID)</span>
+        <h1 id="heroTitle">Tu nuevo hogar en <em>Móstoles</em>, con la garantía de INVERCOR</h1>
+        <p id="heroDesc">Viviendas de alquiler a estrenar de 2, 3 y 4 dormitorios con terraza, garaje, trastero y máxima eficiencia energética. Consulta el alzado interactivo en tiempo real, compara hasta 3 pisos y postúlate con un único formulario.</p>
         <div class="cta">
-          <a class="btn" href="#viviendas">Explorar las 45 viviendas</a>
+          <a class="btn" id="heroBtnUnits" href="#viviendas">Explorar las ${V.length} viviendas</a>
           <a class="btn g" href="#alzado">${ICO('building')} Alzado interactivo</a>
           <a class="btn g" href="#contacto">Enviar candidatura</a>
         </div>
@@ -2944,27 +3082,13 @@ function renderApp() {
 
     <div class="head">
       <div>
-        <h2>Residencial Los Álamos · Galería y calidades</h2>
-        <p>Imágenes arquitectónicas de referencia (sustituibles por fotografía real de obra) y especificaciones comunes de las 45 viviendas.</p>
+        <h2 id="promoTitle">Residencial Los Álamos · Galería y calidades</h2>
+        <p id="promoSub">Imágenes arquitectónicas y especificaciones comunes de las viviendas de la promoción.</p>
       </div>
     </div>
     <div class="promo-box">
-      <div class="promo-gallery" id="promoGallery">
-        ${DEMO_PHOTOS.slice(0, 3).map((ph, idx) => `
-          <div class="pg-item ${idx === 0 ? 'pg-main' : ''}" data-lightbox-idx="${idx}">
-            <img src="${ph.src}" alt="${esc(ph.caption)}" loading="lazy">
-            <div class="pg-cap">
-              <span>${esc(ph.caption)}</span>
-              <small>${esc(ph.file)}</small>
-            </div>
-          </div>`).join('')}
-      </div>
-      <div class="promo-grid">
-        <div class="promo-item"><div class="promo-item-hd">${ICO('pin', 'ico-lg')}<b>Ubicación PAU-4 Móstoles</b></div><span>Av. de los Álamos 14–18, junto a MetroSur, Cercanías C-5, Hospital Rey Juan Carlos y parques.</span></div>
-        <div class="promo-item"><div class="promo-item-hd">${ICO('thermo', 'ico-lg')}<b>Aerotermia y confort</b></div><span>Climatización frío/calor por suelo radiante-refrescante y carpintería con rotura de puente térmico.</span></div>
-        <div class="promo-item"><div class="promo-item-hd">${ICO('shield', 'ico-lg')}<b>Zonas comunes privadas</b></div><span>Control de acceso, zonas ajardinadas, ascensores de última generación y garaje subterráneo.</span></div>
-        <div class="promo-item"><div class="promo-item-hd">${ICO('file', 'ico-lg')}<b>Certificación Energética A</b></div><span>Edificio de consumo energético casi nulo con certificado general y específico por inmueble.</span></div>
-      </div>
+      <div class="promo-gallery" id="promoGallery"></div>
+      <div class="promo-grid" id="promoGrid"></div>
     </div>
 
     <div class="head">
@@ -3015,8 +3139,8 @@ function renderApp() {
   <section class="view" id="v-alzado">
     <div class="head">
       <div>
-        <h2>Alzado Interactivo · Residencial Los Álamos</h2>
-        <p>Explora el edificio completo por portal y planta, resalta viviendas según tus criterios, inspecciona su plano esquemático y simula tu solvencia al instante.</p>
+        <h2 id="alzadoTitle">Alzado Interactivo · Residencial Los Álamos</h2>
+        <p>Explora el edificio completo por portal y planta, resalta viviendas según tus criterios, inspecciona su plano y simula tu solvencia al instante.</p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <a class="btn g sm" href="#viviendas">Ver en modo catálogo</a>
@@ -3034,12 +3158,7 @@ function renderApp() {
       </div>
     </div>
     <div class="split">
-      <div>
-        <details open><summary>1. Solvencia económica mínima (Ratio 3x)</summary><p>La suma de ingresos netos mensuales demostrables de los titulares del contrato debe ser igual o superior a <b>3 veces la renta mensual</b> de la vivienda elegida.</p></details>
-        <details><summary>2. Fianza legal y garantías adicionales</summary><p>Se solicita <b>1 mensualidad de fianza legal</b> (depositada en la Agencia de Vivienda Social de la Comunidad de Madrid). En caso de no alcanzar el ratio de solvencia, valoramos positivamente la presentación de <b>aval bancario</b> o avalista personal de acreditada solvencia.</p></details>
-        <details><summary>3. Documentación necesaria (solo tras pre-aprobación)</summary><p>No pedimos documentación sensible en el primer paso. Únicamente si tu candidatura pasa a estado <b>Pre-aprobada</b> te habilitaremos el enlace seguro de <b>Rentger</b> para adjuntar DNI/NIE, últimas 3 nóminas, contrato laboral y vida laboral.</p></details>
-        <details><summary>4. Fases hasta la firma y entrega de llaves</summary><p>① Envío de solicitud única → ② Estudio preliminar → ③ Pre-aprobación y subida documental en Rentger → ④ Visita presencial a la vivienda → ⑤ Firma de contrato y entrega.</p></details>
-      </div>
+      <div id="condList"></div>
       <div class="panel">
         <h3>Simulador rápido de solvencia</h3>
         <p class="m" style="margin-bottom:12px">Calcula al instante qué viviendas de la promoción encajan con los ingresos netos de tu unidad familiar.</p>
@@ -3060,18 +3179,13 @@ function renderApp() {
     <div class="head"><div><h2>Quiénes somos</h2><p>Gestión patrimonial directa, transparente y sin intermediarios.</p></div></div>
     <div class="split">
       <div class="panel">
-        <h3>INVERCOR PATRIMONIO S.L.</h3>
-        <p style="margin-top:10px;color:var(--mut)">Somos una sociedad patrimonialista especializada en el desarrollo, gestión y arrendamiento directo de promociones residenciales de obra nueva en la Comunidad de Madrid.</p>
-        <p style="margin-top:10px;color:var(--mut)">Iniciamos la comercialización de esta promoción exclusiva de <b>45 viviendas en Móstoles</b> bajo un modelo digital ágil: sin comisiones de agencia para el inquilino, con información técnica completa desde el primer minuto y seguimiento online del estado de cada candidatura.</p>
+        <h3 id="quienesTitle">INVERCOR PATRIMONIO S.L.</h3>
+        <p id="quienesP1" style="margin-top:10px;color:var(--mut)"></p>
+        <p id="quienesP2" style="margin-top:10px;color:var(--mut)"></p>
       </div>
       <div class="panel">
         <h3>Nuestro compromiso con el inquilino</h3>
-        <ul style="margin-top:10px;padding-left:18px;color:var(--mut);display:grid;gap:8px">
-          <li><b>Trato directo con la propiedad:</b> Sin honorarios de intermediación.</li>
-          <li><b>Viviendas a estrenar:</b> Entrega revisada con garantías de obra nueva.</li>
-          <li><b>Transparencia total:</b> Conoces desde el inicio la renta, condiciones y estado real de disponibilidad.</li>
-          <li><b>Escalabilidad:</b> Preparados para incorporar nuevas promociones residenciales.</li>
-        </ul>
+        <ul id="quienesList" style="margin-top:10px;padding-left:18px;color:var(--mut);display:grid;gap:8px"></ul>
       </div>
     </div>
   </section>
@@ -3094,13 +3208,12 @@ function renderApp() {
       <div class="panel" id="mainFormContainer"></div>
       <div style="display:flex;flex-direction:column;gap:16px">
         <div class="panel">
-          <h3>Oficina de atención · Móstoles</h3>
-          <p class="m" style="margin-top:8px">${ICO('pin')} <b>Ubicación:</b> Promoción Residencial INVERCOR, Móstoles (28931, Madrid)</p>
-          <p class="m" style="margin-top:6px">${ICO('bolt')} <b>Horario:</b> Lunes a Viernes de 9:30 a 14:00 y de 16:30 a 19:30</p>
-          <p class="m" style="margin-top:6px">${ICO('file')} <b>Email:</b> alquileres@invercorpatrimonio.es</p>
-          <div style="margin-top:14px;border-radius:6px;overflow:hidden;border:1px solid var(--line)">
-            <iframe title="Mapa Móstoles" width="100%" height="210" style="border:0;display:block" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=-3.8820%2C40.3120%2C-3.8500%2C40.3320&layer=mapnik&marker=40.3223%2C-3.8649"></iframe>
-          </div>
+          <h3 id="oficinaTitle">Oficina de atención · Móstoles</h3>
+          <p class="m" id="oficinaDir" style="margin-top:8px"></p>
+          <p class="m" id="oficinaHor" style="margin-top:6px"></p>
+          <p class="m" id="oficinaEmail" style="margin-top:6px"></p>
+          <p class="m" id="oficinaTel" style="margin-top:6px" hidden></p>
+          <div id="oficinaMapWrap" style="margin-top:14px;border-radius:6px;overflow:hidden;border:1px solid var(--line)"></div>
         </div>
         <div class="panel">
           <h3>Consulta general rápida</h3>
@@ -3125,14 +3238,7 @@ function renderApp() {
   <!-- 10. TEXTOS LEGALES RGPD / LSSI-CE -->
   <section class="view" id="v-privacidad">
     <div class="head"><div><h2>Aviso Legal, Política de Privacidad y Cookies</h2></div></div>
-    <div class="panel legal">
-      <h3>1. Titularidad (LSSI-CE)</h3>
-      <p>En cumplimiento de la Ley 34/2002 (LSSI-CE), se informa que el presente sitio web es titularidad de <b>INVERCOR PATRIMONIO S.L.</b>, con domicilio en Móstoles (Madrid).</p>
-      <h3>2. Protección de Datos Personales (RGPD y LOPDGDD)</h3>
-      <p><b>Responsable:</b> INVERCOR PATRIMONIO S.L. · <b>Finalidad:</b> Gestionar las solicitudes de arrendamiento, evaluar preliminarmente la solvencia económica y habilitar el acceso al área privada y plataforma documental Rentger. · <b>Legitimación:</b> Consentimiento expreso del interesado y aplicación de medidas precontractuales (art. 6.1.a y 6.1.b RGPD). · <b>Destinatarios:</b> Herramientas de gestión interna (Google Workspace/Sheets) y plataforma de validación documental Rentger únicamente en caso de pre-aprobación. · <b>Derechos:</b> Acceso, rectificación, supresión y oposición mediante solicitud escrita al responsable.</p>
-      <h3>3. Política de Cookies</h3>
-      <p>Este sitio emplea almacenamiento técnico local necesario para conservar la sesión del candidato y analítica básica agregada de accesos desde cartelería QR.</p>
-    </div>
+    <div class="panel legal" id="legalBox"></div>
   </section>
   `;
 
@@ -3511,9 +3617,79 @@ function renderApp() {
     if ($('v-alzado')?.classList.contains('on')) renderAlzadoPage();
   };
 
+  window.applySiteContent = () => {
+    const sc = SITE_CONTENT;
+    if ($('heroTag')) $('heroTag').textContent = sc.heroTag;
+    if ($('heroTitle')) $('heroTitle').textContent = sc.heroTitle;
+    if ($('heroDesc')) $('heroDesc').textContent = sc.heroSubtitle;
+    if ($('heroBtnUnits')) $('heroBtnUnits').textContent = `Explorar las ${V.length} viviendas`;
+    if ($('promoTitle')) $('promoTitle').textContent = `${sc.promoName} · Galería y calidades`;
+    if ($('promoSub')) $('promoSub').textContent = sc.promoSubtitle;
+    if ($('alzadoTitle')) $('alzadoTitle').textContent = `Alzado Interactivo · ${sc.promoName}`;
+
+    const promoPhotos = getPromoPhotos();
+    if ($('promoGallery')) {
+      $('promoGallery').innerHTML = promoPhotos.map((ph, idx) => `
+        <div class="pg-item ${idx === 0 ? 'pg-main' : ''}" data-lightbox-idx="${idx}">
+          <img src="${esc(ph.src)}" alt="${esc(ph.caption)}" loading="lazy">
+          <div class="pg-cap">
+            <span>${esc(ph.caption)}</span>
+            <small>${esc(ph.file)}</small>
+          </div>
+        </div>`).join('');
+    }
+    if ($('promoGrid')) {
+      $('promoGrid').innerHTML = sc.calidades.map(item => `
+        <div class="promo-item">
+          <div class="promo-item-hd">${ICO(item.icon || 'pin', 'ico-lg')}<b>${esc(item.title)}</b></div>
+          <span>${esc(item.text)}</span>
+        </div>`).join('');
+    }
+    if ($('condList')) {
+      $('condList').innerHTML = sc.condiciones.map((c, idx) => `
+        <details ${idx === 0 ? 'open' : ''}><summary>${esc(c.title)}</summary><p>${esc(c.text)}</p></details>`).join('');
+    }
+    if ($('quienesTitle')) $('quienesTitle').textContent = sc.aboutTitle;
+    if ($('quienesP1')) $('quienesP1').textContent = sc.aboutP1;
+    if ($('quienesP2')) $('quienesP2').textContent = sc.aboutP2;
+    if ($('quienesList')) {
+      $('quienesList').innerHTML = sc.aboutBullets.map(b => `<li><b>${esc(b.lead)}</b> ${esc(b.text)}</li>`).join('');
+    }
+    if ($('oficinaTitle')) $('oficinaTitle').textContent = sc.officeTitle;
+    if ($('oficinaDir')) $('oficinaDir').innerHTML = `${ICO('pin')} <b>Ubicación:</b> ${esc(sc.officeAddress)}`;
+    if ($('oficinaHor')) $('oficinaHor').innerHTML = `${ICO('bolt')} <b>Horario:</b> ${esc(sc.officeHours)}`;
+    if ($('oficinaEmail')) $('oficinaEmail').innerHTML = `${ICO('file')} <b>Email:</b> ${esc(sc.officeEmail)}`;
+    if ($('oficinaTel')) {
+      if (sc.officePhone && sc.officePhone.trim()) {
+        $('oficinaTel').hidden = false;
+        $('oficinaTel').innerHTML = `${ICO('users')} <b>Teléfono:</b> ${esc(sc.officePhone.trim())}`;
+      } else {
+        $('oficinaTel').hidden = true;
+      }
+    }
+    if ($('oficinaMapWrap')) {
+      const safeMap = /^https:\/\//i.test(String(sc.mapUrl || '').trim())
+        ? String(sc.mapUrl).trim()
+        : DEFAULT_SITE_CONTENT.mapUrl;
+      $('oficinaMapWrap').innerHTML = `<iframe title="Mapa de ubicación" width="100%" height="210" style="border:0;display:block" loading="lazy" src="${esc(safeMap)}"></iframe>`;
+    }
+    if ($('legalBox')) {
+      $('legalBox').innerHTML = `
+        <h3>1. Titularidad (LSSI-CE)</h3>
+        <p>${esc(sc.legalTitular)}</p>
+        <h3>2. Protección de Datos Personales (RGPD y LOPDGDD)</h3>
+        <p>${esc(sc.legalRgpd)}</p>
+        <h3>3. Política de Cookies</h3>
+        <p>${esc(sc.legalCookies)}</p>`;
+    }
+  };
+
   window.refreshInicio = () => {
+    const sc = SITE_CONTENT;
+    const promoPhotos = getPromoPhotos();
     const dispNow = V.filter(v => v.st === 'D');
     const minNow = dispNow.length ? Math.min(...dispNow.map(v => v.r)) : 890;
+    if ($('heroBtnUnits')) $('heroBtnUnits').textContent = `Explorar las ${V.length} viviendas`;
     if ($('homeStats')) {
       $('homeStats').innerHTML = `
         <div><b>${V.length}</b><span>Viviendas en promoción</span></div>
@@ -3527,7 +3703,7 @@ function renderApp() {
     if ($('homeQrShowcase')) {
       const qrUrl = getCfg().baseUrl + '?qr=1#viviendas';
       $('homeQrShowcase').innerHTML = `
-        <div class="qr-box-frame">${makeQrSvg(qrUrl, 'INVERCOR · MÓSTOLES', 'CATÁLOGO 45 VIVIENDAS')}</div>
+        <div class="qr-box-frame">${makeQrSvg(qrUrl, 'INVERCOR · MÓSTOLES', `CATÁLOGO ${V.length} VIVIENDAS`)}</div>
         <div>
           <span class="tag" style="margin-bottom:8px">CÓDIGO QR ESCANEABLE · CARTELERÍA Y FOLLETOS</span>
           <h3 style="font-size:1.4rem;margin-bottom:6px">Acceso móvil directo a la promoción</h3>
@@ -3537,27 +3713,27 @@ function renderApp() {
             <button type="button" class="btn g sm" id="homeDlQrSvg">${ICO('file')} Descargar SVG Vectorial</button>
           </div>
         </div>`;
-      $('homeDlQrPng').onclick = () => downloadQrPng(qrUrl, 'QR_General_INVERCOR_Mostoles', 'INVERCOR PATRIMONIO S.L.', 'RESIDENCIAL LOS ÁLAMOS · MÓSTOLES');
-      $('homeDlQrSvg').onclick = () => downloadQrSvg(qrUrl, 'QR_General_INVERCOR_Mostoles', 'INVERCOR PATRIMONIO S.L.', 'RESIDENCIAL LOS ÁLAMOS · MÓSTOLES');
+      $('homeDlQrPng').onclick = () => downloadQrPng(qrUrl, 'QR_General_INVERCOR_Mostoles', 'INVERCOR PATRIMONIO S.L.', `${sc.promoName.toUpperCase()} · MÓSTOLES`);
+      $('homeDlQrSvg').onclick = () => downloadQrSvg(qrUrl, 'QR_General_INVERCOR_Mostoles', 'INVERCOR PATRIMONIO S.L.', `${sc.promoName.toUpperCase()} · MÓSTOLES`);
     }
     if ($('promoGallery')) {
       $('promoGallery').onclick = e => {
         const card = e.target.closest('[data-lightbox-idx]');
-        if (card) openPhotoLightbox(DEMO_PHOTOS, Number(card.dataset.lightboxIdx));
+        if (card) openPhotoLightbox(getPromoPhotos(), Number(card.dataset.lightboxIdx));
       };
     }
     if ($('homeHeroVisual')) {
-      const facade = DEMO_PHOTOS[0];
+      const facade = promoPhotos[0];
       $('homeHeroVisual').innerHTML = `
         <div class="hero-visual-media" id="heroFacadeClick">
-          <img src="${facade.src}" alt="${esc(facade.caption)}">
+          <img src="${esc(facade.src)}" alt="${esc(facade.caption)}">
           <div class="hero-visual-top">
-            <span class="ref-badge">PAU-4 · MÓSTOLES</span>
+            <span class="ref-badge">${esc(sc.heroBadge)}</span>
             <span class="st D">${dispNow.length} viviendas libres</span>
           </div>
           <div class="hero-visual-cap">
-            <b>Residencial Los Álamos</b>
-            <small>3 Portales · 6 Plantas · 45 viviendas de obra nueva con CEE A</small>
+            <b>${esc(sc.promoName)}</b>
+            <small>${esc(sc.heroCardCaption)} · ${V.length} viviendas</small>
           </div>
         </div>
         <div class="hero-visual-foot">
@@ -3568,7 +3744,7 @@ function renderApp() {
           </div>
           <a class="btn sm" href="#alzado">Abrir alzado →</a>
         </div>`;
-      $('heroFacadeClick').onclick = () => openPhotoLightbox(DEMO_PHOTOS, 0);
+      $('heroFacadeClick').onclick = () => openPhotoLightbox(getPromoPhotos(), 0);
     }
   };
 
@@ -3756,6 +3932,8 @@ function renderApp() {
       notify('No se pudo enviar la consulta ahora. Inténtalo de nuevo.');
     }
   };
+
+  applySiteContent();
 }
 
 /* ==========================================================================
@@ -3975,7 +4153,9 @@ function renderFicha(ref) {
             <img src="${ph.src}" alt="${esc(ph.caption)}">
           </button>`).join('')}
         <button type="button" class="thumb-btn plan-tb" data-slide="plan" title="Ver plano arquitectónico">
-          <span>${ICO('ruler')}<br>Plano</span>
+          ${v.customPlanUrl && isSafeImageSrc(v.customPlanUrl)
+            ? `<img src="${esc(v.customPlanUrl)}" alt="Plano ${esc(v.ref)}" style="opacity:.88">`
+            : `<span>${ICO('ruler')}<br>Plano</span>`}
         </button>
       </div>
     </div>
@@ -4041,8 +4221,11 @@ function renderFicha(ref) {
     if (s === 'plan') {
       currentSlide = 'plan';
       $('galMain').innerHTML = `<div class="plan-wrap">${planSvg}</div><div class="gallery-overlay"><span class="ref-badge">${v.ref} · PLANO TÉCNICO</span><span class="st ${v.st}">${stLabel(v.st)}</span></div>`;
-      $('galCaption').textContent = `Plano Arquitectónico Orientativo · ${v.ref} (${v.m2} m²)`;
-      $('galFile').textContent = `plano_${v.ref.toLowerCase()}_${v.h}hab.svg`;
+      const hasCustomPlan = Boolean(v.customPlanUrl && isSafeImageSrc(v.customPlanUrl));
+      $('galCaption').textContent = v.planNote
+        ? `Plano Técnico · ${v.ref} — ${v.planNote}`
+        : `${hasCustomPlan ? 'Plano Técnico Oficial' : 'Plano Arquitectónico Orientativo'} · ${v.ref} (${v.m2} m²)`;
+      $('galFile').textContent = hasCustomPlan ? `plano_${v.ref.toLowerCase()}_personalizado` : `plano_${v.ref.toLowerCase()}_${v.h}hab.svg`;
     } else {
       currentSlide = Number(s);
       const ph = photos[currentSlide];
@@ -4080,7 +4263,7 @@ function renderFicha(ref) {
     $('dlg').classList.remove('wide');
     $('dlg').innerHTML = `
       <h3>Certificado de Eficiencia Energética · ${v.ref}</h3>
-      <p class="m" style="margin:10px 0">Residencial Los Álamos · INVERCOR PATRIMONIO S.L. (Móstoles, Madrid)</p>
+      <p class="m" style="margin:10px 0">${esc(SITE_CONTENT.promoName)} · ${esc(SITE_CONTENT.aboutTitle)}</p>
       <div style="background:#047857;color:#fff;padding:14px;border-radius:4px;font-weight:700;font-size:1rem">Calificación Energética: CLASE ${esc(v.cee || 'A')} (Consumo &lt; 28 kWh/m²·año)</div>
       <p class="m" style="margin-top:10px">Documento informativo provisional. El certificado oficial visado se entrega junto con el contrato de arrendamiento.</p>
       <div style="margin-top:14px;text-align:right"><button class="btn sm" onclick="$('dlg').close()">Cerrar</button></div>`;
@@ -4208,6 +4391,42 @@ function openUnitEditorModal(existingUnit = null, onSaved = null) {
         <div class="photo-list" id="uePhotoList"></div>
       </div>
 
+      <div class="photo-mgr" id="uePlanBox" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <div>
+            <b style="font-size:.86rem">${ICO('ruler')} Plano técnico de la vivienda</b>
+            <div class="m" style="font-size:.76rem">Sube el plano real (JPG/PNG/WebP), pega una URL o personaliza las estancias del plano automático.</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <label class="btn sm" style="margin:0;cursor:pointer">
+              ${ICO('download')} Subir plano
+              <input type="file" id="uePlanFile" accept="image/*" hidden>
+            </label>
+            <button type="button" class="btn g sm" id="uePlanReset">Usar plano automático</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+          <input type="url" id="uePlanUrl" value="${esc(existingUnit?.customPlanUrl && !String(existingUnit.customPlanUrl).startsWith('data:') ? existingUnit.customPlanUrl : '')}" placeholder="https://... (URL de imagen del plano real, opcional)" style="flex:2;min-width:220px;margin:0;padding:7px 10px;font-size:.8rem">
+          <input type="text" id="uePlanNote" value="${esc(existingUnit?.planNote || '')}" placeholder="Nota / pie del plano (ej. Superficie útil 78 m² + terraza 12 m²)" style="flex:2;min-width:200px;margin:0;padding:7px 10px;font-size:.8rem">
+        </div>
+
+        <div class="edit-grid" style="margin-top:10px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+          <label style="margin:0;font-size:.74rem">Salón (m² en plano auto.)
+            <input type="number" id="uePlanSalonM2" min="5" max="200" value="${existingUnit?.planSalonM2 ? Number(existingUnit.planSalonM2) : ''}" placeholder="Automático" style="padding:6px 8px;font-size:.78rem">
+          </label>
+          <label style="margin:0;font-size:.74rem">Estancia inf. izq. (plano auto.)
+            <input type="text" id="uePlanLeftLabel" value="${esc(existingUnit?.planLeftLabel || '')}" placeholder="Ej. TERRAZA 14 m²" style="padding:6px 8px;font-size:.78rem">
+          </label>
+          <label style="margin:0;font-size:.74rem">Dormitorio principal (plano auto.)
+            <input type="text" id="uePlanSuiteLabel" value="${esc(existingUnit?.planSuiteLabel || '')}" placeholder="Ej. SUITE PRINCIPAL" style="padding:6px 8px;font-size:.78rem">
+          </label>
+        </div>
+
+        <div id="uePlanStatus" class="m" style="font-size:.77rem;margin-top:8px"></div>
+        <div id="uePlanPreview" style="margin-top:10px;padding:10px;background:var(--card);border:1px solid var(--line);border-radius:6px;text-align:center"></div>
+      </div>
+
       <div id="ueError" style="color:var(--bad-tx);font-size:.82rem;font-weight:600;margin-bottom:10px" hidden></div>
 
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
@@ -4222,10 +4441,35 @@ function openUnitEditorModal(existingUnit = null, onSaved = null) {
   const photoBox = $('uePhotoBox');
   const photoStatus = $('uePhotoStatus');
   const photoListEl = $('uePhotoList');
+  let customPlanUrl = existingUnit?.customPlanUrl && isSafeImageSrc(existingUnit.customPlanUrl) ? String(existingUnit.customPlanUrl).trim() : '';
 
   const showErr = msg => {
     errBox.textContent = msg;
     errBox.hidden = !msg;
+  };
+
+  const getTotalInlineBytes = () => estimateInlinePhotoBytes(unitPhotos) + (customPlanUrl.startsWith('data:') ? customPlanUrl.length : 0);
+
+  const renderPlanPreview = () => {
+    const previewUnit = {
+      ref: $('ueRef').value.trim().toUpperCase() || baseRef,
+      m2: Number($('ueM2').value) || Number(existingUnit?.m2) || 85,
+      h: Number($('ueHabs').value) || Number(existingUnit?.h) || 3,
+      b: Number($('ueBanos').value) || Number(existingUnit?.b) || 2,
+      ori: $('ueOri').value || 'Sur',
+      t: $('ueTerraza').checked,
+      customPlanUrl: customPlanUrl && isSafeImageSrc(customPlanUrl) ? customPlanUrl : '',
+      planNote: $('uePlanNote').value.trim(),
+      planSalonM2: Number($('uePlanSalonM2').value) || 0,
+      planLeftLabel: $('uePlanLeftLabel').value.trim(),
+      planSuiteLabel: $('uePlanSuiteLabel').value.trim()
+    };
+    const isCustom = Boolean(previewUnit.customPlanUrl);
+    const planKb = customPlanUrl.startsWith('data:') ? Math.round(customPlanUrl.length / 1024) : 0;
+    $('uePlanStatus').textContent = isCustom
+      ? (planKb > 0 ? `Plano real subido desde tu dispositivo (${planKb} KB optimizados). Se mostrará en la ficha y en el alzado.` : 'Plano real cargado desde enlace URL. Se mostrará en la ficha y en el alzado.')
+      : 'Plano esquemático automático activo. Puedes subir un plano real o personalizar los textos de las estancias.';
+    $('uePlanPreview').innerHTML = buildPlanSvg(previewUnit);
   };
 
   const renderPhotoList = () => {
@@ -4255,6 +4499,7 @@ function openUnitEditorModal(existingUnit = null, onSaved = null) {
   };
 
   renderPhotoList();
+  renderPlanPreview();
 
   photoListEl.oninput = e => {
     if (e.target.dataset.pcap !== undefined) {
@@ -4291,8 +4536,8 @@ function openUnitEditorModal(existingUnit = null, onSaved = null) {
     for (const f of files) {
       try {
         const dataUrl = await compressImageFile(f, 1200, 0.78);
-        if (estimateInlinePhotoBytes(unitPhotos) + dataUrl.length > 760000) {
-          showErr('Límite de tamaño alcanzado para fotos subidas directamente (máx. ~750 KB por vivienda). Para más fotos puedes pegar enlaces URL.');
+        if (getTotalInlineBytes() + dataUrl.length > 760000) {
+          showErr('Límite de tamaño alcanzado para imágenes subidas directamente (máx. ~750 KB por vivienda entre fotos y plano). Para añadir más puedes pegar enlaces URL.');
           break;
         }
         const cleanName = String(f.name || `foto_${unitPhotos.length + 1}.jpg`).replace(/\.[^.]+$/, '');
@@ -4339,6 +4584,53 @@ function openUnitEditorModal(existingUnit = null, onSaved = null) {
     };
   }
 
+  $('uePlanFile').onchange = async e => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    showErr('');
+    $('uePlanStatus').textContent = 'Optimizando imagen del plano…';
+    try {
+      const dataUrl = await compressImageFile(f, 1400, 0.82);
+      const withoutCurrentPlan = estimateInlinePhotoBytes(unitPhotos);
+      if (withoutCurrentPlan + dataUrl.length > 760000) {
+        showErr('El plano junto con las fotos supera el límite (~750 KB por vivienda). Puedes reducir fotos o enlazar el plano por URL.');
+        renderPlanPreview();
+        return;
+      }
+      customPlanUrl = dataUrl;
+      $('uePlanUrl').value = '';
+      renderPlanPreview();
+      notify('Plano cargado en la vista previa');
+    } catch (err) {
+      showErr(err.message || 'No se pudo cargar la imagen del plano');
+      renderPlanPreview();
+    }
+  };
+
+  $('uePlanUrl').oninput = () => {
+    const val = $('uePlanUrl').value.trim();
+    if (!val) {
+      if (!customPlanUrl.startsWith('data:')) customPlanUrl = '';
+    } else if (isSafeImageSrc(val)) {
+      customPlanUrl = val;
+    }
+    renderPlanPreview();
+  };
+
+  $('uePlanReset').onclick = () => {
+    customPlanUrl = '';
+    $('uePlanUrl').value = '';
+    renderPlanPreview();
+    notify('Restaurado al plano esquemático automático');
+  };
+
+  ['ueRef', 'ueM2', 'ueHabs', 'ueBanos', 'ueOri', 'ueTerraza', 'uePlanNote', 'uePlanSalonM2', 'uePlanLeftLabel', 'uePlanSuiteLabel'].forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    el.addEventListener(el.tagName === 'SELECT' || el.type === 'checkbox' ? 'change' : 'input', renderPlanPreview);
+  });
+
   const closeModal = () => {
     dlg.classList.remove('wide');
     dlg.close();
@@ -4366,6 +4658,12 @@ function openUnitEditorModal(existingUnit = null, onSaved = null) {
     const g = $('ueGaraje').checked;
     const tr = $('ueTrastero').checked;
     const desc = $('ueDesc').value.trim();
+    const planUrlInput = $('uePlanUrl').value.trim();
+    const finalPlanUrl = planUrlInput ? planUrlInput : customPlanUrl;
+    const planNote = $('uePlanNote').value.trim();
+    const planSalonM2 = Number($('uePlanSalonM2').value) || 0;
+    const planLeftLabel = $('uePlanLeftLabel').value.trim();
+    const planSuiteLabel = $('uePlanSuiteLabel').value.trim();
 
     if (!ref || ref.length < 2) { showErr('Indica una referencia válida (ej. REF-46).'); $('ueRef').focus(); return; }
     if (isNew && V.some(x => String(x.ref).toUpperCase() === ref)) {
@@ -4381,6 +4679,7 @@ function openUnitEditorModal(existingUnit = null, onSaved = null) {
     if (!Number.isFinite(m2) || m2 < 15) { showErr('Indica la superficie en m² (mínimo 15 m²).'); $('ueM2').focus(); return; }
     if (!Number.isInteger(pl) || pl < 0 || pl > 30) { showErr('Indica la planta (0 para bajo).'); $('uePlanta').focus(); return; }
     if (rentgerUrl && !/^https?:\/\//i.test(rentgerUrl)) { showErr('La URL de Rentger debe empezar por https:// o http://'); $('ueRentger').focus(); return; }
+    if (finalPlanUrl && !isSafeImageSrc(finalPlanUrl)) { showErr('La URL del plano debe empezar por https:// o http:// (o subir una imagen desde tu dispositivo).'); $('uePlanUrl').focus(); return; }
     if (desc.length < 10) { showErr('Completa la descripción de la vivienda (mínimo 10 caracteres).'); $('ueDesc').focus(); return; }
     if (isNew && unitPhotos.length === 0) {
       photoBox.classList.add('err');
@@ -4415,6 +4714,11 @@ function openUnitEditorModal(existingUnit = null, onSaved = null) {
       photoIdx: existingUnit?.photoIdx || ((V.length % 5) + 1),
       customPhotoUrl: sanitizedPhotos[0]?.src || '',
       customPhotos: sanitizedPhotos,
+      customPlanUrl: finalPlanUrl || '',
+      planNote,
+      planSalonM2,
+      planLeftLabel,
+      planSuiteLabel,
       rentgerUrl,
       desc
     };
@@ -4508,6 +4812,7 @@ function renderAdmin(subTab) {
     <a class="chip ${adminTab === 'archivo' ? 'on' : ''}" id="admTabArch" href="#admin/archivo" style="text-decoration:none">${ICO('file')} Archivo (${archivedSols.length})</a>
     <a class="chip ${adminTab === 'qrs' ? 'on' : ''}" href="#admin/qrs" style="text-decoration:none">${ICO('qr')} Códigos QR</a>
     <a class="chip ${adminTab === 'blog' ? 'on' : ''}" href="#admin/blog" style="text-decoration:none">${ICO('edit')} Consejos / Blog</a>
+    <a class="chip ${adminTab === 'web' ? 'on' : ''}" href="#admin/web" style="text-decoration:none">${ICO('file')} Web / Textos</a>
     <a class="chip ${adminTab === 'usuarios' ? 'on' : ''}" href="#admin/usuarios" style="text-decoration:none">${ICO('lock')} Usuarios y Roles</a>
     <a class="chip ${adminTab === 'config' ? 'on' : ''}" href="#admin/config" style="text-decoration:none">${ICO('sliders')} Integraciones</a>
   </div>
@@ -5469,6 +5774,326 @@ function renderAdmin(subTab) {
         renderAdmin('usuarios');
         notify('Permiso de administrador revocado');
       }
+    };
+  }
+
+  /* TAB 5B: CONTENIDO WEB Y TEXTOS (CMS completo sin tocar código) */
+  if (adminTab === 'web') {
+    const sc = mergeSiteContent(SITE_CONTENT);
+    const promoDraft = sc.promoPhotos.map(p => ({ ...p }));
+    const effectivePhotos = getPromoPhotos();
+
+    body.innerHTML = `
+    <form id="siteContentForm" novalidate style="display:grid;gap:16px">
+      <div class="panel" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div>
+          <h3>Editor completo de la Web</h3>
+          <p class="m" style="margin-top:4px">Modifica textos de portada, fotos de la promoción, calidades, condiciones, quiénes somos, oficina, mapa y textos legales sin tocar código.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn g sm" id="scResetDefaultsBtn">Restaurar textos originales</button>
+          <button type="submit" class="btn sm">${ICO('check')} Guardar cambios en la web</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>1. Portada y Promoción</h3>
+        <div class="edit-grid" style="margin-top:12px">
+          <label>Etiqueta superior (Hero)
+            <input id="scHeroTag" required value="${esc(sc.heroTag)}">
+          </label>
+          <label>Nombre de la promoción
+            <input id="scPromoName" required value="${esc(sc.promoName)}">
+          </label>
+          <label>Insignia de tarjeta portada
+            <input id="scHeroBadge" value="${esc(sc.heroBadge)}" placeholder="Ej. PAU-4 · MÓSTOLES">
+          </label>
+          <label>Pie tarjeta portada
+            <input id="scHeroCardCaption" value="${esc(sc.heroCardCaption)}" placeholder="Ej. 3 Portales · 6 Plantas · Obra nueva con CEE A">
+          </label>
+        </div>
+        <label>Titular principal de portada
+          <input id="scHeroTitle" required value="${esc(sc.heroTitle)}">
+        </label>
+        <label>Descripción de portada
+          <textarea id="scHeroSubtitle" rows="2" required>${esc(sc.heroSubtitle)}</textarea>
+        </label>
+        <label>Subtítulo de galería y calidades
+          <input id="scPromoSubtitle" value="${esc(sc.promoSubtitle)}">
+        </label>
+
+        <div class="photo-mgr" style="margin-top:12px">
+          <b style="font-size:.86rem">Imágenes de portada y galería de la promoción (3 fotos)</b>
+          <div class="m" style="font-size:.76rem;margin-top:2px">La foto #1 es la fachada principal de la portada. Sube desde tu dispositivo o pega una URL https://.</div>
+          <div id="scPromoPhotosList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:12px">
+            ${promoDraft.map((ph, idx) => `
+              <div style="border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--card)">
+                <img id="scPPImg_${idx}" src="${esc(effectivePhotos[idx].src)}" alt="${esc(ph.caption)}" style="width:100%;height:120px;object-fit:cover;border-radius:4px;border:1px solid var(--line);margin-bottom:8px">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
+                  <b style="font-size:.78rem">${idx === 0 ? 'Foto #1 (Fachada portada)' : `Foto #${idx + 1} (Galería)`}</b>
+                  <div style="display:flex;gap:4px">
+                    <label class="btn g sm" style="margin:0;padding:4px 8px;font-size:.72rem;cursor:pointer">
+                      Subir
+                      <input type="file" data-sc-pp-file="${idx}" accept="image/*" hidden>
+                    </label>
+                    <button type="button" class="btn g sm" style="padding:4px 8px;font-size:.72rem" data-sc-pp-reset="${idx}">Demo</button>
+                  </div>
+                </div>
+                <input type="url" id="scPPUrl_${idx}" value="${esc(ph.src && !ph.src.startsWith('data:') ? ph.src : '')}" placeholder="https://... (URL opcional)" style="margin:0 0 6px;padding:6px 8px;font-size:.76rem">
+                <input type="text" id="scPPCap_${idx}" value="${esc(ph.caption)}" placeholder="Pie de foto" style="margin:0;padding:6px 8px;font-size:.76rem">
+              </div>`).join('')}
+          </div>
+          <div id="scPromoPhotoErr" style="color:var(--bad-tx);font-size:.78rem;font-weight:600;margin-top:8px" hidden></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>2. Bloques de calidades de la promoción (4 cajas)</h3>
+        <div class="edit-grid" style="margin-top:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+          ${sc.calidades.map((item, idx) => `
+            <div style="border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--card2)">
+              <label style="margin-bottom:6px">Título calidad ${idx + 1}
+                <input id="scCalT_${idx}" required value="${esc(item.title)}">
+              </label>
+              <label style="margin:0">Descripción
+                <textarea id="scCalD_${idx}" rows="2" required>${esc(item.text)}</textarea>
+              </label>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>3. Condiciones de arrendamiento (4 apartados desplegables)</h3>
+        <div style="display:grid;gap:10px;margin-top:12px">
+          ${sc.condiciones.map((c, idx) => `
+            <div style="border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--card2)">
+              <label style="margin-bottom:6px">Título condición ${idx + 1}
+                <input id="scCondT_${idx}" required value="${esc(c.title)}">
+              </label>
+              <label style="margin:0">Texto explicativo
+                <textarea id="scCondD_${idx}" rows="2" required>${esc(c.text)}</textarea>
+              </label>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>4. Quiénes somos</h3>
+        <div style="margin-top:12px">
+          <label>Nombre de la empresa / titular
+            <input id="scAboutTitle" required value="${esc(sc.aboutTitle)}">
+          </label>
+          <label>Párrafo 1
+            <textarea id="scAboutP1" rows="2" required>${esc(sc.aboutP1)}</textarea>
+          </label>
+          <label>Párrafo 2
+            <textarea id="scAboutP2" rows="2" required>${esc(sc.aboutP2)}</textarea>
+          </label>
+          <div class="edit-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:8px">
+            ${sc.aboutBullets.map((b, idx) => `
+              <div style="border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--card2)">
+                <label style="margin-bottom:6px">Compromiso ${idx + 1} (negrita)
+                  <input id="scBulL_${idx}" required value="${esc(b.lead)}">
+                </label>
+                <label style="margin:0">Detalle
+                  <input id="scBulT_${idx}" required value="${esc(b.text)}">
+                </label>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>5. Oficina, contacto y mapa</h3>
+        <div class="edit-grid" style="margin-top:12px">
+          <label>Título de oficina
+            <input id="scOffTitle" required value="${esc(sc.officeTitle)}">
+          </label>
+          <label>Dirección visible
+            <input id="scOffAddr" required value="${esc(sc.officeAddress)}">
+          </label>
+          <label>Horario de atención
+            <input id="scOffHours" required value="${esc(sc.officeHours)}">
+          </label>
+          <label>Email de contacto
+            <input id="scOffEmail" type="email" required value="${esc(sc.officeEmail)}">
+          </label>
+        </div>
+        <div class="edit-grid">
+          <label>Teléfono (opcional)
+            <input id="scOffPhone" value="${esc(sc.officePhone || '')}" placeholder="Ej. 910 000 000">
+          </label>
+          <label>URL de mapa embebido (OpenStreetMap o Google Maps iframe https://)
+            <input id="scMapUrl" type="url" value="${esc(sc.mapUrl)}" placeholder="https://www.openstreetmap.org/export/embed.html?...">
+          </label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>6. Aviso Legal, Privacidad y Cookies</h3>
+        <div style="margin-top:12px">
+          <label>1. Titularidad (LSSI-CE)
+            <textarea id="scLegTit" rows="2" required>${esc(sc.legalTitular)}</textarea>
+          </label>
+          <label>2. Protección de Datos (RGPD y LOPDGDD)
+            <textarea id="scLegRgpd" rows="3" required>${esc(sc.legalRgpd)}</textarea>
+          </label>
+          <label>3. Política de Cookies
+            <textarea id="scLegCook" rows="2" required>${esc(sc.legalCookies)}</textarea>
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
+        <button type="submit" class="btn">${ICO('check')} Guardar cambios en la web</button>
+      </div>
+    </form>`;
+
+    const ppErr = $('scPromoPhotoErr');
+    const showPpErr = msg => {
+      ppErr.textContent = msg;
+      ppErr.hidden = !msg;
+    };
+
+    const estimatePromoInline = () => promoDraft.reduce((s, p) => s + (String(p.src || '').startsWith('data:') ? p.src.length : 0), 0);
+
+    $('scPromoPhotosList').onchange = async e => {
+      const idxAttr = e.target.dataset.scPpFile;
+      if (idxAttr === undefined) return;
+      const idx = Number(idxAttr);
+      const f = e.target.files?.[0];
+      e.target.value = '';
+      if (!f) return;
+      showPpErr('');
+      try {
+        const dataUrl = await compressImageFile(f, 1280, 0.76);
+        const currentWithoutIdx = estimatePromoInline() - (String(promoDraft[idx].src || '').startsWith('data:') ? promoDraft[idx].src.length : 0);
+        if (currentWithoutIdx + dataUrl.length > 760000) {
+          showPpErr('Las 3 fotos de portada juntas superan ~750 KB. Puedes usar enlaces URL https:// para imágenes de gran tamaño.');
+          return;
+        }
+        promoDraft[idx].src = dataUrl;
+        promoDraft[idx].file = f.name || promoDraft[idx].file;
+        $(`scPPUrl_${idx}`).value = '';
+        $(`scPPImg_${idx}`).src = dataUrl;
+        notify(`Foto #${idx + 1} cargada (pulsa Guardar cambios para publicar)`);
+      } catch (err) {
+        showPpErr(err.message || 'No se pudo procesar la imagen');
+      }
+    };
+
+    $('scPromoPhotosList').oninput = e => {
+      const m = String(e.target.id || '').match(/^scPPUrl_(\d+)$/);
+      if (!m) return;
+      const idx = Number(m[1]);
+      const val = e.target.value.trim();
+      if (!val) {
+        if (!String(promoDraft[idx].src || '').startsWith('data:')) {
+          promoDraft[idx].src = '';
+          $(`scPPImg_${idx}`).src = (DEMO_PHOTOS[idx] || DEMO_PHOTOS[0]).src;
+        }
+      } else if (isSafeImageSrc(val)) {
+        promoDraft[idx].src = val;
+        $(`scPPImg_${idx}`).src = val;
+      }
+    };
+
+    $('scPromoPhotosList').onclick = e => {
+      const btn = e.target.closest('[data-sc-pp-reset]');
+      if (!btn) return;
+      const idx = Number(btn.dataset.scPpReset);
+      promoDraft[idx].src = '';
+      $(`scPPUrl_${idx}`).value = '';
+      $(`scPPImg_${idx}`).src = (DEMO_PHOTOS[idx] || DEMO_PHOTOS[0]).src;
+      notify(`Foto #${idx + 1} restaurada a imagen demo`);
+    };
+
+    $('scResetDefaultsBtn').onclick = () => {
+      const dlg = $('dlg');
+      dlg.oncancel = null;
+      dlg.classList.remove('wide');
+      dlg.innerHTML = `
+        <h3>Restaurar textos e imágenes originales</h3>
+        <p class="m" style="margin-top:8px">Se restablecerán los textos de portada, condiciones, quiénes somos, oficina, mapa, avisos legales y fotos de portada por defecto. No afectará a las viviendas ni a las candidaturas.</p>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+          <button type="button" class="btn g sm" id="scResCancel">Cancelar</button>
+          <button type="button" class="btn bad sm" id="scResConfirm">Restaurar todo</button>
+        </div>`;
+      dlg.showModal();
+      $('scResCancel').onclick = () => dlg.close();
+      $('scResConfirm').onclick = () => {
+        dlg.close();
+        SITE_CONTENT = mergeSiteContent(DEFAULT_SITE_CONTENT);
+        saveSiteContent();
+        applySiteContent();
+        refreshInicio();
+        trackBgOp(cloudSaveSiteContent(SITE_CONTENT));
+        renderAdmin('web');
+        notify('Contenido web restaurado a valores originales');
+      };
+    };
+
+    $('siteContentForm').onsubmit = e => {
+      e.preventDefault();
+      const mapUrl = $('scMapUrl').value.trim();
+      if (mapUrl && !/^https:\/\//i.test(mapUrl)) {
+        notify('La URL del mapa embebido debe empezar por https://');
+        $('scMapUrl').focus();
+        return;
+      }
+      for (let i = 0; i < 3; i++) {
+        const typedUrl = $(`scPPUrl_${i}`).value.trim();
+        if (typedUrl && !isSafeImageSrc(typedUrl)) {
+          notify(`La URL de la foto #${i + 1} debe empezar por https:// o http://`);
+          $(`scPPUrl_${i}`).focus();
+          return;
+        }
+        promoDraft[i].src = typedUrl ? typedUrl : (String(promoDraft[i].src || '').startsWith('data:') ? promoDraft[i].src : '');
+        promoDraft[i].caption = $(`scPPCap_${i}`).value.trim() || DEFAULT_SITE_CONTENT.promoPhotos[i].caption;
+      }
+
+      const nextContent = mergeSiteContent({
+        heroTag: $('scHeroTag').value.trim() || DEFAULT_SITE_CONTENT.heroTag,
+        heroTitle: $('scHeroTitle').value.trim() || DEFAULT_SITE_CONTENT.heroTitle,
+        heroSubtitle: $('scHeroSubtitle').value.trim() || DEFAULT_SITE_CONTENT.heroSubtitle,
+        promoName: $('scPromoName').value.trim() || DEFAULT_SITE_CONTENT.promoName,
+        promoSubtitle: $('scPromoSubtitle').value.trim() || DEFAULT_SITE_CONTENT.promoSubtitle,
+        heroBadge: $('scHeroBadge').value.trim() || DEFAULT_SITE_CONTENT.heroBadge,
+        heroCardCaption: $('scHeroCardCaption').value.trim() || DEFAULT_SITE_CONTENT.heroCardCaption,
+        promoPhotos: promoDraft,
+        calidades: [0, 1, 2, 3].map(i => ({
+          icon: DEFAULT_SITE_CONTENT.calidades[i].icon,
+          title: $(`scCalT_${i}`).value.trim() || DEFAULT_SITE_CONTENT.calidades[i].title,
+          text: $(`scCalD_${i}`).value.trim() || DEFAULT_SITE_CONTENT.calidades[i].text
+        })),
+        condiciones: [0, 1, 2, 3].map(i => ({
+          title: $(`scCondT_${i}`).value.trim() || DEFAULT_SITE_CONTENT.condiciones[i].title,
+          text: $(`scCondD_${i}`).value.trim() || DEFAULT_SITE_CONTENT.condiciones[i].text
+        })),
+        aboutTitle: $('scAboutTitle').value.trim() || DEFAULT_SITE_CONTENT.aboutTitle,
+        aboutP1: $('scAboutP1').value.trim() || DEFAULT_SITE_CONTENT.aboutP1,
+        aboutP2: $('scAboutP2').value.trim() || DEFAULT_SITE_CONTENT.aboutP2,
+        aboutBullets: [0, 1, 2, 3].map(i => ({
+          lead: $(`scBulL_${i}`).value.trim() || DEFAULT_SITE_CONTENT.aboutBullets[i].lead,
+          text: $(`scBulT_${i}`).value.trim() || DEFAULT_SITE_CONTENT.aboutBullets[i].text
+        })),
+        officeTitle: $('scOffTitle').value.trim() || DEFAULT_SITE_CONTENT.officeTitle,
+        officeAddress: $('scOffAddr').value.trim() || DEFAULT_SITE_CONTENT.officeAddress,
+        officeHours: $('scOffHours').value.trim() || DEFAULT_SITE_CONTENT.officeHours,
+        officeEmail: $('scOffEmail').value.trim() || DEFAULT_SITE_CONTENT.officeEmail,
+        officePhone: $('scOffPhone').value.trim(),
+        mapUrl: mapUrl || DEFAULT_SITE_CONTENT.mapUrl,
+        legalTitular: $('scLegTit').value.trim() || DEFAULT_SITE_CONTENT.legalTitular,
+        legalRgpd: $('scLegRgpd').value.trim() || DEFAULT_SITE_CONTENT.legalRgpd,
+        legalCookies: $('scLegCook').value.trim() || DEFAULT_SITE_CONTENT.legalCookies
+      });
+
+      SITE_CONTENT = nextContent;
+      saveSiteContent();
+      applySiteContent();
+      refreshInicio();
+      trackBgOp(cloudSaveSiteContent(SITE_CONTENT));
+      notify('Contenido de la web guardado y publicado');
     };
   }
 
