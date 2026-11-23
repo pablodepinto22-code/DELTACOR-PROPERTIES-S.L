@@ -540,8 +540,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 
 <footer>
   © 2026 <b>INVERCOR PATRIMONIO S.L.</b> · Promoción Obra Nueva en Móstoles (Madrid) ·
-  <a href="#privacidad">Aviso Legal, Privacidad y Cookies</a> ·
-  <a href="#" id="dlHtmlBtn" style="display:inline-flex;align-items:center;gap:4px;margin-left:4px;padding:3px 9px;border:1px dashed var(--b1);border-radius:4px">Descargar HTML</a>
+  <a href="#privacidad">Aviso Legal, Privacidad y Cookies</a>
 </footer>
 
 <dialog id="dlg"></dialog>
@@ -684,67 +683,274 @@ function solToSheetRow(s) {
   ];
 }
 
-async function syncToGoogleSheets(mode, payloadOrAll) {
-  const url = String(getCfg().appsScriptUrl || '').trim();
-  if (!url) return { ok: false, skipped: true };
+const SHEET_SYNC_CACHE_KEY = 'inv-sheets-synced-v2';
+const SHEET_BATCH_SIZE = 100;
+const SHEET_PENDING_QUEUE = new Map();
+let sheetFlushTimer = null;
+
+function solSyncHash(s) {
+  return JSON.stringify(solToSheetRow(s));
+}
+
+function getSyncedSheetHashes() {
   try {
-    const body = mode === 'sync_all'
-      ? { action: 'sync_all', headers: SHEET_HEADERS, rows: (payloadOrAll || []).map(solToSheetRow) }
-      : { action: 'upsert', headers: SHEET_HEADERS, id: payloadOrAll.id, row: solToSheetRow(payloadOrAll) };
-    await fetch(url, {
+    const raw = JSON.parse(localStorage.getItem(SHEET_SYNC_CACHE_KEY) || '{}');
+    return raw && typeof raw === 'object' ? raw : {};
+  } catch { return {}; }
+}
+
+function markSolsSynced(list) {
+  const map = getSyncedSheetHashes();
+  (list || []).forEach(s => {
+    if (s && s.id) map[String(s.id)] = solSyncHash(s);
+  });
+  try { localStorage.setItem(SHEET_SYNC_CACHE_KEY, JSON.stringify(map)); } catch {}
+}
+
+function getPendingSheetSols(list = SOLS) {
+  const map = getSyncedSheetHashes();
+  return (list || []).filter(s => s && s.id && map[String(s.id)] !== solSyncHash(s));
+}
+
+function updateSheetSyncBadge() {
+  const btn = $('syncSheetsBtn');
+  if (!btn || btn.disabled) return;
+  const pending = getPendingSheetSols(SOLS).length;
+  btn.innerHTML = pending > 0
+    ? `${ICO('check')} Sincronizar cambios (${pending})`
+    : `${ICO('check')} Sincronizar pendientes`;
+}
+
+async function postToAppsScript(url, body) {
+  const serialized = JSON.stringify(body);
+  try {
+    const res = await fetch(url, {
       method: 'POST',
-      mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(body)
+      body: serialized
     });
-    return { ok: true };
-  } catch (err) {
-    console.warn('Google Sheets sync error:', err);
-    return { ok: false, error: err };
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      return { ok: res.ok && data.ok !== false, data, opaque: false };
+    } catch {
+      return { ok: res.ok, data: null, opaque: false };
+    }
+  } catch (corsOrNetErr) {
+    try {
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: serialized
+      });
+      return { ok: true, data: null, opaque: true };
+    } catch (err) {
+      console.warn('Google Sheets sync error:', err || corsOrNetErr);
+      return { ok: false, error: err || corsOrNetErr };
+    }
   }
 }
 
-const APPS_SCRIPT_TEMPLATE = `function doGet() {
-  return ContentService.createTextOutput(JSON.stringify({ ok: true, status: 'INVERCOR Sheets sync activo' }))
+async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
+  const url = String(getCfg().appsScriptUrl || '').trim();
+  if (!url) return { ok: false, skipped: true };
+
+  if (mode === 'upsert') {
+    const sol = payloadOrAll;
+    if (!sol || !sol.id) return { ok: false, skipped: true };
+    const body = {
+      action: 'upsert',
+      headers: SHEET_HEADERS,
+      id: sol.id,
+      row: solToSheetRow(sol)
+    };
+    if (options.changedCols && Object.keys(options.changedCols).length) {
+      body.changedCols = options.changedCols;
+    }
+    const res = await postToAppsScript(url, body);
+    if (res.ok) {
+      markSolsSynced([sol]);
+      updateSheetSyncBadge();
+    }
+    return { ...res, count: 1 };
+  }
+
+  if (mode === 'upsert_batch') {
+    const list = (payloadOrAll || []).filter(s => s && s.id);
+    if (!list.length) return { ok: true, skipped: true, count: 0 };
+    if (list.length === 1) {
+      return syncToGoogleSheets('upsert', list[0], options);
+    }
+    let syncedCount = 0;
+    for (let i = 0; i < list.length; i += SHEET_BATCH_SIZE) {
+      const chunk = list.slice(i, i + SHEET_BATCH_SIZE);
+      const res = await postToAppsScript(url, {
+        action: 'upsert_batch',
+        headers: SHEET_HEADERS,
+        items: chunk.map(s => ({ id: s.id, row: solToSheetRow(s) }))
+      });
+      if (!res.ok) return { ok: false, count: syncedCount, error: res.error };
+      markSolsSynced(chunk);
+      syncedCount += chunk.length;
+    }
+    updateSheetSyncBadge();
+    return { ok: true, count: syncedCount };
+  }
+
+  if (mode === 'sync_all') {
+    const list = (payloadOrAll || []).filter(s => s && s.id);
+    const res = await postToAppsScript(url, {
+      action: 'sync_all',
+      headers: SHEET_HEADERS,
+      rows: list.map(solToSheetRow)
+    });
+    if (res.ok) {
+      markSolsSynced(list);
+      updateSheetSyncBadge();
+    }
+    return { ...res, count: list.length };
+  }
+
+  return { ok: false, skipped: true };
+}
+
+function queueSheetUpsert(sol, changedCols = null) {
+  if (!sol || !sol.id || !getCfg().appsScriptUrl) return;
+  const prev = SHEET_PENDING_QUEUE.get(sol.id);
+  const mergedCols = prev && prev.changedCols && changedCols
+    ? { ...prev.changedCols, ...changedCols }
+    : (prev ? null : changedCols);
+  SHEET_PENDING_QUEUE.set(sol.id, { sol, changedCols: mergedCols });
+  updateSheetSyncBadge();
+  clearTimeout(sheetFlushTimer);
+  sheetFlushTimer = setTimeout(flushSheetQueue, 650);
+}
+
+async function flushSheetQueue() {
+  if (!SHEET_PENDING_QUEUE.size) return;
+  const entries = Array.from(SHEET_PENDING_QUEUE.values());
+  SHEET_PENDING_QUEUE.clear();
+  if (entries.length === 1) {
+    await syncToGoogleSheets('upsert', entries[0].sol, { changedCols: entries[0].changedCols });
+  } else {
+    await syncToGoogleSheets('upsert_batch', entries.map(e => e.sol));
+  }
+}
+
+const APPS_SCRIPT_TEMPLATE = `// INVERCOR Google Sheets Sync v2 (Incremental O(1) + Batch + LockService)
+function doGet() {
+  return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 2, status: 'INVERCOR Sheets sync v2 activo' }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
-  var headers = data.headers || ['ID','Fecha','Nombre','Documento','Email','Teléfono','Adultos','Niños','Mascotas','Ingresos (€/mes)','Renta máx. 3x (€)','Aval','Viviendas y estados','Otras opciones','Habitaciones','Comentarios'];
-
-  if (data.action === 'sync_all') {
-    sheet.clearContents();
-    sheet.appendRow(headers);
-    (data.rows || []).forEach(function(r) { sheet.appendRow(r); });
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-    sheet.setFrozenRows(1);
-    return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
-  }
-
+function ensureHeaders_(sheet, headers) {
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(headers);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
     sheet.setFrozenRows(1);
   }
+}
 
-  var row = data.row || [];
-  var id = data.id || row[0];
+function findRowById_(sheet, id) {
   var lastRow = sheet.getLastRow();
-  var updated = false;
-  if (id && lastRow > 1) {
-    var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-    for (var i = 0; i < ids.length; i++) {
-      if (String(ids[i][0]) === String(id)) {
-        sheet.getRange(i + 2, 1, 1, row.length).setValues([row]);
-        updated = true;
-        break;
-      }
-    }
+  if (lastRow <= 1 || !id) return -1;
+  var match = sheet
+    .getRange(2, 1, lastRow - 1, 1)
+    .createTextFinder(String(id))
+    .matchEntireCell(true)
+    .findNext();
+  return match ? match.getRow() : -1;
+}
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: 'busy' }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
-  if (!updated && row.length) sheet.appendRow(row);
-  return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+  try {
+    var data = JSON.parse(e.postData.contents || '{}');
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+    var headers = data.headers || ['ID','Fecha','Nombre','Documento','Email','Teléfono','Adultos','Niños','Mascotas','Ingresos (€/mes)','Renta máx. 3x (€)','Aval','Viviendas y estados','Otras opciones','Habitaciones','Comentarios'];
+
+    // 1. Reconstrucción completa en UNA sola llamada setValues (sin appendRow en bucle)
+    if (data.action === 'sync_all') {
+      var rows = data.rows || [];
+      var matrix = [headers].concat(rows);
+      var prevLastRow = sheet.getLastRow();
+      sheet.getRange(1, 1, matrix.length, headers.length).setValues(matrix);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+      sheet.setFrozenRows(1);
+      if (prevLastRow > matrix.length) {
+        sheet.getRange(matrix.length + 1, 1, prevLastRow - matrix.length, Math.max(sheet.getLastColumn(), headers.length)).clearContent();
+      }
+      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 2, action: 'sync_all', rows: rows.length }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    ensureHeaders_(sheet, headers);
+
+    // 2. Sincronización incremental por lote (solo filas nuevas o modificadas)
+    if (data.action === 'upsert_batch') {
+      var items = data.items || [];
+      var lastRow = sheet.getLastRow();
+      var idMap = {};
+      if (lastRow > 1) {
+        var existingIds = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+        for (var i = 0; i < existingIds.length; i++) {
+          var key = String(existingIds[i][0] || '');
+          if (key) idMap[key] = i + 2;
+        }
+      }
+      var toInsert = [];
+      var updatedCount = 0;
+      for (var j = 0; j < items.length; j++) {
+        var item = items[j];
+        if (!item || !item.row || !item.row.length) continue;
+        var itemId = String(item.id || item.row[0] || '');
+        var rowNum = idMap[itemId];
+        if (rowNum) {
+          sheet.getRange(rowNum, 1, 1, item.row.length).setValues([item.row]);
+          updatedCount++;
+        } else {
+          toInsert.push(item.row);
+        }
+      }
+      if (toInsert.length) {
+        sheet.getRange(sheet.getLastRow() + 1, 1, toInsert.length, toInsert[0].length).setValues(toInsert);
+      }
+      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 2, action: 'upsert_batch', updated: updatedCount, inserted: toInsert.length }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 3. Actualización quirúrgica de una sola candidatura (celda o fila en O(1) con TextFinder)
+    var row = data.row || [];
+    var id = data.id || row[0];
+    var targetRow = findRowById_(sheet, id);
+    if (targetRow > 1) {
+      if (data.changedCols && typeof data.changedCols === 'object') {
+        var cols = Object.keys(data.changedCols);
+        for (var c = 0; c < cols.length; c++) {
+          var colNum = Number(cols[c]);
+          if (colNum >= 1 && colNum <= headers.length) {
+            sheet.getRange(targetRow, colNum).setValue(data.changedCols[cols[c]]);
+          }
+        }
+      } else if (row.length) {
+        sheet.getRange(targetRow, 1, 1, row.length).setValues([row]);
+      }
+      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 2, action: 'upsert', updated: 1, inserted: 0 }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (row.length) {
+      sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length).setValues([row]);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 2, action: 'upsert', updated: 0, inserted: row.length ? 1 : 0 }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
 }`;
 const GOOGLE_ICON = `<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>`;
 const getCfg = () => {
@@ -3245,6 +3451,7 @@ function renderAdmin(subTab) {
     const c = getCfg();
     const hasSheetLink = Boolean(c.googleSheetUrl);
     const hasLiveSync = Boolean(c.appsScriptUrl);
+    const pendingCount = getPendingSheetSols(SOLS).length;
     body.innerHTML = `
     <div class="panel" style="margin-bottom:16px;padding:16px 18px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
@@ -3252,7 +3459,7 @@ function renderAdmin(subTab) {
           <b style="font-size:.95rem">Resumen de candidaturas en Google Sheets</b>
           <div class="m" style="margin-top:2px">
             ${hasLiveSync
-              ? '<span class="dot ok"></span>Sincronización automática activa: cada candidatura y cambio de estado se actualiza en tu hoja.'
+              ? '<span class="dot ok"></span>Sincronización incremental activa: solo se actualiza la fila o celda modificada, sin recargar el resto de la hoja.'
               : hasSheetLink
               ? '<span class="dot warn"></span>Hoja enlazada. Puedes abrirla aquí o activar el volcado automático en Integraciones.'
               : 'Conecta un único enlace de Google Sheets para ver siempre todas las candidaturas actualizadas sin descargar archivos Excel.'}
@@ -3263,7 +3470,8 @@ function renderAdmin(subTab) {
             ? `<a class="btn ok sm" href="${esc(c.googleSheetUrl)}" target="_blank" rel="noopener">${ICO('file')} Abrir Google Sheets</a>`
             : `<button class="btn ok sm" type="button" id="quickLinkSheetBtn">${ICO('file')} Conectar enlace Google Sheets</button>`}
           ${hasLiveSync
-            ? `<button class="btn sm" type="button" id="syncSheetsBtn">${ICO('check')} Actualizar Google Sheets ahora</button>`
+            ? `<button class="btn sm" type="button" id="syncSheetsBtn">${ICO('check')} ${pendingCount > 0 ? `Sincronizar cambios (${pendingCount})` : 'Sincronizar pendientes'}</button>
+               <button class="btn g sm" type="button" id="rebuildSheetsBtn" title="Sobrescribe toda la hoja en un único bloque por si fue vaciada manualmente">Reconstruir hoja</button>`
             : ''}
           <button class="btn g sm" type="button" id="copySheetsBtn">${ICO('columns')} Copiar tabla para Google Sheets</button>
           <button class="btn g sm" type="button" id="exportCsvBtn">${ICO('download')} CSV</button>
@@ -3330,9 +3538,13 @@ function renderAdmin(subTab) {
       if (e.target.dataset.sol !== undefined) {
         const sIdx = Number(e.target.dataset.sol), selIdx = Number(e.target.dataset.sel);
         const newSt = e.target.value;
-        SOLS[sIdx].selecciones[selIdx].estado = newSt;
-        cloudSaveSol(SOLS[sIdx]);
-        if (getCfg().appsScriptUrl) syncToGoogleSheets('upsert', SOLS[sIdx]);
+        const sol = SOLS[sIdx];
+        sol.selecciones[selIdx].estado = newSt;
+        cloudSaveSol(sol);
+        const viviendasEstados = (sol.selecciones || []).map(x => `${x.ref} (${x.estado})`).join(' | ');
+        if (getCfg().appsScriptUrl) {
+          queueSheetUpsert(sol, { 13: viviendasEstados });
+        }
         notify(newSt === 'Pre-aprobada'
           ? 'Marcada como Pre-aprobada: el botón de Rentger ya es visible para el usuario'
           : newSt === 'No aprobada'
@@ -3360,13 +3572,37 @@ function renderAdmin(subTab) {
 
     if ($('syncSheetsBtn')) {
       $('syncSheetsBtn').onclick = async () => {
+        clearTimeout(sheetFlushTimer);
+        SHEET_PENDING_QUEUE.clear();
+        const pending = getPendingSheetSols(SOLS);
+        if (!pending.length) {
+          notify('Google Sheets ya está al día: no hay candidaturas nuevas ni modificadas');
+          return;
+        }
         const btn = $('syncSheetsBtn');
         btn.disabled = true;
-        btn.textContent = 'Sincronizando…';
+        btn.textContent = `Sincronizando ${pending.length}…`;
+        const res = await syncToGoogleSheets('upsert_batch', pending);
+        btn.disabled = false;
+        updateSheetSyncBadge();
+        notify(res.ok
+          ? `${pending.length} ${pending.length === 1 ? 'candidatura actualizada' : 'candidaturas actualizadas'} en Google Sheets sin recargar el resto`
+          : 'No se pudo conectar con Google Sheets. Revisa la URL de conexión.');
+      };
+    }
+
+    if ($('rebuildSheetsBtn')) {
+      $('rebuildSheetsBtn').onclick = async () => {
+        const btn = $('rebuildSheetsBtn');
+        btn.disabled = true;
+        btn.textContent = 'Reconstruyendo…';
         const res = await syncToGoogleSheets('sync_all', SOLS);
         btn.disabled = false;
-        btn.innerHTML = `${ICO('check')} Actualizar Google Sheets ahora`;
-        notify(res.ok ? `Resumen completo (${SOLS.length} candidaturas) enviado a Google Sheets` : 'No se pudo conectar con Google Sheets. Revisa la URL de conexión.');
+        btn.textContent = 'Reconstruir hoja';
+        updateSheetSyncBadge();
+        notify(res.ok
+          ? `Hoja reconstruida en bloque (${SOLS.length} candidaturas en una sola escritura)`
+          : 'No se pudo reconstruir Google Sheets. Revisa la URL de conexión.');
       };
     }
 
@@ -3562,21 +3798,21 @@ function renderAdmin(subTab) {
       </div>
 
       <div class="panel">
-        <h3>Conectar actualización automática con Google Sheets</h3>
-        <p class="m" style="margin:6px 0 10px">Para que cada nueva candidatura y cada cambio de estado se guarden solos en una única hoja de Google Sheets:</p>
+        <h3>Sincronización incremental con Google Sheets (v2)</h3>
+        <p class="m" style="margin:6px 0 10px">Optimizado para miles de candidaturas: actualiza únicamente la celda o fila modificada mediante búsqueda directa (<code>TextFinder</code>) y lotes agrupados, sin borrar ni recargar el resto de filas.</p>
         <ol class="m" style="padding-left:18px;display:grid;gap:6px;margin-bottom:14px">
-          <li>Crea una hoja en <b>Google Sheets</b> y pega su enlace arriba en <b>Enlace de tu hoja de Google Sheets</b>.</li>
-          <li>Dentro de esa hoja ve a <b>Extensiones → Apps Script</b>, borra lo que aparece y pega el código del botón inferior.</li>
-          <li>Pulsa <b>Implementar → Nueva implementación → Aplicación web</b> (Acceso: <i>Cualquier usuario</i>) y pega la URL generada en <b>Conexión automática</b>.</li>
+          <li>Crea o abre tu hoja en <b>Google Sheets</b> y pega su enlace en <b>Enlace de tu hoja de Google Sheets</b>.</li>
+          <li>Dentro de esa hoja ve a <b>Extensiones → Apps Script</b>, sustituye el código por la versión v2 del botón inferior y guarda.</li>
+          <li>Pulsa <b>Implementar → Administrar implementaciones</b> (o <i>Nueva implementación → Aplicación web</i>, acceso: <i>Cualquier usuario</i>) y actualiza la URL en <b>Conexión automática</b> si cambió.</li>
         </ol>
-        <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar código para Google Sheets</button>
+        <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v2 (Incremental)</button>
       </div>
     </div>`;
 
     $('copyAppsScriptBtn').onclick = async () => {
       try {
         await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-        notify('Código de Google Apps Script copiado al portapapeles');
+        notify('Código de Google Apps Script v2 (incremental) copiado al portapapeles');
       } catch (_) {
         notify('No se pudo copiar automáticamente');
       }
@@ -3660,43 +3896,6 @@ document.addEventListener('click', e => {
 
 $('bur').onclick = () => $('nl').classList.toggle('open');
 addEventListener('hashchange', route);
-
-$('dlHtmlBtn').onclick = e => {
-  e.preventDefault();
-  const docClone = document.documentElement.cloneNode(true);
-  docClone.removeAttribute('data-theme');
-  ['#app', '#nl', '#lgS', '#userMenu'].forEach(sel => {
-    const el = docClone.querySelector(sel);
-    if (el) el.innerHTML = '';
-  });
-  const um = docClone.querySelector('#userMenu');
-  if (um) um.classList.remove('open');
-  const ub = docClone.querySelector('#userBtn');
-  if (ub) { ub.classList.remove('is-admin'); ub.setAttribute('aria-expanded', 'false'); }
-  const ul = docClone.querySelector('#userBtnLabel');
-  if (ul) ul.textContent = 'Iniciar sesión';
-  const cb = docClone.querySelector('#compareBar');
-  if (cb) { cb.innerHTML = ''; cb.hidden = true; }
-  const ck = docClone.querySelector('#cookieBar');
-  if (ck) ck.hidden = true;
-  const dlgEl = docClone.querySelector('#dlg');
-  if (dlgEl) { dlgEl.removeAttribute('open'); dlgEl.className = ''; dlgEl.innerHTML = ''; }
-  const cpEl = docClone.querySelector('#chatPanel');
-  if (cpEl) { cpEl.classList.remove('open', 'has-cmp'); cpEl.hidden = true; }
-  const cfEl = docClone.querySelector('#chatFab');
-  if (cfEl) { cfEl.setAttribute('aria-expanded', 'false'); cfEl.classList.remove('has-cmp'); }
-  const cbBody = docClone.querySelector('#chatBody');
-  if (cbBody) cbBody.innerHTML = '';
-  const cLogo = docClone.querySelector('#chatLogo');
-  if (cLogo) cLogo.innerHTML = '';
-  const fullHtml = '<!DOCTYPE html>\n' + docClone.outerHTML;
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([fullHtml], { type: 'text/html;charset=utf-8' }));
-  a.download = 'INVERCOR_PATRIMONIO.html';
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1500);
-  notify('Archivo INVERCOR_PATRIMONIO.html descargado');
-};
 
 /* ==========================================================================
    CHAT FLOTANTE DE CONSULTAS RÁPIDAS (WEB3FORMS)
