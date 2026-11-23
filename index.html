@@ -299,7 +299,7 @@ tr:last-child td{border-bottom:0}
 .qr-card svg{width:146px;height:auto;background:#fff;padding:6px;border-radius:4px;border:1px solid var(--line)}
 
 /* Dialog, Cookie Banner, Toast, Footer */
-dialog{border:1px solid var(--line);border-radius:var(--radius);max-width:480px;width:94vw;padding:24px;background:var(--card);color:var(--tx);box-shadow:var(--shadow-lg);margin:auto}
+dialog{border:1px solid var(--line);border-radius:var(--radius);max-width:480px;width:94vw;max-height:92vh;overflow-y:auto;padding:24px;background:var(--card);color:var(--tx);box-shadow:var(--shadow-lg);margin:auto}
 dialog.wide{max-width:860px}
 dialog::backdrop{background:rgba(7,17,29,.72);backdrop-filter:blur(4px)}
 .cookie-bar{position:fixed;bottom:16px;left:16px;right:16px;max-width:960px;margin:auto;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--b1);border-radius:var(--radius);padding:15px 20px;z-index:90;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--shadow-lg)}
@@ -529,6 +529,23 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .arch-badge.sold{background:var(--ok-bg);color:var(--ok-tx);border-color:rgba(16,185,129,.4)}
 .arch-badge.rej{background:var(--bad-bg);color:var(--bad-tx);border-color:rgba(239,68,68,.4)}
 .card-leaving{opacity:0!important;transform:translateY(-6px) scale(.99)!important;transition:opacity .15s ease,transform .15s ease!important;pointer-events:none}
+.edit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.edit-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:640px){.edit-grid-2{grid-template-columns:1fr}}
+.edit-checks{display:flex;gap:16px;flex-wrap:wrap;margin:4px 0 12px}
+.edit-checks label{display:inline-flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:.83rem}
+.edit-checks input{width:16px;height:16px;margin:0;accent-color:var(--b1)}
+.photo-mgr{border:1px solid var(--line);border-radius:6px;background:var(--card2);padding:12px;margin:6px 0 14px}
+.photo-mgr.err{border-color:rgba(239,68,68,.65);background:var(--bad-bg)}
+.photo-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:10px}
+.photo-item{border:1px solid var(--line);border-radius:4px;background:var(--card);overflow:hidden;display:flex;flex-direction:column}
+.photo-item img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:var(--bg)}
+.photo-item-meta{padding:7px;display:flex;flex-direction:column;gap:5px}
+.photo-item-meta input{margin:0;padding:4px 6px;font-size:.74rem}
+.photo-item-acts{display:flex;gap:4px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.photo-cover-tag{font-size:.66rem;font-weight:700;padding:2px 6px;border-radius:3px;background:var(--ok-bg);color:var(--ok-tx)}
+.blog-cover{width:100%;max-height:260px;object-fit:cover;border-radius:4px;border:1px solid var(--line);margin:10px 0 4px;display:block}
+.blog-edit-banner{background:var(--warn-bg);color:var(--warn-tx);border:1px solid rgba(245,158,11,.45);border-radius:4px;padding:8px 11px;font-size:.81rem;font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .confirm-box{background:var(--card2);border:1px solid var(--line);border-radius:4px;padding:12px;margin:12px 0;font-size:.84rem}
 .confirm-check{display:flex;gap:9px;align-items:flex-start;cursor:pointer;font-size:.83rem;font-weight:600;margin:10px 0;color:var(--tx)}
 .confirm-check input{width:16px;height:16px;margin-top:2px;accent-color:var(--b1);flex-shrink:0}
@@ -1653,6 +1670,7 @@ function setSession(user) {
   if (CURRENT_USER) safeSetItem(sessionStorage, 'inv-session', JSON.stringify(CURRENT_USER));
   else { try { sessionStorage.removeItem('inv-session'); } catch {} }
   updateUserHeader();
+  if (window.renderBlogList) renderBlogList();
 }
 
 function isConfiguredAdminEmail(email) {
@@ -1807,13 +1825,102 @@ function seedViviendas() {
   return list;
 }
 
+function isSafeImageSrc(src) {
+  const s = String(src || '').trim();
+  if (!s) return false;
+  return /^https?:\/\//i.test(s) || /^data:image\/(jpeg|jpg|png|webp|gif);base64,/i.test(s);
+}
+
+function compressImageFile(file, maxWidth = 1200, quality = 0.78) {
+  return new Promise((resolve, reject) => {
+    if (!file || !String(file.type || '').startsWith('image/')) {
+      reject(new Error('El archivo seleccionado no es una imagen válida'));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Formato de imagen no compatible'));
+      img.onload = () => {
+        const scale = img.width > maxWidth ? (maxWidth / img.width) : 1;
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        let dataUrl = canvas.toDataURL('image/jpeg', quality);
+        if (dataUrl.length > 260000) {
+          dataUrl = canvas.toDataURL('image/jpeg', 0.62);
+        }
+        resolve(dataUrl);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function estimateInlinePhotoBytes(photos) {
+  return (photos || []).reduce((sum, p) => {
+    const src = String(p?.src || '');
+    return sum + (src.startsWith('data:') ? src.length : 0);
+  }, 0);
+}
+
+function getNextUnitRef() {
+  let maxNum = 0;
+  V.forEach(u => {
+    const m = String(u.ref || '').match(/(\d+)/);
+    if (m) maxNum = Math.max(maxNum, Number(m[1]));
+  });
+  return 'REF-' + String(maxNum + 1).padStart(2, '0');
+}
+
+function getUnitCustomPhotos(v) {
+  if (!v) return [];
+  if (Array.isArray(v.customPhotos) && v.customPhotos.length) {
+    return v.customPhotos
+      .filter(p => p && isSafeImageSrc(p.src))
+      .map((p, idx) => ({
+        file: p.file || `${String(v.ref || 'vivienda').toLowerCase()}_foto_${idx + 1}.jpg`,
+        caption: p.caption || `${v.ref} · Fotografía ${idx + 1}`,
+        src: String(p.src).trim()
+      }));
+  }
+  if (v.customPhotoUrl && isSafeImageSrc(v.customPhotoUrl)) {
+    return [{
+      file: `${String(v.ref || 'vivienda').toLowerCase()}_principal.jpg`,
+      caption: `${v.ref} · Fotografía principal`,
+      src: String(v.customPhotoUrl).trim()
+    }];
+  }
+  return [];
+}
+
 function getUnitPhotos(v) {
-  const baseIdx = Number.isInteger(v.photoIdx) ? v.photoIdx % DEMO_PHOTOS.length : 1;
+  const custom = getUnitCustomPhotos(v);
+  if (Array.isArray(v?.customPhotos) && custom.length) {
+    return custom;
+  }
+  const baseIdx = Number.isInteger(v?.photoIdx) ? v.photoIdx % DEMO_PHOTOS.length : 1;
   const ordered = [DEMO_PHOTOS[baseIdx], ...DEMO_PHOTOS.filter((_, idx) => idx !== baseIdx)];
-  if (v.customPhotoUrl) {
-    return [{ file: `${v.ref.toLowerCase()}_principal.jpg`, caption: `${v.ref} · Fotografía principal`, src: v.customPhotoUrl }, ...ordered];
+  if (custom.length) {
+    return [custom[0], ...ordered];
   }
   return ordered;
+}
+
+function refreshAllPropertyViews() {
+  if (window.renderCatalog) window.renderCatalog();
+  if (window.refreshInicio) window.refreshInicio();
+  if (window.renderBuildingExplorer) window.renderBuildingExplorer();
+  if (window.renderAlzadoPage) window.renderAlzadoPage();
+  if (window.renderCompareBar) window.renderCompareBar();
 }
 
 const DEFAULT_BLOG = [
@@ -1850,6 +1957,17 @@ const saveStats = () => safeSetItem(localStorage, 'inv-stats', JSON.stringify(ST
 async function cloudSaveUnit(v) {
   saveV();
   try { await setDoc(doc(fbDb, 'viviendas', v.ref), v); FB_DB_ONLINE = true; } catch (_) {}
+}
+async function cloudDeleteUnit(ref, unitObj = null) {
+  saveV();
+  try {
+    await deleteDoc(doc(fbDb, 'viviendas', String(ref)));
+    FB_DB_ONLINE = true;
+  } catch (_) {
+    try {
+      await setDoc(doc(fbDb, 'viviendas', String(ref)), { ...(unitObj || { ref: String(ref) }), deleted: true }, { merge: true });
+    } catch (_) {}
+  }
 }
 async function cloudSaveSol(sol) {
   saveSols();
@@ -1942,14 +2060,20 @@ async function syncPublicData() {
     ]);
     FB_DB_ONLINE = true;
     if (!vSnap.empty) {
-      V = vSnap.docs.map(d => d.data()).sort((a, b) => a.ref.localeCompare(b.ref));
+      V = vSnap.docs
+        .map(d => d.data())
+        .filter(x => x && !x.deleted)
+        .sort((a, b) => String(a.ref || '').localeCompare(String(b.ref || ''), 'es', { numeric: true }));
       FB_VIVIENDAS_EMPTY = false;
       saveV();
     } else {
       FB_VIVIENDAS_EMPTY = true;
     }
     if (!bSnap.empty) {
-      BLOG = bSnap.docs.map(d => d.data()).sort((a, b) => Number(b.id) - Number(a.id));
+      BLOG = bSnap.docs
+        .map(d => d.data())
+        .filter(b => b && !b.deleted)
+        .sort((a, b) => Number(b.id) - Number(a.id));
       saveBlog();
       if (window.renderBlogList) renderBlogList();
     }
@@ -3587,12 +3711,27 @@ function renderApp() {
   $('ing').oninput = updateSim; updateSim();
 
   window.renderBlogList = () => {
-    $('blogList').innerHTML = BLOG.map(b => `
+    const isAdmin = CURRENT_USER?.role === 'admin';
+    const host = $('blogList');
+    if (!host) return;
+    host.innerHTML = BLOG.map(b => `
       <details open>
-        <summary><span><span class="tag" style="margin:0 8px 0 0">${esc(b.cat)}</span>${esc(b.title)}</span></summary>
+        <summary>
+          <span><span class="tag" style="margin:0 8px 0 0">${esc(b.cat)}</span>${esc(b.title)}</span>
+          ${isAdmin ? `<button type="button" class="btn g sm" data-pub-edit-blog="${b.id}" style="margin-left:auto">${ICO('edit')} Editar</button>` : ''}
+        </summary>
+        ${b.image && isSafeImageSrc(b.image) ? `<img class="blog-cover" src="${esc(b.image)}" alt="${esc(b.title)}" loading="lazy">` : ''}
         <p style="font-size:.78rem;margin-top:6px">Publicado el ${esc(b.date)}</p>
-        <p>${esc(b.body)}</p>
+        <p style="white-space:pre-line">${esc(b.body)}</p>
       </details>`).join('');
+    host.onclick = e => {
+      const editBtn = e.target.closest('[data-pub-edit-blog]');
+      if (!editBtn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      PENDING_EDIT_BLOG_ID = Number(editBtn.dataset.pubEditBlog);
+      location.hash = 'admin/blog';
+    };
   };
   renderBlogList();
 
@@ -3804,6 +3943,7 @@ function renderFicha(ref) {
   <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
     <a class="btn g sm" href="#viviendas">← Volver al listado</a>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${CURRENT_USER?.role === 'admin' ? `<button type="button" class="btn sm" id="fichaEditUnitBtn">${ICO('edit')} Editar vivienda</button>` : ''}
       <a class="btn g sm" target="_blank" rel="noopener" href="https://wa.me/?text=${waText}">Compartir WhatsApp</a>
       <a class="btn g sm" href="mailto:?subject=Vivienda ${v.ref} Móstoles&body=${waText}">Email</a>
       <button type="button" class="btn g sm" id="copyFichaLink">Copiar enlace</button>
@@ -3929,6 +4069,9 @@ function renderFicha(ref) {
   $('openLightboxBtn').onclick = openFull;
 
   $('copyFichaLink').onclick = () => { navigator.clipboard?.writeText(shareUrl); notify('Enlace de ' + v.ref + ' copiado'); };
+  if ($('fichaEditUnitBtn')) {
+    $('fichaEditUnitBtn').onclick = () => openUnitEditorModal(v, saved => renderFicha(saved.ref));
+  }
   if ($('scrollToFormBtn')) $('scrollToFormBtn').onclick = () => $('ficha-form-anchor')?.scrollIntoView({ behavior: 'smooth' });
   $('dlUnitQrPng').onclick = () => downloadQrPng(shareUrl, `QR_${v.ref}_INVERCOR`, `INVERCOR · ${v.ref}`, `${v.h} HAB · ${v.m2} m² · ${eur(v.r)}/MES`);
   $('dlUnitQrSvg').onclick = () => downloadQrSvg(shareUrl, `QR_${v.ref}_INVERCOR`, `INVERCOR · ${v.ref}`, `${v.h} HAB · ${v.m2} m² · ${eur(v.r)}/MES`);
@@ -3938,10 +4081,387 @@ function renderFicha(ref) {
     $('dlg').innerHTML = `
       <h3>Certificado de Eficiencia Energética · ${v.ref}</h3>
       <p class="m" style="margin:10px 0">Residencial Los Álamos · INVERCOR PATRIMONIO S.L. (Móstoles, Madrid)</p>
-      <div style="background:#047857;color:#fff;padding:14px;border-radius:4px;font-weight:700;font-size:1rem">Calificación Energética: CLASE A (Consumo &lt; 28 kWh/m²·año)</div>
+      <div style="background:#047857;color:#fff;padding:14px;border-radius:4px;font-weight:700;font-size:1rem">Calificación Energética: CLASE ${esc(v.cee || 'A')} (Consumo &lt; 28 kWh/m²·año)</div>
       <p class="m" style="margin-top:10px">Documento informativo provisional. El certificado oficial visado se entrega junto con el contrato de arrendamiento.</p>
       <div style="margin-top:14px;text-align:right"><button class="btn sm" onclick="$('dlg').close()">Cerrar</button></div>`;
     $('dlg').showModal();
+  };
+}
+
+let PENDING_EDIT_BLOG_ID = null;
+
+/* ==========================================================================
+   MODAL COMPLETO DE EDICIÓN / ALTA DE VIVIENDAS (Solo Admin)
+   ========================================================================== */
+function openUnitEditorModal(existingUnit = null, onSaved = null) {
+  if (!CURRENT_USER || CURRENT_USER.role !== 'admin') return;
+  const isNew = !existingUnit;
+  const baseRef = isNew ? getNextUnitRef() : existingUnit.ref;
+  const unitPhotos = isNew ? [] : getUnitCustomPhotos(existingUnit).map(p => ({ ...p }));
+  let clearToDemo = false;
+
+  const dlg = $('dlg');
+  dlg.oncancel = null;
+  dlg.classList.add('wide');
+
+  const curOri = existingUnit?.ori || 'Sur';
+  const curSt = existingUnit?.st || 'D';
+  const curCee = existingUnit?.cee || 'A';
+  const orientations = ['Sur', 'Sureste', 'Suroeste', 'Este', 'Oeste', 'Norte', 'Noreste', 'Noroeste'];
+  const ceeOpts = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+
+  dlg.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
+      <div>
+        <h3>${isNew ? 'Añadir nueva vivienda' : `Editar vivienda · ${esc(existingUnit.ref)}`}</h3>
+        <p class="m" style="margin-top:2px">${isNew ? 'Completa todos los datos obligatorios y añade al menos una fotografía real de la vivienda.' : 'Modifica cualquier dato, estado, descripción o fotografía de esta vivienda.'}</p>
+      </div>
+      <button type="button" class="icon-btn" id="unitEdCloseX" aria-label="Cerrar">✕</button>
+    </div>
+
+    <form id="unitEditorForm" novalidate>
+      <div class="edit-grid">
+        <label>Referencia *
+          <input id="ueRef" required value="${esc(baseRef)}" ${isNew ? '' : 'readonly'} placeholder="Ej. REF-46" style="${isNew ? '' : 'opacity:.75;cursor:not-allowed'}">
+        </label>
+        <label>Nombre / Tipología *
+          <input id="ueNombre" required value="${esc(existingUnit?.nombre || '')}" placeholder="Ej. Ático Mirador · 3D">
+        </label>
+        <label>Portal / Bloque *
+          <input id="uePortal" required value="${esc(existingUnit?.portal || 'Portal A')}" placeholder="Ej. Portal C">
+        </label>
+        <label>Estado *
+          <select id="ueSt">
+            <option value="D" ${curSt === 'D' ? 'selected' : ''}>Disponible</option>
+            <option value="R" ${curSt === 'R' ? 'selected' : ''}>Reservada</option>
+            <option value="A" ${curSt === 'A' ? 'selected' : ''}>Alquilada</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="edit-grid">
+        <label>Renta mensual (€/mes) *
+          <input id="ueRent" type="number" min="100" max="20000" step="10" required value="${existingUnit ? Number(existingUnit.r) : ''}" placeholder="Ej. 1180">
+        </label>
+        <label>Habitaciones *
+          <input id="ueHabs" type="number" min="1" max="10" required value="${existingUnit ? Number(existingUnit.h) : ''}" placeholder="Ej. 3">
+        </label>
+        <label>Baños *
+          <input id="ueBanos" type="number" min="1" max="6" required value="${existingUnit ? Number(existingUnit.b) : ''}" placeholder="Ej. 2">
+        </label>
+        <label>Superficie (m²) *
+          <input id="ueM2" type="number" min="15" max="999" required value="${existingUnit ? Number(existingUnit.m2) : ''}" placeholder="Ej. 92">
+        </label>
+      </div>
+
+      <div class="edit-grid">
+        <label>Planta (0 = Bajo) *
+          <input id="uePlanta" type="number" min="0" max="30" required value="${existingUnit !== null && existingUnit !== undefined ? Number(existingUnit.pl) : ''}" placeholder="Ej. 2">
+        </label>
+        <label>Orientación *
+          <select id="ueOri">
+            ${orientations.map(o => `<option value="${o}" ${curOri === o ? 'selected' : ''}>${o}</option>`).join('')}
+          </select>
+        </label>
+        <label>Certificado CEE *
+          <select id="ueCee">
+            ${ceeOpts.map(c => `<option value="${c}" ${curCee === c ? 'selected' : ''}>Clase ${c}</option>`).join('')}
+          </select>
+        </label>
+        <label>Enlace Rentger (opcional)
+          <input id="ueRentger" type="url" value="${esc(existingUnit?.rentgerUrl || '')}" placeholder="https://app.rentger.com/...">
+        </label>
+      </div>
+
+      <div class="edit-checks">
+        <label><input type="checkbox" id="ueTerraza" ${existingUnit?.t ? 'checked' : ''}> Terraza</label>
+        <label><input type="checkbox" id="ueGaraje" ${existingUnit ? (existingUnit.g ? 'checked' : '') : 'checked'}> Plaza de garaje</label>
+        <label><input type="checkbox" id="ueTrastero" ${existingUnit?.tr ? 'checked' : ''}> Trastero</label>
+      </div>
+
+      <label>Descripción completa de la vivienda *
+        <textarea id="ueDesc" rows="3" required placeholder="Describe distribución, calidades, luminosidad, equipamiento y extras...">${esc(existingUnit?.desc || '')}</textarea>
+      </label>
+
+      <div class="photo-mgr" id="uePhotoBox">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <div>
+            <b style="font-size:.86rem">Fotografías de la vivienda ${isNew ? '* (mínimo 1 obligatoria)' : ''}</b>
+            <div class="m" style="font-size:.76rem">Sube imágenes desde tu dispositivo (se optimizan automáticamente) o añade enlaces URL. La primera será la portada.</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <label class="btn sm" style="margin:0;cursor:pointer">
+              ${ICO('download')} Subir fotos
+              <input type="file" id="uePhotoFiles" accept="image/*" multiple hidden>
+            </label>
+            ${!isNew ? `<button type="button" class="btn g sm" id="ueUseDemoBtn" title="Quitar fotos personalizadas y volver a las fotos demo">Usar fotos demo</button>` : ''}
+          </div>
+        </div>
+
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+          <input type="url" id="uePhotoUrlIn" placeholder="https://... (pegar URL de fotografía)" style="flex:2;min-width:200px;margin:0;padding:7px 10px;font-size:.8rem">
+          <input type="text" id="uePhotoCapIn" placeholder="Pie de foto (ej. Salón comedor)" style="flex:1;min-width:140px;margin:0;padding:7px 10px;font-size:.8rem">
+          <button type="button" class="btn g sm" id="ueAddPhotoUrlBtn">+ Añadir URL</button>
+        </div>
+
+        <div id="uePhotoStatus" class="m" style="font-size:.77rem;margin-top:7px"></div>
+        <div class="photo-list" id="uePhotoList"></div>
+      </div>
+
+      <div id="ueError" style="color:var(--bad-tx);font-size:.82rem;font-weight:600;margin-bottom:10px" hidden></div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
+        <button type="button" class="btn g sm" id="ueCancelBtn">Cancelar</button>
+        <button type="submit" class="btn sm" id="ueSaveBtn">${isNew ? 'Crear vivienda' : 'Guardar cambios'}</button>
+      </div>
+    </form>`;
+
+  dlg.showModal();
+
+  const errBox = $('ueError');
+  const photoBox = $('uePhotoBox');
+  const photoStatus = $('uePhotoStatus');
+  const photoListEl = $('uePhotoList');
+
+  const showErr = msg => {
+    errBox.textContent = msg;
+    errBox.hidden = !msg;
+  };
+
+  const renderPhotoList = () => {
+    photoBox.classList.remove('err');
+    if (!unitPhotos.length) {
+      photoListEl.innerHTML = '';
+      photoStatus.textContent = isNew
+        ? 'Todavía no has añadido ninguna fotografía. Sube al menos una foto o pega una URL.'
+        : (clearToDemo
+          ? 'Se usarán las fotografías de demostración de la promoción.'
+          : 'Actualmente usa las fotografías de demostración. Sube o añade URLs para sustituirlas.');
+      return;
+    }
+    const kb = Math.round(estimateInlinePhotoBytes(unitPhotos) / 1024);
+    photoStatus.textContent = `${unitPhotos.length} fotografía${unitPhotos.length > 1 ? 's' : ''} cargada${unitPhotos.length > 1 ? 's' : ''}${kb > 0 ? ` (${kb} KB optimizados)` : ''}. La #1 aparece como portada.`;
+    photoListEl.innerHTML = unitPhotos.map((ph, idx) => `
+      <div class="photo-item" data-pidx="${idx}">
+        <img src="${esc(ph.src)}" alt="${esc(ph.caption || '')}">
+        <div class="photo-item-meta">
+          <input type="text" data-pcap="${idx}" value="${esc(ph.caption || '')}" placeholder="Pie de foto">
+          <div class="photo-item-acts">
+            ${idx === 0 ? '<span class="photo-cover-tag">Portada</span>' : `<button type="button" class="btn g sm" style="padding:3px 7px;font-size:.7rem" data-pcover="${idx}">Portada</button>`}
+            <button type="button" class="btn bad sm" style="padding:3px 7px;font-size:.7rem" data-pdel="${idx}">Quitar</button>
+          </div>
+        </div>
+      </div>`).join('');
+  };
+
+  renderPhotoList();
+
+  photoListEl.oninput = e => {
+    if (e.target.dataset.pcap !== undefined) {
+      const idx = Number(e.target.dataset.pcap);
+      if (unitPhotos[idx]) unitPhotos[idx].caption = e.target.value;
+    }
+  };
+
+  photoListEl.onclick = e => {
+    const delBtn = e.target.closest('[data-pdel]');
+    if (delBtn) {
+      unitPhotos.splice(Number(delBtn.dataset.pdel), 1);
+      renderPhotoList();
+      return;
+    }
+    const covBtn = e.target.closest('[data-pcover]');
+    if (covBtn) {
+      const idx = Number(covBtn.dataset.pcover);
+      if (idx > 0 && unitPhotos[idx]) {
+        const [moved] = unitPhotos.splice(idx, 1);
+        unitPhotos.unshift(moved);
+        renderPhotoList();
+      }
+    }
+  };
+
+  $('uePhotoFiles').onchange = async e => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (!files.length) return;
+    showErr('');
+    photoStatus.textContent = 'Optimizando fotografías…';
+    let added = 0;
+    for (const f of files) {
+      try {
+        const dataUrl = await compressImageFile(f, 1200, 0.78);
+        if (estimateInlinePhotoBytes(unitPhotos) + dataUrl.length > 760000) {
+          showErr('Límite de tamaño alcanzado para fotos subidas directamente (máx. ~750 KB por vivienda). Para más fotos puedes pegar enlaces URL.');
+          break;
+        }
+        const cleanName = String(f.name || `foto_${unitPhotos.length + 1}.jpg`).replace(/\.[^.]+$/, '');
+        unitPhotos.push({
+          file: f.name || `foto_${unitPhotos.length + 1}.jpg`,
+          caption: cleanName || `Fotografía ${unitPhotos.length + 1}`,
+          src: dataUrl
+        });
+        clearToDemo = false;
+        added++;
+      } catch (err) {
+        showErr(err.message || 'No se pudo procesar una de las imágenes');
+      }
+    }
+    renderPhotoList();
+    if (added > 0) notify(`${added} fotografía${added > 1 ? 's' : ''} añadida${added > 1 ? 's' : ''}`);
+  };
+
+  $('ueAddPhotoUrlBtn').onclick = () => {
+    const url = $('uePhotoUrlIn').value.trim();
+    const cap = $('uePhotoCapIn').value.trim();
+    if (!isSafeImageSrc(url)) {
+      showErr('Introduce una URL de imagen válida que empiece por https:// o http://');
+      $('uePhotoUrlIn').focus();
+      return;
+    }
+    showErr('');
+    unitPhotos.push({
+      file: `foto_${unitPhotos.length + 1}.jpg`,
+      caption: cap || `Fotografía ${unitPhotos.length + 1}`,
+      src: url
+    });
+    clearToDemo = false;
+    $('uePhotoUrlIn').value = '';
+    $('uePhotoCapIn').value = '';
+    renderPhotoList();
+  };
+
+  if ($('ueUseDemoBtn')) {
+    $('ueUseDemoBtn').onclick = () => {
+      unitPhotos.length = 0;
+      clearToDemo = true;
+      renderPhotoList();
+    };
+  }
+
+  const closeModal = () => {
+    dlg.classList.remove('wide');
+    dlg.close();
+  };
+  $('ueCancelBtn').onclick = closeModal;
+  $('unitEdCloseX').onclick = closeModal;
+
+  $('unitEditorForm').onsubmit = e => {
+    e.preventDefault();
+    showErr('');
+
+    const ref = $('ueRef').value.trim().toUpperCase();
+    const nombre = $('ueNombre').value.trim();
+    const portal = $('uePortal').value.trim();
+    const st = $('ueSt').value;
+    const r = Number($('ueRent').value);
+    const h = Number($('ueHabs').value);
+    const b = Number($('ueBanos').value);
+    const m2 = Number($('ueM2').value);
+    const pl = Number($('uePlanta').value);
+    const ori = $('ueOri').value;
+    const cee = $('ueCee').value;
+    const rentgerUrl = $('ueRentger').value.trim();
+    const t = $('ueTerraza').checked;
+    const g = $('ueGaraje').checked;
+    const tr = $('ueTrastero').checked;
+    const desc = $('ueDesc').value.trim();
+
+    if (!ref || ref.length < 2) { showErr('Indica una referencia válida (ej. REF-46).'); $('ueRef').focus(); return; }
+    if (isNew && V.some(x => String(x.ref).toUpperCase() === ref)) {
+      showErr(`Ya existe una vivienda con la referencia ${ref}. Elige otra referencia.`);
+      $('ueRef').focus();
+      return;
+    }
+    if (nombre.length < 3) { showErr('Indica el nombre o tipología de la vivienda.'); $('ueNombre').focus(); return; }
+    if (!portal) { showErr('Indica el portal o bloque de la vivienda.'); $('uePortal').focus(); return; }
+    if (!Number.isFinite(r) || r < 100) { showErr('Introduce una renta mensual válida (mínimo 100 €).'); $('ueRent').focus(); return; }
+    if (!Number.isInteger(h) || h < 1 || h > 10) { showErr('Indica el número de habitaciones (1 a 10).'); $('ueHabs').focus(); return; }
+    if (!Number.isInteger(b) || b < 1 || b > 6) { showErr('Indica el número de baños (1 a 6).'); $('ueBanos').focus(); return; }
+    if (!Number.isFinite(m2) || m2 < 15) { showErr('Indica la superficie en m² (mínimo 15 m²).'); $('ueM2').focus(); return; }
+    if (!Number.isInteger(pl) || pl < 0 || pl > 30) { showErr('Indica la planta (0 para bajo).'); $('uePlanta').focus(); return; }
+    if (rentgerUrl && !/^https?:\/\//i.test(rentgerUrl)) { showErr('La URL de Rentger debe empezar por https:// o http://'); $('ueRentger').focus(); return; }
+    if (desc.length < 10) { showErr('Completa la descripción de la vivienda (mínimo 10 caracteres).'); $('ueDesc').focus(); return; }
+    if (isNew && unitPhotos.length === 0) {
+      photoBox.classList.add('err');
+      showErr('Para añadir una vivienda nueva debes subir o añadir al menos 1 fotografía.');
+      return;
+    }
+
+    const sanitizedPhotos = unitPhotos
+      .filter(p => p && isSafeImageSrc(p.src))
+      .map((p, idx) => ({
+        file: p.file || `${ref.toLowerCase()}_foto_${idx + 1}.jpg`,
+        caption: String(p.caption || `${ref} · Fotografía ${idx + 1}`).trim(),
+        src: String(p.src).trim()
+      }));
+
+    const updatedUnit = {
+      ...(existingUnit || {}),
+      ref,
+      nombre,
+      portal,
+      h,
+      pl,
+      m2,
+      b,
+      t,
+      g,
+      tr,
+      ori,
+      r,
+      st,
+      cee,
+      photoIdx: existingUnit?.photoIdx || ((V.length % 5) + 1),
+      customPhotoUrl: sanitizedPhotos[0]?.src || '',
+      customPhotos: sanitizedPhotos,
+      rentgerUrl,
+      desc
+    };
+    delete updatedUnit.deleted;
+
+    if (isNew) {
+      V.push(updatedUnit);
+      V.sort((a, b2) => String(a.ref || '').localeCompare(String(b2.ref || ''), 'es', { numeric: true }));
+    } else {
+      Object.assign(existingUnit, updatedUnit);
+    }
+
+    closeModal();
+    trackBgOp(cloudSaveUnit(isNew ? updatedUnit : existingUnit));
+    refreshAllPropertyViews();
+    if (typeof onSaved === 'function') onSaved(isNew ? updatedUnit : existingUnit);
+    notify(isNew ? `Vivienda ${ref} creada correctamente` : `Vivienda ${ref} actualizada`);
+  };
+}
+
+function openDeleteUnitModal(unit, onDeleted = null) {
+  if (!CURRENT_USER || CURRENT_USER.role !== 'admin' || !unit) return;
+  const dlg = $('dlg');
+  dlg.oncancel = null;
+  dlg.classList.remove('wide');
+  dlg.innerHTML = `
+    <h3>Eliminar vivienda ${esc(unit.ref)}</h3>
+    <p class="m" style="margin-top:6px">Se eliminará <b>${esc(unit.ref)} · ${esc(unit.nombre || '')}</b> (${esc(unit.portal)}, ${eur(unit.r)}/mes) del catálogo y de Firestore.</p>
+    <label class="confirm-check" style="background:var(--bad-bg);color:var(--bad-tx);padding:9px 10px;border-radius:4px;border:1px solid rgba(239,68,68,.3)">
+      <input type="checkbox" id="delUnitVerifyChk">
+      <span>Confirmo que deseo eliminar esta vivienda del inventario.</span>
+    </label>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+      <button type="button" class="btn g sm" id="delUnitCancelBtn">Cancelar</button>
+      <button type="button" class="btn bad sm" id="delUnitConfirmBtn" disabled>Eliminar vivienda</button>
+    </div>`;
+  dlg.showModal();
+  $('delUnitVerifyChk').onchange = () => { $('delUnitConfirmBtn').disabled = !$('delUnitVerifyChk').checked; };
+  $('delUnitCancelBtn').onclick = () => dlg.close();
+  $('delUnitConfirmBtn').onclick = () => {
+    if (!$('delUnitVerifyChk').checked) return;
+    V = V.filter(x => x.ref !== unit.ref);
+    dlg.close();
+    trackBgOp(cloudDeleteUnit(unit.ref, unit));
+    refreshAllPropertyViews();
+    if (typeof onDeleted === 'function') onDeleted(unit);
+    notify(`Vivienda ${unit.ref} eliminada del inventario`);
   };
 }
 
@@ -4029,35 +4549,55 @@ function renderAdmin(subTab) {
   if (adminTab === 'inventario') {
     body.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-      <input id="admSearch" placeholder="Buscar REF-01, Portal..." style="max-width:260px;margin:0">
-      <button class="btn sm" id="addUnitBtn">+ Añadir nueva vivienda</button>
+      <input id="admSearch" placeholder="Buscar REF-01, tipología, portal, orientación..." style="max-width:300px;margin:0">
+      <button class="btn sm" type="button" id="addUnitBtn">+ Añadir nueva vivienda</button>
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Ref.</th><th>Tipología / Portal</th><th>Hab / m²</th><th>Renta/mes</th><th>Estado</th><th>Foto Principal (URL opcional)</th><th>URL Rentger</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>Ref.</th><th>Tipología / Portal</th><th>Características</th><th>Renta/mes</th><th>Estado</th><th>Fotos</th><th>Acciones</th></tr></thead>
         <tbody id="invRows"></tbody>
       </table>
     </div>`;
 
     const drawRows = () => {
-      const q = ($('admSearch').value || '').toUpperCase();
-      $('invRows').innerHTML = V.filter(v => v.ref.includes(q) || v.portal.toUpperCase().includes(q)).map(v => `
+      const q = ($('admSearch').value || '').trim().toLowerCase();
+      $('invRows').innerHTML = V.filter(v => {
+        if (!q) return true;
+        return `${v.ref} ${v.nombre || ''} ${v.portal || ''} ${v.ori || ''}`.toLowerCase().includes(q);
+      }).map(v => {
+        const customCount = getUnitCustomPhotos(v).length;
+        const extras = [v.t ? 'Terraza' : '', v.g ? 'Garaje' : '', v.tr ? 'Trastero' : ''].filter(Boolean).join(' · ');
+        return `
         <tr>
-          <td><b>${v.ref}</b></td>
-          <td>${esc(v.nombre || '')}<div class="m" style="font-size:.74rem">${v.portal} · P${v.pl}</div></td>
-          <td>${v.h} hab · ${v.m2} m²</td>
-          <td><input type="number" value="${v.r}" data-rent="${v.ref}" style="width:88px;margin:0;padding:5px 8px"> €</td>
+          <td><b>${esc(v.ref)}</b></td>
           <td>
-            <select data-st="${v.ref}" style="width:125px;margin:0;padding:5px 8px">
+            <b>${esc(v.nombre || '')}</b>
+            <div class="m" style="font-size:.74rem">${esc(v.portal)} · ${v.pl === 0 ? 'Bajo' : 'P' + v.pl} · ${esc(v.ori || 'Sur')} · CEE ${esc(v.cee || 'A')}</div>
+          </td>
+          <td>
+            ${v.h} hab · ${v.b} baño${v.b > 1 ? 's' : ''} · ${v.m2} m²
+            ${extras ? `<div class="m" style="font-size:.73rem">${extras}</div>` : ''}
+          </td>
+          <td><input type="number" value="${v.r}" data-rent="${esc(v.ref)}" style="width:88px;margin:0;padding:5px 8px"> €</td>
+          <td>
+            <select data-st="${esc(v.ref)}" style="width:125px;margin:0;padding:5px 8px">
               <option value="D" ${v.st === 'D' ? 'selected' : ''}>Disponible</option>
               <option value="R" ${v.st === 'R' ? 'selected' : ''}>Reservada</option>
               <option value="A" ${v.st === 'A' ? 'selected' : ''}>Alquilada</option>
             </select>
           </td>
-          <td><input type="url" value="${esc(v.customPhotoUrl || '')}" data-img="${v.ref}" style="min-width:175px;margin:0;padding:5px 8px" placeholder="Foto demo (o pega URL)"></td>
-          <td><input type="url" value="${esc(v.rentgerUrl || '')}" data-rg="${v.ref}" style="min-width:190px;margin:0;padding:5px 8px" placeholder="https://app.rentger.com/..."></td>
-          <td><a class="btn g sm" href="#ficha/${v.ref}">Ver</a></td>
-        </tr>`).join('');
+          <td>
+            <span class="m" style="font-size:.78rem;white-space:nowrap">${customCount > 0 ? `${customCount} propia${customCount > 1 ? 's' : ''}` : 'Demo'}</span>
+          </td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:nowrap">
+              <button type="button" class="btn sm" data-edit-unit="${esc(v.ref)}">${ICO('edit')} Editar</button>
+              <a class="btn g sm" href="#ficha/${encodeURIComponent(v.ref)}">Ver</a>
+              <button type="button" class="btn bad sm" data-del-unit="${esc(v.ref)}" title="Eliminar vivienda">✕</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
     };
     drawRows();
     $('admSearch').oninput = drawRows;
@@ -4065,28 +4605,42 @@ function renderAdmin(subTab) {
     body.onchange = e => {
       if (e.target.dataset.st) {
         const v = V.find(x => x.ref === e.target.dataset.st);
-        if (v) { v.st = e.target.value; refreshAdminHeaderCounts(); trackBgOp(cloudSaveUnit(v)); notify(`${v.ref} actualizada a ${stLabel(v.st)}`); }
+        if (v) { v.st = e.target.value; refreshAdminHeaderCounts(); refreshAllPropertyViews(); trackBgOp(cloudSaveUnit(v)); notify(`${v.ref} actualizada a ${stLabel(v.st)}`); }
       } else if (e.target.dataset.rent) {
         const v = V.find(x => x.ref === e.target.dataset.rent);
-        if (v) { v.r = Number(e.target.value); trackBgOp(cloudSaveUnit(v)); notify(`Renta de ${v.ref} guardada`); }
-      } else if (e.target.dataset.rg) {
-        const v = V.find(x => x.ref === e.target.dataset.rg);
-        if (v) { v.rentgerUrl = e.target.value.trim(); trackBgOp(cloudSaveUnit(v)); notify(`URL Rentger de ${v.ref} actualizada`); }
-      } else if (e.target.dataset.img) {
-        const v = V.find(x => x.ref === e.target.dataset.img);
-        if (v) { v.customPhotoUrl = e.target.value.trim(); trackBgOp(cloudSaveUnit(v)); notify(`Fotografía de ${v.ref} actualizada`); }
+        if (v) { v.r = Number(e.target.value); refreshAllPropertyViews(); trackBgOp(cloudSaveUnit(v)); notify(`Renta de ${v.ref} guardada`); }
+      }
+    };
+
+    body.onclick = e => {
+      const editBtn = e.target.closest('[data-edit-unit]');
+      if (editBtn) {
+        const v = V.find(x => x.ref === editBtn.dataset.editUnit);
+        if (v) {
+          openUnitEditorModal(v, () => {
+            drawRows();
+            refreshAdminHeaderCounts();
+          });
+        }
+        return;
+      }
+      const delBtn = e.target.closest('[data-del-unit]');
+      if (delBtn) {
+        const v = V.find(x => x.ref === delBtn.dataset.delUnit);
+        if (v) {
+          openDeleteUnitModal(v, () => {
+            drawRows();
+            refreshAdminHeaderCounts();
+          });
+        }
       }
     };
 
     $('addUnitBtn').onclick = () => {
-      const nextNum = V.length + 1;
-      const ref = 'REF-' + String(nextNum).padStart(2, '0');
-      const unit = { ref, nombre: 'Tipología Nueva · 3D', portal: 'Portal C', h: 3, pl: 2, m2: 88, b: 2, t: true, g: true, tr: true, ori: 'Sur', r: 1180, st: 'D', cee: 'A', photoIdx: 1, customPhotoUrl: '', rentgerUrl: '', desc: 'Nueva vivienda añadida desde el panel de gestión.' };
-      V.push(unit);
-      drawRows();
-      refreshAdminHeaderCounts();
-      trackBgOp(cloudSaveUnit(unit));
-      notify(`Vivienda ${ref} creada`);
+      openUnitEditorModal(null, () => {
+        drawRows();
+        refreshAdminHeaderCounts();
+      });
     };
   }
 
@@ -4700,54 +5254,177 @@ function renderAdmin(subTab) {
     };
   }
 
-  /* TAB 4: BLOG / CONSEJOS CMS */
+  /* TAB 4: BLOG / CONSEJOS CMS (Crear, editar cualquier publicación y eliminar) */
   if (adminTab === 'blog') {
-    body.innerHTML = `
-    <div class="split">
-      <div class="panel">
-        <h3>Publicar nuevo consejo / artículo</h3>
-        <form id="newBlogForm" style="margin-top:12px">
-          <label>Título del artículo<input id="bTitle" required placeholder="Ej. Cómo dar de alta los suministros en tu piso nuevo"></label>
-          <label>Categoría<input id="bCat" value="Guía Inquilinos" required></label>
-          <label>Contenido<textarea id="bBody" rows="4" required placeholder="Escribe aquí el consejo práctico..."></textarea></label>
-          <button class="btn sm" type="submit">Publicar en la web</button>
-        </form>
-      </div>
-      <div>
-        ${BLOG.map(b => `
-          <div class="panel" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-            <div><b>${esc(b.title)}</b><div class="m" style="font-size:.8rem">${esc(b.cat)} · ${esc(b.date)}</div></div>
-            <button class="btn bad sm" data-del-blog="${b.id}">Eliminar</button>
-          </div>`).join('')}
-      </div>
-    </div>`;
+    let editingBlogId = PENDING_EDIT_BLOG_ID;
+    PENDING_EDIT_BLOG_ID = null;
 
-    $('newBlogForm').onsubmit = e => {
-      e.preventDefault();
-      const post = {
-        id: Date.now(),
-        title: $('bTitle').value.trim(),
-        cat: $('bCat').value.trim(),
-        date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
-        body: $('bBody').value.trim()
+    const drawBlogAdmin = () => {
+      const editingPost = editingBlogId !== null ? BLOG.find(x => Number(x.id) === Number(editingBlogId)) : null;
+      if (!editingPost) editingBlogId = null;
+      const defaultDate = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+
+      body.innerHTML = `
+      <div class="split">
+        <div class="panel">
+          <h3>${editingPost ? 'Editar publicación' : 'Publicar nuevo consejo / artículo'}</h3>
+          ${editingPost ? `
+            <div class="blog-edit-banner" style="margin-top:10px">
+              <span>Editando: ${esc(editingPost.title)}</span>
+              <button type="button" class="btn g sm" id="cancelBlogEditBtn">Cancelar edición</button>
+            </div>` : ''}
+          <form id="newBlogForm" style="margin-top:12px">
+            <label>Título del artículo *
+              <input id="bTitle" required value="${esc(editingPost?.title || '')}" placeholder="Ej. Cómo dar de alta los suministros en tu piso nuevo">
+            </label>
+            <div class="edit-grid-2">
+              <label>Categoría *
+                <input id="bCat" required value="${esc(editingPost?.cat || 'Guía Inquilinos')}">
+              </label>
+              <label>Fecha de publicación *
+                <input id="bDate" required value="${esc(editingPost?.date || defaultDate)}" placeholder="Ej. 23 Nov 2026">
+              </label>
+            </div>
+            <label>Imagen de portada (opcional: pega URL o sube archivo)
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+                <input id="bImg" type="text" value="${esc(editingPost?.image || '')}" placeholder="https://... o sube una imagen" style="flex:1;min-width:160px;margin:0">
+                <label class="btn g sm" style="margin:0;cursor:pointer">
+                  Subir
+                  <input type="file" id="bImgFile" accept="image/*" hidden>
+                </label>
+                <button type="button" class="btn g sm" id="bImgClear" ${editingPost?.image ? '' : 'hidden'}>Quitar</button>
+              </div>
+            </label>
+            <div id="bImgPreviewWrap" ${editingPost?.image && isSafeImageSrc(editingPost.image) ? '' : 'hidden'}>
+              <img id="bImgPreview" class="blog-cover" src="${editingPost?.image && isSafeImageSrc(editingPost.image) ? esc(editingPost.image) : ''}" alt="Portada" style="max-height:150px;margin:0 0 12px">
+            </div>
+            <label>Contenido *
+              <textarea id="bBody" rows="6" required placeholder="Escribe aquí el consejo práctico...">${esc(editingPost?.body || '')}</textarea>
+            </label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn sm" type="submit">${editingPost ? 'Guardar cambios' : 'Publicar en la web'}</button>
+              ${editingPost ? '<button type="button" class="btn g sm" id="cancelBlogEditBtn2">Cancelar</button>' : ''}
+            </div>
+          </form>
+        </div>
+        <div>
+          <div class="m" style="margin-bottom:10px"><b>Publicaciones activas (${BLOG.length})</b> · Pulsa <i>Editar</i> en cualquiera para modificar título, fecha, imagen o contenido.</div>
+          ${!BLOG.length ? '<div class="panel"><p class="m">No hay publicaciones todavía.</p></div>' : BLOG.map(b => `
+            <div class="panel" style="margin-bottom:10px;${Number(b.id) === Number(editingBlogId) ? 'border-color:var(--b1);box-shadow:0 0 0 2px rgba(0,126,194,.16)' : ''}">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+                <div style="flex:1;min-width:200px">
+                  <b>${esc(b.title)}</b>
+                  <div class="m" style="font-size:.8rem;margin-top:2px">${esc(b.cat)} · ${esc(b.date)}</div>
+                  <div class="m" style="font-size:.8rem;margin-top:6px;line-height:1.45">${esc(String(b.body || '').slice(0, 140))}${String(b.body || '').length > 140 ? '…' : ''}</div>
+                </div>
+                <div style="display:flex;gap:6px;flex-shrink:0">
+                  <button type="button" class="btn sm" data-edit-blog="${b.id}">${ICO('edit')} Editar</button>
+                  <button type="button" class="btn bad sm" data-del-blog="${b.id}">Eliminar</button>
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+
+      const syncImgPreview = () => {
+        const val = $('bImg').value.trim();
+        const ok = isSafeImageSrc(val);
+        $('bImgPreviewWrap').hidden = !ok;
+        $('bImgClear').hidden = !val;
+        if (ok) $('bImgPreview').src = val;
       };
-      BLOG.unshift(post);
-      trackBgOp(cloudSaveBlog(post));
-      renderBlogList();
-      renderAdmin('blog');
-      notify('Artículo publicado en Consejos');
+
+      $('bImg').oninput = syncImgPreview;
+      $('bImgClear').onclick = () => {
+        $('bImg').value = '';
+        syncImgPreview();
+      };
+      $('bImgFile').onchange = async e => {
+        const f = e.target.files?.[0];
+        e.target.value = '';
+        if (!f) return;
+        try {
+          const dataUrl = await compressImageFile(f, 1000, 0.76);
+          $('bImg').value = dataUrl;
+          syncImgPreview();
+          notify('Imagen de portada cargada');
+        } catch (err) {
+          notify(err.message || 'No se pudo cargar la imagen');
+        }
+      };
+
+      const cancelEdit = () => {
+        editingBlogId = null;
+        drawBlogAdmin();
+      };
+      if ($('cancelBlogEditBtn')) $('cancelBlogEditBtn').onclick = cancelEdit;
+      if ($('cancelBlogEditBtn2')) $('cancelBlogEditBtn2').onclick = cancelEdit;
+
+      $('newBlogForm').onsubmit = e => {
+        e.preventDefault();
+        const title = $('bTitle').value.trim();
+        const cat = $('bCat').value.trim();
+        const date = $('bDate').value.trim() || defaultDate;
+        const bodyTxt = $('bBody').value.trim();
+        const imgRaw = $('bImg').value.trim();
+        if (imgRaw && !isSafeImageSrc(imgRaw)) {
+          notify('La URL de imagen no es válida (debe empezar por https:// o ser una foto subida)');
+          $('bImg').focus();
+          return;
+        }
+
+        if (editingPost) {
+          editingPost.title = title;
+          editingPost.cat = cat;
+          editingPost.date = date;
+          editingPost.body = bodyTxt;
+          editingPost.image = imgRaw;
+          trackBgOp(cloudSaveBlog(editingPost));
+          editingBlogId = null;
+          renderBlogList();
+          drawBlogAdmin();
+          notify('Publicación actualizada correctamente');
+        } else {
+          const post = {
+            id: Date.now(),
+            title,
+            cat,
+            date,
+            image: imgRaw,
+            body: bodyTxt
+          };
+          BLOG.unshift(post);
+          trackBgOp(cloudSaveBlog(post));
+          renderBlogList();
+          drawBlogAdmin();
+          notify('Artículo publicado en Consejos');
+        }
+      };
     };
 
     body.onclick = e => {
-      const id = Number(e.target.dataset.delBlog);
-      if (id) {
-        BLOG = BLOG.filter(x => x.id !== id);
-        trackBgOp(cloudDeleteBlog(id));
-        renderBlogList();
-        renderAdmin('blog');
-        notify('Artículo eliminado');
+      const editBtn = e.target.closest('[data-edit-blog]');
+      if (editBtn) {
+        editingBlogId = Number(editBtn.dataset.editBlog);
+        drawBlogAdmin();
+        $('bTitle')?.focus();
+        return;
+      }
+      const delBtn = e.target.closest('[data-del-blog]');
+      if (delBtn) {
+        const id = Number(delBtn.dataset.delBlog);
+        if (id) {
+          BLOG = BLOG.filter(x => Number(x.id) !== id);
+          if (Number(editingBlogId) === id) editingBlogId = null;
+          trackBgOp(cloudDeleteBlog(id));
+          renderBlogList();
+          drawBlogAdmin();
+          notify('Artículo eliminado');
+        }
       }
     };
+
+    drawBlogAdmin();
   }
 
   /* TAB 5: ADMINISTRADORES Y ROLES EN FIRESTORE */
