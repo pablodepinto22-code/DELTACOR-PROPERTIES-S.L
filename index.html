@@ -760,11 +760,11 @@ function normSolStatus(st) {
 }
 
 function getActiveSols() {
-  return SOLS.filter(s => !s.archived);
+  return SOLS.filter(s => !s.archived && !s.deleted);
 }
 
 function getArchivedSols() {
-  return SOLS.filter(s => Boolean(s.archived));
+  return SOLS.filter(s => Boolean(s.archived) && !s.deleted);
 }
 
 function solToArchiveRow(s) {
@@ -820,6 +820,82 @@ function updateSheetSyncBadge() {
     : `${ICO('check')} Sincronizar pendientes`;
 }
 
+let LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0 };
+
+async function checkAppsScriptVersion(force = false) {
+  const url = String(getCfg().appsScriptUrl || '').trim();
+  if (!url) return { ok: false, version: 0, configured: false };
+  if (!force && LAST_APPS_SCRIPT_CHECK.url === url && Date.now() - LAST_APPS_SCRIPT_CHECK.checkedAt < 25000) {
+    return { ok: true, version: LAST_APPS_SCRIPT_CHECK.version, configured: true };
+  }
+  try {
+    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const text = await res.text();
+    const data = JSON.parse(text);
+    const ver = Number(data?.version || (data?.ok ? 1 : 0));
+    LAST_APPS_SCRIPT_CHECK = { url, version: ver, checkedAt: Date.now() };
+    return { ok: Boolean(data?.ok), version: ver, configured: true, status: data?.status || '' };
+  } catch {
+    return { ok: false, version: null, configured: true };
+  }
+}
+
+async function renderScriptVersionBanner(hostId) {
+  const host = $(hostId);
+  if (!host) return;
+  const info = await checkAppsScriptVersion();
+  const currentHost = $(hostId);
+  if (!currentHost || !info.configured) return;
+
+  if (info.version !== null && info.version < 3) {
+    currentHost.innerHTML = `
+      <div class="panel" style="margin-bottom:14px;padding:13px 16px;background:var(--warn-bg);border-color:rgba(245,158,11,.45)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:240px">
+            <b style="color:var(--warn-tx);font-size:.9rem">Google Apps Script desactualizado (versión detectada: v${esc(info.version)})</b>
+            <div style="font-size:.82rem;color:var(--tx);margin-top:4px;line-height:1.45">
+              Mientras tu enlace de Google Apps Script siga en v${esc(info.version)}, Excel <b>no borrará filas ni moverá registros a la hoja «Archivo»</b>.
+              Para activarlo: abre tu Google Sheet → <b>Extensiones → Apps Script</b> → pega el código v3 → pulsa <b>Implementar → Administrar implementaciones → Editar (lápiz) → Versión: Nueva versión → Implementar</b>.
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn sm" id="${esc(hostId)}CopyBtn">${ICO('file')} Copiar Apps Script v3</button>
+            <button type="button" class="btn g sm" id="${esc(hostId)}RecheckBtn">Comprobar ahora</button>
+          </div>
+        </div>
+      </div>`;
+    const copyBtn = $(`${hostId}CopyBtn`);
+    const recheckBtn = $(`${hostId}RecheckBtn`);
+    if (copyBtn) {
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
+          notify('Apps Script v3 copiado: pégalo en Google Apps Script y publica una «Nueva versión»');
+        } catch {
+          notify('No se pudo copiar automáticamente');
+        }
+      };
+    }
+    if (recheckBtn) {
+      recheckBtn.onclick = async () => {
+        recheckBtn.disabled = true;
+        recheckBtn.textContent = 'Comprobando…';
+        const next = await checkAppsScriptVersion(true);
+        if (next.version >= 3) {
+          currentHost.innerHTML = '';
+          notify('Apps Script v3 detectado correctamente: borrado y hoja «Archivo» activos');
+        } else {
+          recheckBtn.disabled = false;
+          recheckBtn.textContent = 'Comprobar ahora';
+          notify(`Sigue respondiendo v${next.version || 1}. Recuerda elegir «Nueva versión» al implementar.`);
+        }
+      };
+    }
+  } else {
+    currentHost.innerHTML = '';
+  }
+}
+
 async function postToAppsScript(url, body) {
   const serialized = JSON.stringify(body);
   try {
@@ -831,6 +907,11 @@ async function postToAppsScript(url, body) {
     const text = await res.text();
     try {
       const data = JSON.parse(text);
+      if (data && typeof data.version === 'number') {
+        LAST_APPS_SCRIPT_CHECK = { url, version: data.version, checkedAt: Date.now() };
+      } else if (data && data.ok) {
+        LAST_APPS_SCRIPT_CHECK = { url, version: 1, checkedAt: Date.now() };
+      }
       return { ok: res.ok && data.ok !== false, data, opaque: false };
     } catch {
       return { ok: res.ok, data: null, opaque: false };
@@ -897,6 +978,12 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
     return { ok: true, count: syncedCount };
   }
 
+  const isOutdatedV3 = res => {
+    if (!res.opaque && res.data && Number(res.data.version || 0) < 3) return true;
+    if (res.opaque && LAST_APPS_SCRIPT_CHECK.url === url && LAST_APPS_SCRIPT_CHECK.version !== null && LAST_APPS_SCRIPT_CHECK.version < 3) return true;
+    return false;
+  };
+
   if (mode === 'delete') {
     const id = typeof payloadOrAll === 'string' ? payloadOrAll : payloadOrAll?.id;
     if (!id) return { ok: false, skipped: true };
@@ -905,6 +992,7 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
       id,
       sheetName: options.sheetName || ''
     });
+    if (isOutdatedV3(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || 1) };
     if (res.ok && !options.sheetName) {
       unmarkSolSynced(id);
       updateSheetSyncBadge();
@@ -922,6 +1010,7 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
       archiveHeaders: ARCHIVE_HEADERS,
       archiveRow: solToArchiveRow(sol)
     });
+    if (isOutdatedV3(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || 1) };
     if (res.ok) {
       unmarkSolSynced(sol.id);
       updateSheetSyncBadge();
@@ -939,6 +1028,7 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
       row: solToSheetRow(sol),
       archiveSheet: ARCHIVE_SHEET_NAME
     });
+    if (isOutdatedV3(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || 1) };
     if (res.ok) {
       markSolsSynced([sol]);
       updateSheetSyncBadge();
@@ -947,13 +1037,14 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
   }
 
   if (mode === 'sync_archive') {
-    const list = (payloadOrAll || []).filter(s => s && s.id && s.archived);
+    const list = (payloadOrAll || []).filter(s => s && s.id && s.archived && !s.deleted);
     const res = await postToAppsScript(url, {
       action: 'sync_archive',
       archiveSheet: ARCHIVE_SHEET_NAME,
       archiveHeaders: ARCHIVE_HEADERS,
       rows: list.map(solToArchiveRow)
     });
+    if (isOutdatedV3(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || 1) };
     return { ...res, count: list.length };
   }
 
@@ -998,7 +1089,7 @@ async function flushSheetQueue() {
   }
 }
 
-const APPS_SCRIPT_TEMPLATE = `// INVERCOR Google Sheets Sync v3 (Incremental O(1) + Batch + Delete + Hoja "Archivo" + LockService)
+const APPS_SCRIPT_TEMPLATE = `// INVERCOR Google Sheets Sync v3.1 (Incremental + Batch + Delete + Hoja "Archivo" + Compatible con filtros y pestaña "Activos")
 function doGet() {
   return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, status: 'INVERCOR Sheets sync v3 activo (con hoja Archivo)' }))
     .setMimeType(ContentService.MimeType.JSON);
@@ -1011,6 +1102,20 @@ function ensureHeaders_(sheet, headers) {
   }
 }
 
+function getMainSheet_(ss, archiveName) {
+  var preferred = ['Activos', 'Candidaturas'];
+  for (var p = 0; p < preferred.length; p++) {
+    var byName = ss.getSheetByName(preferred[p]);
+    if (byName) return byName;
+  }
+  var sheets = ss.getSheets();
+  var archLower = String(archiveName || 'Archivo').toLowerCase();
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].getName().toLowerCase() !== archLower) return sheets[i];
+  }
+  return sheets[0];
+}
+
 function getOrCreateSheet_(ss, name, headers) {
   var s = ss.getSheetByName(name);
   if (!s) {
@@ -1020,20 +1125,33 @@ function getOrCreateSheet_(ss, name, headers) {
   return s;
 }
 
-function findRowById_(sheet, id) {
+function findRowsById_(sheet, id) {
   var lastRow = sheet.getLastRow();
-  if (lastRow <= 1 || !id) return -1;
-  var match = sheet
-    .getRange(2, 1, lastRow - 1, 1)
-    .createTextFinder(String(id))
-    .matchEntireCell(true)
-    .findNext();
-  return match ? match.getRow() : -1;
+  var target = String(id || '').trim();
+  if (lastRow <= 1 || !target) return [];
+  var vals = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  var rows = [];
+  for (var i = 0; i < vals.length; i++) {
+    if (String(vals[i][0] || '').trim() === target) {
+      rows.push(i + 2);
+    }
+  }
+  return rows;
+}
+
+function deleteRowsById_(sheet, id) {
+  if (!sheet || !id) return 0;
+  var rows = findRowsById_(sheet, id);
+  for (var i = rows.length - 1; i >= 0; i--) {
+    sheet.deleteRow(rows[i]);
+  }
+  return rows.length;
 }
 
 function upsertRow_(sheet, id, row, changedCols, headersLen) {
-  var targetRow = findRowById_(sheet, id);
-  if (targetRow > 1) {
+  var rows = findRowsById_(sheet, id);
+  if (rows.length > 0) {
+    var targetRow = rows[0];
     if (changedCols && typeof changedCols === 'object') {
       var cols = Object.keys(changedCols);
       for (var c = 0; c < cols.length; c++) {
@@ -1057,52 +1175,39 @@ function upsertRow_(sheet, id, row, changedCols, headersLen) {
 function doPost(e) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(15000)) {
-    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: 'busy' }))
+    return ContentService.createTextOutput(JSON.stringify({ ok: false, version: 3, error: 'busy' }))
       .setMimeType(ContentService.MimeType.JSON);
   }
   try {
     var data = JSON.parse(e.postData.contents || '{}');
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var mainSheet = ss.getSheets()[0];
-    var headers = data.headers || ['ID','Fecha','Nombre','Documento','Email','Teléfono','Adultos','Niños','Mascotas','Ingresos (€/mes)','Renta máx. 3x (€)','Aval','Viviendas y estados','Otras opciones','Habitaciones','Comentarios'];
     var archiveName = data.archiveSheet || 'Archivo';
+    var mainSheet = getMainSheet_(ss, archiveName);
+    var headers = data.headers || ['ID','Fecha','Nombre','Documento','Email','Teléfono','Adultos','Niños','Mascotas','Ingresos (€/mes)','Renta máx. 3x (€)','Aval','Viviendas y estados','Otras opciones','Habitaciones','Comentarios'];
     var archiveHeaders = data.archiveHeaders || headers.concat(['Motivo archivo', 'Fecha archivo', 'Archivado por']);
 
-    // 1. Eliminar una candidatura de la hoja principal o de "Archivo"
+    // 1. Eliminar una candidatura de la hoja principal (Activos) o de "Archivo"
     if (data.action === 'delete') {
       var delSheet = data.sheetName ? ss.getSheetByName(data.sheetName) : mainSheet;
-      var deleted = 0;
-      if (delSheet && data.id) {
-        var delRow = findRowById_(delSheet, data.id);
-        if (delRow > 1) {
-          delSheet.deleteRow(delRow);
-          deleted = 1;
-        }
-      }
+      var deleted = deleteRowsById_(delSheet, data.id);
       return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, action: 'delete', deleted: deleted }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 2. Mover a hoja "Archivo" (elimina de hoja principal y añade/actualiza en "Archivo")
+    // 2. Mover a hoja "Archivo" (elimina de Activos y añade/actualiza en "Archivo")
     if (data.action === 'archive') {
-      if (data.id) {
-        var mainRow = findRowById_(mainSheet, data.id);
-        if (mainRow > 1) mainSheet.deleteRow(mainRow);
-      }
+      var removed = deleteRowsById_(mainSheet, data.id);
       var archSheet = getOrCreateSheet_(ss, archiveName, archiveHeaders);
       var archRow = data.archiveRow || [];
       var archRes = upsertRow_(archSheet, data.id || archRow[0], archRow, null, archiveHeaders.length);
-      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, action: 'archive', updated: archRes.updated, inserted: archRes.inserted }))
+      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, action: 'archive', removed: removed, updated: archRes.updated, inserted: archRes.inserted }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 3. Restaurar desde hoja "Archivo" a la hoja principal
+    // 3. Restaurar desde hoja "Archivo" a la hoja principal (Activos)
     if (data.action === 'restore') {
       var archSheet2 = ss.getSheetByName(archiveName);
-      if (archSheet2 && data.id) {
-        var rIdx = findRowById_(archSheet2, data.id);
-        if (rIdx > 1) archSheet2.deleteRow(rIdx);
-      }
+      deleteRowsById_(archSheet2, data.id);
       ensureHeaders_(mainSheet, headers);
       var resRest = upsertRow_(mainSheet, data.id || (data.row && data.row[0]), data.row || [], null, headers.length);
       return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, action: 'restore', updated: resRest.updated, inserted: resRest.inserted }))
@@ -1150,7 +1255,7 @@ function doPost(e) {
       if (lastRow > 1) {
         var existingIds = mainSheet.getRange(2, 1, lastRow - 1, 1).getValues();
         for (var i = 0; i < existingIds.length; i++) {
-          var key = String(existingIds[i][0] || '');
+          var key = String(existingIds[i][0] || '').trim();
           if (key) idMap[key] = i + 2;
         }
       }
@@ -1159,7 +1264,7 @@ function doPost(e) {
       for (var j = 0; j < items.length; j++) {
         var item = items[j];
         if (!item || !item.row || !item.row.length) continue;
-        var itemId = String(item.id || item.row[0] || '');
+        var itemId = String(item.id || item.row[0] || '').trim();
         var rowNum = idMap[itemId];
         if (rowNum) {
           mainSheet.getRange(rowNum, 1, 1, item.row.length).setValues([item.row]);
@@ -1175,7 +1280,7 @@ function doPost(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 7. Actualización quirúrgica de una sola candidatura (O(1) con TextFinder)
+    // 7. Actualización quirúrgica de una sola candidatura
     var row = data.row || [];
     var id = data.id || row[0];
     var resUpsert = upsertRow_(mainSheet, id, row, data.changedCols, headers.length);
@@ -1497,9 +1602,22 @@ async function cloudSaveSol(sol) {
   saveSols();
   try { await setDoc(doc(fbDb, 'solicitudes', sol.id), sol); FB_DB_ONLINE = true; } catch (_) {}
 }
-async function cloudDeleteSol(id) {
+async function cloudDeleteSol(id, solObj = null) {
   saveSols();
-  try { await deleteDoc(doc(fbDb, 'solicitudes', String(id))); FB_DB_ONLINE = true; } catch (_) {}
+  try {
+    await deleteDoc(doc(fbDb, 'solicitudes', String(id)));
+    FB_DB_ONLINE = true;
+    return { ok: true, mode: 'delete' };
+  } catch (err) {
+    try {
+      await setDoc(doc(fbDb, 'solicitudes', String(id)), { ...(solObj || { id: String(id) }), deleted: true, archived: false }, { merge: true });
+      FB_DB_ONLINE = true;
+      return { ok: true, mode: 'soft-delete' };
+    } catch (err2) {
+      console.warn('Firestore delete solicitud error:', err, err2);
+      return { ok: false, error: err2 || err };
+    }
+  }
 }
 async function cloudSaveBlog(b) {
   saveBlog();
@@ -1607,21 +1725,20 @@ async function syncProtectedData() {
         getDocs(collection(fbDb, 'admins'))
       ]);
       FB_DB_ONLINE = true;
-      if (!sSnap.empty) {
-        SOLS = sSnap.docs.map(d => d.data()).sort((a, b) => String(b.id).localeCompare(String(a.id)));
-        saveSols();
-      }
+      SOLS = sSnap.docs
+        .map(d => d.data())
+        .filter(s => s && !s.deleted)
+        .sort((a, b) => String(b.id).localeCompare(String(a.id)));
+      saveSols();
       CLOUD_ADMINS = aSnap.docs.map(d => ({ email: d.id, ...d.data() }));
     } else {
       const q = query(collection(fbDb, 'solicitudes'), where('email', '==', CURRENT_USER.email.toLowerCase()));
       const sSnap = await getDocs(q);
       FB_DB_ONLINE = true;
-      const mine = sSnap.docs.map(d => d.data());
-      if (mine.length) {
-        const others = SOLS.filter(s => s.email !== CURRENT_USER.email.toLowerCase());
-        SOLS = [...mine, ...others];
-        saveSols();
-      }
+      const mine = sSnap.docs.map(d => d.data()).filter(s => s && !s.deleted);
+      const others = SOLS.filter(s => s.email !== CURRENT_USER.email.toLowerCase() && !s.deleted);
+      SOLS = [...mine, ...others];
+      saveSols();
     }
   } catch (_) {}
 }
@@ -3702,6 +3819,7 @@ function renderAdmin(subTab) {
     };
 
     body.innerHTML = `
+    <div id="candScriptBanner"></div>
     <div class="panel" style="margin-bottom:16px;padding:16px 18px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
@@ -3839,11 +3957,16 @@ function renderAdmin(subTab) {
           await cloudSaveUnit(prop);
         }
         await cloudSaveSol(sol);
+        let sheetRes = null;
         if (getCfg().appsScriptUrl) {
-          await syncToGoogleSheets('archive', sol);
+          sheetRes = await syncToGoogleSheets('archive', sol);
         }
         dlg.close();
-        notify(`${sol.nombre} (${sel.ref}) marcada como Vendido y movida a Archivo`);
+        if (sheetRes?.outdatedScript) {
+          notify('Movida a Archivo en la web, pero Google Sheets sigue en Apps Script v1/v2: actualiza e implementa «Nueva versión» v3.');
+        } else {
+          notify(`${sol.nombre} (${sel.ref}) marcada como Vendido y movida a Archivo`);
+        }
         renderAdmin('candidatos');
       };
     };
@@ -3893,19 +4016,29 @@ function renderAdmin(subTab) {
           sol.archivedAt = new Date().toLocaleString('es-ES');
           sol.archivedBy = CURRENT_USER.email;
           await cloudSaveSol(sol);
+          let sheetRes = null;
           if (getCfg().appsScriptUrl) {
-            await syncToGoogleSheets('archive', sol);
+            sheetRes = await syncToGoogleSheets('archive', sol);
           }
           dlg.close();
-          notify(`Candidatura de ${sol.nombre} rechazada y guardada en Archivo`);
+          if (sheetRes?.outdatedScript) {
+            notify('Guardada en Archivo en la web, pero tu Google Apps Script está en v1/v2: publica una «Nueva versión» con el código v3.');
+          } else {
+            notify(`Candidatura de ${sol.nombre} rechazada y guardada en Archivo`);
+          }
         } else {
           SOLS = SOLS.filter(x => x.id !== sol.id);
-          await cloudDeleteSol(sol.id);
+          await cloudDeleteSol(sol.id, sol);
+          let sheetRes = null;
           if (getCfg().appsScriptUrl) {
-            await syncToGoogleSheets('delete', sol.id);
+            sheetRes = await syncToGoogleSheets('delete', sol.id);
           }
           dlg.close();
-          notify(`Candidatura de ${sol.nombre} rechazada y eliminada de la web y del Excel`);
+          if (sheetRes?.outdatedScript) {
+            notify('Eliminada de la web, pero Excel sigue en Apps Script v1/v2: publica una «Nueva versión» con v3 para borrar filas.');
+          } else {
+            notify(`Candidatura de ${sol.nombre} rechazada y eliminada de la web y del Excel`);
+          }
         }
         renderAdmin('candidatos');
       };
@@ -4031,6 +4164,8 @@ function renderAdmin(subTab) {
       a.click();
       notify('Archivo CSV compatible con Excel descargado');
     };
+
+    if (hasLiveSync) renderScriptVersionBanner('candScriptBanner');
   }
 
   /* TAB 2B: ARCHIVO (Candidaturas Vendidas y Rechazadas guardadas opcionalmente) */
@@ -4047,6 +4182,7 @@ function renderAdmin(subTab) {
       const list = archFilter === 'ALL' ? allArch : allArch.filter(s => s.archiveReason === archFilter);
 
       body.innerHTML = `
+      <div id="archScriptBanner"></div>
       <div class="panel" style="margin-bottom:16px;padding:16px 18px">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
           <div>
@@ -4102,11 +4238,14 @@ function renderAdmin(subTab) {
           const res = await syncToGoogleSheets('sync_archive', archNow);
           btn.disabled = false;
           btn.innerHTML = `${ICO('check')} Sincronizar hoja Archivo`;
-          notify(res.ok
-            ? `Hoja «Archivo» sincronizada en Google Sheets (${archNow.length} registros)`
-            : 'No se pudo sincronizar la hoja Archivo. Revisa la URL de Apps Script v3.');
+          notify(res.outdatedScript
+            ? 'Tu Google Apps Script sigue en v1/v2: pega el código v3 e implementa una «Nueva versión».'
+            : res.ok
+              ? `Hoja «Archivo» sincronizada en Google Sheets (${archNow.length} registros)`
+              : 'No se pudo sincronizar la hoja Archivo. Revisa la URL de Apps Script v3.');
         };
       }
+      if (hasLiveSync) renderScriptVersionBanner('archScriptBanner');
     };
 
     body.onclick = e => {
@@ -4139,11 +4278,14 @@ function renderAdmin(subTab) {
           delete sol.archivedBy;
           sol.selecciones = (sol.selecciones || []).map(x => ({ ...x, estado: 'En revisión' }));
           await cloudSaveSol(sol);
+          let sheetRes = null;
           if (getCfg().appsScriptUrl) {
-            await syncToGoogleSheets('restore', sol);
+            sheetRes = await syncToGoogleSheets('restore', sol);
           }
           dlg.close();
-          notify(`Candidatura de ${sol.nombre} restaurada a Candidaturas`);
+          notify(sheetRes?.outdatedScript
+            ? 'Restaurada en la web, pero actualiza Apps Script a v3 («Nueva versión») para moverla en Excel.'
+            : `Candidatura de ${sol.nombre} restaurada a Candidaturas`);
           renderAdmin('archivo');
         };
         return;
@@ -4172,12 +4314,15 @@ function renderAdmin(subTab) {
         $('purgeConfirmBtn').onclick = async () => {
           if (!$('purgeVerifyChk').checked) return;
           SOLS = SOLS.filter(x => x.id !== sol.id);
-          await cloudDeleteSol(sol.id);
+          await cloudDeleteSol(sol.id, sol);
+          let sheetRes = null;
           if (getCfg().appsScriptUrl) {
-            await syncToGoogleSheets('delete', sol.id, { sheetName: ARCHIVE_SHEET_NAME });
+            sheetRes = await syncToGoogleSheets('delete', sol.id, { sheetName: ARCHIVE_SHEET_NAME });
           }
           dlg.close();
-          notify(`Registro de ${sol.nombre} eliminado definitivamente`);
+          notify(sheetRes?.outdatedScript
+            ? 'Eliminada de la web, pero actualiza Apps Script a v3 («Nueva versión») para borrarla del Excel.'
+            : `Registro de ${sol.nombre} eliminado definitivamente`);
           renderAdmin('archivo');
         };
       }
@@ -4328,6 +4473,7 @@ function renderAdmin(subTab) {
   if (adminTab === 'config') {
     const c = getCfg();
     body.innerHTML = `
+    <div id="cfgScriptBanner" style="max-width:680px"></div>
     <div class="panel" style="max-width:680px">
       <h3>Integraciones</h3>
       <form id="cfgForm" style="margin-top:14px">
@@ -4343,7 +4489,10 @@ function renderAdmin(subTab) {
             <label>URL de Apps Script
               <input id="cfgSheets" type="url" value="${esc(c.appsScriptUrl)}" placeholder="https://script.google.com/macros/s/XXXXX/exec">
             </label>
-            <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v3 (con hoja Archivo)</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v3 (con hoja Archivo)</button>
+              <button type="button" class="btn g sm" id="testAppsScriptBtn">Comprobar versión</button>
+            </div>
           </div>
         </details>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -4353,17 +4502,37 @@ function renderAdmin(subTab) {
       </form>
     </div>`;
 
+    renderScriptVersionBanner('cfgScriptBanner');
+
     $('copyAppsScriptBtn').onclick = async () => {
       try {
         await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-        notify('Código de Apps Script v3 (con hoja Archivo) copiado al portapapeles');
+        notify('Apps Script v3 copiado: pégalo en Apps Script y publica una «Nueva versión»');
       } catch (_) {
         notify('No se pudo copiar automáticamente');
       }
     };
 
+    $('testAppsScriptBtn').onclick = async () => {
+      const btn = $('testAppsScriptBtn');
+      btn.disabled = true;
+      btn.textContent = 'Comprobando…';
+      const info = await checkAppsScriptVersion(true);
+      btn.disabled = false;
+      btn.textContent = 'Comprobar versión';
+      renderScriptVersionBanner('cfgScriptBanner');
+      if (info.version >= 3) {
+        notify('Conectado correctamente a Apps Script v3 (borrado y hoja Archivo activos)');
+      } else if (info.version) {
+        notify(`Tu enlace sigue en v${info.version}. En Apps Script pulsa Implementar → Administrar implementaciones → Editar → Nueva versión.`);
+      } else {
+        notify('No se pudo verificar la URL de Apps Script');
+      }
+    };
+
     $('cfgForm').onsubmit = async e => {
       e.preventDefault();
+      LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0 };
       await cloudSaveConfig({
         ...getCfg(),
         baseUrl: $('cfgUrl').value.trim(),
@@ -4718,15 +4887,25 @@ function initFloatingChat() {
         });
         card.appendChild(links);
       }
-      if (data.handoff) {
+      if (data.handoff || data.retryQuery) {
         const acts = document.createElement('div');
         acts.className = 'calc-actions';
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'chat-link-btn';
-        btn.textContent = 'Consultar esto por correo →';
-        btn.onclick = () => handoffToMail(data.handoff);
-        acts.appendChild(btn);
+        if (data.retryQuery) {
+          const retryBtn = document.createElement('button');
+          retryBtn.type = 'button';
+          retryBtn.className = 'chat-link-btn';
+          retryBtn.textContent = 'Reintentar cálculo ↻';
+          retryBtn.onclick = () => runCalcPrompt(data.retryQuery);
+          acts.appendChild(retryBtn);
+        }
+        if (data.handoff) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'chat-link-btn';
+          btn.textContent = 'Consultar esto por correo →';
+          btn.onclick = () => handoffToMail(data.handoff);
+          acts.appendChild(btn);
+        }
         card.appendChild(acts);
       }
       if (item.time) {
@@ -4813,7 +4992,16 @@ function initFloatingChat() {
       });
       const payload = await resp.json().catch(() => ({}));
       if (!resp.ok || !payload.ok || !payload.result) {
-        throw new Error(payload.error || 'No se pudo obtener respuesta de la IA.');
+        const err = new Error(
+          payload.error ||
+          (resp.status === 404
+            ? 'La calculadora IA necesita el servidor backend activo (no está disponible en GitHub Pages estático).'
+            : resp.status === 503 || resp.status === 429
+              ? 'El servicio de IA está recibiendo alta demanda temporal. Inténtalo de nuevo en unos segundos.'
+              : `No se pudo obtener respuesta de la IA (HTTP ${resp.status}).`)
+        );
+        err.code = payload.code || (resp.status === 404 ? 'NO_BACKEND' : resp.status === 503 ? 'HIGH_DEMAND' : 'HTTP_ERROR');
+        throw err;
       }
       const r = payload.result;
       const units = (r.recommendedRefs || [])
@@ -4834,12 +5022,22 @@ function initFloatingChat() {
         time: formatNow()
       });
     } catch (err) {
+      const code = err?.code || '';
+      const isKeyErr = code === 'MISSING_API_KEY' || code === 'API_KEY_ERROR';
+      const isTransient = code === 'HIGH_DEMAND' || code === 'RATE_LIMIT' || code === 'UPSTREAM_ERROR';
       calcHistory.push({
         role: 'calc',
         data: {
-          title: 'Error en la calculadora IA',
+          title: isTransient ? 'IA ocupada temporalmente' : 'Error en la calculadora IA',
           text: err?.message || 'No se pudo conectar con el servicio de IA. Inténtalo de nuevo.',
-          status: { cls: 'bad', text: 'Comprueba la conexión o la configuración de GEMINI_API_KEY.' }
+          status: isKeyErr
+            ? { cls: 'bad', text: 'Revisa GEMINI_API_KEY en Settings > Secrets.' }
+            : isTransient
+              ? { cls: 'warn', text: 'Pico temporal de demanda en el modelo de IA. Pulsa «Reintentar cálculo» en unos segundos.' }
+              : code === 'NO_BACKEND'
+                ? { cls: 'warn', text: 'Ábrela desde la URL con servidor activo en lugar de GitHub Pages.' }
+                : { cls: 'bad', text: 'Comprueba la conexión e inténtalo de nuevo.' },
+          retryQuery: code === 'NO_BACKEND' ? '' : clean
         },
         time: formatNow()
       });

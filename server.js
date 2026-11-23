@@ -131,11 +131,20 @@ app.post('/api/calc-ai', async (req, res) => {
   ].filter(Boolean).join('\n\n');
 
   try {
+    const attempts = [
+      { model: 'gemini-4-hydrogen', delayMs: 0 },
+      { model: 'gemini-3.1-flash-lite', delayMs: 350 },
+      { model: 'gemini-4-hydrogen', delayMs: 900 },
+    ];
     let response;
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    let lastErr;
+    for (const step of attempts) {
+      if (step.delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, step.delayMs));
+      }
       try {
         response = await ai.models.generateContent({
-          model: 'gemini-4-hydrogen',
+          model: step.model,
           contents: promptParts,
           config: {
             systemInstruction,
@@ -144,16 +153,19 @@ app.post('/api/calc-ai', async (req, res) => {
             responseSchema: CALC_RESPONSE_SCHEMA,
           },
         });
+        lastErr = null;
         break;
       } catch (e) {
+        lastErr = e;
         const s = Number(e?.status || e?.code) || 0;
-        if (attempt === 0 && (s === 503 || String(e?.message || '').includes('UNAVAILABLE'))) {
-          await new Promise((resolve) => setTimeout(resolve, 800));
+        const m = String(e?.message || '');
+        if (s === 503 || s === 429 || m.includes('UNAVAILABLE') || m.includes('RESOURCE_EXHAUSTED')) {
           continue;
         }
         throw e;
       }
     }
+    if (lastErr) throw lastErr;
 
     const rawText = (response.text ?? '').trim();
     if (!rawText) {
