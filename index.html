@@ -506,6 +506,23 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .calc-input-row{display:flex;gap:8px;align-items:center}
 .calc-input-row input{margin-top:0;flex:1;padding:9px 11px;font-size:.84rem;min-height:38px}
 .calc-hint{font-size:.71rem;color:var(--mut);line-height:1.35}
+.calc-loading{align-self:flex-start;background:var(--card);border:1px solid var(--line);color:var(--mut);padding:9px 12px;border-radius:6px;font-size:.8rem;font-style:italic}
+
+/* Admin Candidaturas Status Colors & Archivo */
+.sol-sel-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;background:var(--card2);padding:10px 12px;border-radius:5px;border:1px solid var(--line);transition:background .15s,border-color .15s}
+.sol-sel-row.st-rev{background:var(--warn-bg);border-color:rgba(245,158,11,.45)}
+.sol-sel-row.st-ok{background:var(--ok-bg);border-color:rgba(16,185,129,.45)}
+.sol-sel-row.st-sold{background:rgba(0,126,194,.1);border-color:rgba(0,126,194,.4)}
+.sol-select{width:195px;margin:0;padding:6px 10px;font-weight:700;font-size:.82rem}
+.sol-select.st-rev{background:var(--card);color:var(--warn-tx);border-color:rgba(245,158,11,.65)}
+.sol-select.st-ok{background:var(--card);color:var(--ok-tx);border-color:rgba(16,185,129,.65)}
+.sol-select.st-sold{background:var(--card);color:var(--b1);border-color:var(--b1)}
+.arch-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:3px;font-size:.73rem;font-weight:700;border:1px solid var(--line)}
+.arch-badge.sold{background:var(--ok-bg);color:var(--ok-tx);border-color:rgba(16,185,129,.4)}
+.arch-badge.rej{background:var(--bad-bg);color:var(--bad-tx);border-color:rgba(239,68,68,.4)}
+.confirm-box{background:var(--card2);border:1px solid var(--line);border-radius:4px;padding:12px;margin:12px 0;font-size:.84rem}
+.confirm-check{display:flex;gap:9px;align-items:flex-start;cursor:pointer;font-size:.83rem;font-weight:600;margin:10px 0;color:var(--tx)}
+.confirm-check input{width:16px;height:16px;margin-top:2px;accent-color:var(--b1);flex-shrink:0}
 
 .chat-form{padding:14px 16px 16px;background:var(--card);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:9px}
 .chat-id-summary{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.76rem;color:var(--mut);padding:6px 9px;background:var(--card2);border:1px solid var(--line);border-radius:4px}
@@ -575,19 +592,19 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 
 <dialog id="dlg"></dialog>
 
-<!-- Floating Calculator Chatbot & Quick-Inquiry Widget (Web3Forms) -->
-<button class="chat-fab" id="chatFab" type="button" aria-expanded="false" aria-controls="chatPanel" aria-label="Abrir calculadora y chat de consultas sobre la promoción de Móstoles">
+<!-- Floating AI Calculator Chatbot & Quick-Inquiry Widget (Web3Forms) -->
+<button class="chat-fab" id="chatFab" type="button" aria-expanded="false" aria-controls="chatPanel" aria-label="Abrir calculadora con IA y chat de consultas sobre la promoción de Móstoles">
   <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
-  <span class="chat-fab-lbl">Calculadora y chat</span>
+  <span class="chat-fab-lbl">Calculadora IA</span>
 </button>
 
-<aside class="chat-panel" id="chatPanel" role="dialog" aria-label="Calculadora y consultas de la promoción de Móstoles" hidden>
+<aside class="chat-panel" id="chatPanel" role="dialog" aria-label="Calculadora con IA y consultas de la promoción de Móstoles" hidden>
   <div class="chat-hd">
     <div class="chat-hd-info">
       <span class="chat-hd-logo" id="chatLogo" aria-hidden="true"></span>
       <div class="chat-hd-txt">
-        <b id="chatTitle">Calculadora · Móstoles</b>
-        <small id="chatSubtitle">Solvencia 3×, fianza y cuotas al instante</small>
+        <b id="chatTitle">Calculadora IA · Móstoles</b>
+        <small id="chatSubtitle">Cálculos y solvencia con IA al instante</small>
       </div>
     </div>
     <div class="chat-hd-acts">
@@ -601,7 +618,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
   </div>
 
   <div class="chat-tabs" role="tablist" aria-label="Modo del asistente">
-    <button class="chat-tab on" id="chatTabCalc" type="button" role="tab" aria-selected="true" aria-controls="chatPaneCalc">Calculadora</button>
+    <button class="chat-tab on" id="chatTabCalc" type="button" role="tab" aria-selected="true" aria-controls="chatPaneCalc">Calculadora IA</button>
     <button class="chat-tab" id="chatTabMail" type="button" role="tab" aria-selected="false" aria-controls="chatPaneMail">Enviar consulta</button>
   </div>
 
@@ -610,15 +627,15 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
     <button class="chat-link-btn" id="chatCtxUnlink" type="button">Quitar</button>
   </div>
 
-  <!-- Tab 1: Chatbot Calculadora -->
+  <!-- Tab 1: Chatbot Calculadora IA -->
   <div class="chat-pane" id="chatPaneCalc" role="tabpanel" aria-labelledby="chatTabCalc">
     <div class="chat-body" id="calcBody" aria-live="polite"></div>
     <form class="calc-form" id="calcForm" novalidate>
       <div class="calc-input-row">
-        <input id="calcInput" type="text" maxlength="200" autocomplete="off" placeholder="Ej: 3200€, REF-04, 1200 entre 2, 1150*12…">
-        <button class="btn sm chat-send" type="submit">Calcular</button>
+        <input id="calcInput" type="text" maxlength="500" autocomplete="off" placeholder="Ej: Gano 2.400€ en 14 pagas, ¿qué piso encaja?">
+        <button class="btn sm chat-send" id="calcSubmitBtn" type="submit">Calcular</button>
       </div>
-      <span class="calc-hint">Introduce tus ingresos, una referencia (REF-01…45), fianza o una operación.</span>
+      <span class="calc-hint">Asistente con IA: solvencia 3×, pagas, fianza, gastos y comparativas reales.</span>
     </form>
   </div>
 
@@ -725,10 +742,37 @@ function solToSheetRow(s) {
     Number(s.ingresos || 0),
     Math.floor(Number(s.ingresos || 0) / 3),
     s.aval || 'No',
-    (s.selecciones || []).map(x => `${x.ref} (${x.estado})`).join(' | '),
+    (s.selecciones || []).map(x => `${x.ref} (${normSolStatus(x.estado)})`).join(' | '),
     s.otrasOpciones || 'No',
     s.habitacionesDeseadas || 'Indiferente',
     s.comentario || ''
+  ];
+}
+
+const ARCHIVE_SHEET_NAME = 'Archivo';
+const ARCHIVE_HEADERS = [...SHEET_HEADERS, 'Motivo archivo', 'Fecha archivo', 'Archivado por'];
+
+function normSolStatus(st) {
+  if (st === 'Pre-aprobada' || st === 'Aprobado') return 'Aprobado';
+  if (st === 'Vendido') return 'Vendido';
+  if (st === 'No aprobada' || st === 'Rechazada') return 'Rechazada';
+  return 'En revisión';
+}
+
+function getActiveSols() {
+  return SOLS.filter(s => !s.archived);
+}
+
+function getArchivedSols() {
+  return SOLS.filter(s => Boolean(s.archived));
+}
+
+function solToArchiveRow(s) {
+  return [
+    ...solToSheetRow(s),
+    s.archiveReason || 'Archivada',
+    s.archivedAt || new Date().toLocaleString('es-ES'),
+    s.archivedBy || ''
   ];
 }
 
@@ -756,15 +800,21 @@ function markSolsSynced(list) {
   try { localStorage.setItem(SHEET_SYNC_CACHE_KEY, JSON.stringify(map)); } catch {}
 }
 
-function getPendingSheetSols(list = SOLS) {
+function unmarkSolSynced(id) {
   const map = getSyncedSheetHashes();
-  return (list || []).filter(s => s && s.id && map[String(s.id)] !== solSyncHash(s));
+  delete map[String(id)];
+  try { localStorage.setItem(SHEET_SYNC_CACHE_KEY, JSON.stringify(map)); } catch {}
+}
+
+function getPendingSheetSols(list = getActiveSols()) {
+  const map = getSyncedSheetHashes();
+  return (list || []).filter(s => s && s.id && !s.archived && map[String(s.id)] !== solSyncHash(s));
 }
 
 function updateSheetSyncBadge() {
   const btn = $('syncSheetsBtn');
   if (!btn || btn.disabled) return;
-  const pending = getPendingSheetSols(SOLS).length;
+  const pending = getPendingSheetSols(getActiveSols()).length;
   btn.innerHTML = pending > 0
     ? `${ICO('check')} Sincronizar cambios (${pending})`
     : `${ICO('check')} Sincronizar pendientes`;
@@ -826,7 +876,7 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
   }
 
   if (mode === 'upsert_batch') {
-    const list = (payloadOrAll || []).filter(s => s && s.id);
+    const list = (payloadOrAll || []).filter(s => s && s.id && !s.archived);
     if (!list.length) return { ok: true, skipped: true, count: 0 };
     if (list.length === 1) {
       return syncToGoogleSheets('upsert', list[0], options);
@@ -847,8 +897,68 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
     return { ok: true, count: syncedCount };
   }
 
+  if (mode === 'delete') {
+    const id = typeof payloadOrAll === 'string' ? payloadOrAll : payloadOrAll?.id;
+    if (!id) return { ok: false, skipped: true };
+    const res = await postToAppsScript(url, {
+      action: 'delete',
+      id,
+      sheetName: options.sheetName || ''
+    });
+    if (res.ok && !options.sheetName) {
+      unmarkSolSynced(id);
+      updateSheetSyncBadge();
+    }
+    return { ...res, count: 1 };
+  }
+
+  if (mode === 'archive') {
+    const sol = payloadOrAll;
+    if (!sol || !sol.id) return { ok: false, skipped: true };
+    const res = await postToAppsScript(url, {
+      action: 'archive',
+      id: sol.id,
+      archiveSheet: ARCHIVE_SHEET_NAME,
+      archiveHeaders: ARCHIVE_HEADERS,
+      archiveRow: solToArchiveRow(sol)
+    });
+    if (res.ok) {
+      unmarkSolSynced(sol.id);
+      updateSheetSyncBadge();
+    }
+    return { ...res, count: 1 };
+  }
+
+  if (mode === 'restore') {
+    const sol = payloadOrAll;
+    if (!sol || !sol.id) return { ok: false, skipped: true };
+    const res = await postToAppsScript(url, {
+      action: 'restore',
+      id: sol.id,
+      headers: SHEET_HEADERS,
+      row: solToSheetRow(sol),
+      archiveSheet: ARCHIVE_SHEET_NAME
+    });
+    if (res.ok) {
+      markSolsSynced([sol]);
+      updateSheetSyncBadge();
+    }
+    return { ...res, count: 1 };
+  }
+
+  if (mode === 'sync_archive') {
+    const list = (payloadOrAll || []).filter(s => s && s.id && s.archived);
+    const res = await postToAppsScript(url, {
+      action: 'sync_archive',
+      archiveSheet: ARCHIVE_SHEET_NAME,
+      archiveHeaders: ARCHIVE_HEADERS,
+      rows: list.map(solToArchiveRow)
+    });
+    return { ...res, count: list.length };
+  }
+
   if (mode === 'sync_all') {
-    const list = (payloadOrAll || []).filter(s => s && s.id);
+    const list = (payloadOrAll || []).filter(s => s && s.id && !s.archived);
     const res = await postToAppsScript(url, {
       action: 'sync_all',
       headers: SHEET_HEADERS,
@@ -865,7 +975,7 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
 }
 
 function queueSheetUpsert(sol, changedCols = null) {
-  if (!sol || !sol.id || !getCfg().appsScriptUrl) return;
+  if (!sol || !sol.id || sol.archived || !getCfg().appsScriptUrl) return;
   const prev = SHEET_PENDING_QUEUE.get(sol.id);
   const mergedCols = prev && prev.changedCols && changedCols
     ? { ...prev.changedCols, ...changedCols }
@@ -878,8 +988,9 @@ function queueSheetUpsert(sol, changedCols = null) {
 
 async function flushSheetQueue() {
   if (!SHEET_PENDING_QUEUE.size) return;
-  const entries = Array.from(SHEET_PENDING_QUEUE.values());
+  const entries = Array.from(SHEET_PENDING_QUEUE.values()).filter(e => e.sol && !e.sol.archived);
   SHEET_PENDING_QUEUE.clear();
+  if (!entries.length) return;
   if (entries.length === 1) {
     await syncToGoogleSheets('upsert', entries[0].sol, { changedCols: entries[0].changedCols });
   } else {
@@ -887,9 +998,9 @@ async function flushSheetQueue() {
   }
 }
 
-const APPS_SCRIPT_TEMPLATE = `// INVERCOR Google Sheets Sync v2 (Incremental O(1) + Batch + LockService)
+const APPS_SCRIPT_TEMPLATE = `// INVERCOR Google Sheets Sync v3 (Incremental O(1) + Batch + Delete + Hoja "Archivo" + LockService)
 function doGet() {
-  return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 2, status: 'INVERCOR Sheets sync v2 activo' }))
+  return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, status: 'INVERCOR Sheets sync v3 activo (con hoja Archivo)' }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -898,6 +1009,15 @@ function ensureHeaders_(sheet, headers) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
     sheet.setFrozenRows(1);
   }
+}
+
+function getOrCreateSheet_(ss, name, headers) {
+  var s = ss.getSheetByName(name);
+  if (!s) {
+    s = ss.insertSheet(name);
+  }
+  if (headers && headers.length) ensureHeaders_(s, headers);
+  return s;
 }
 
 function findRowById_(sheet, id) {
@@ -911,6 +1031,29 @@ function findRowById_(sheet, id) {
   return match ? match.getRow() : -1;
 }
 
+function upsertRow_(sheet, id, row, changedCols, headersLen) {
+  var targetRow = findRowById_(sheet, id);
+  if (targetRow > 1) {
+    if (changedCols && typeof changedCols === 'object') {
+      var cols = Object.keys(changedCols);
+      for (var c = 0; c < cols.length; c++) {
+        var colNum = Number(cols[c]);
+        if (colNum >= 1 && colNum <= headersLen) {
+          sheet.getRange(targetRow, colNum).setValue(changedCols[cols[c]]);
+        }
+      }
+    } else if (row && row.length) {
+      sheet.getRange(targetRow, 1, 1, row.length).setValues([row]);
+    }
+    return { updated: 1, inserted: 0 };
+  }
+  if (row && row.length) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length).setValues([row]);
+    return { updated: 0, inserted: 1 };
+  }
+  return { updated: 0, inserted: 0 };
+}
+
 function doPost(e) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(15000)) {
@@ -919,33 +1062,93 @@ function doPost(e) {
   }
   try {
     var data = JSON.parse(e.postData.contents || '{}');
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var mainSheet = ss.getSheets()[0];
     var headers = data.headers || ['ID','Fecha','Nombre','Documento','Email','Teléfono','Adultos','Niños','Mascotas','Ingresos (€/mes)','Renta máx. 3x (€)','Aval','Viviendas y estados','Otras opciones','Habitaciones','Comentarios'];
+    var archiveName = data.archiveSheet || 'Archivo';
+    var archiveHeaders = data.archiveHeaders || headers.concat(['Motivo archivo', 'Fecha archivo', 'Archivado por']);
 
-    // 1. Reconstrucción completa en UNA sola llamada setValues (sin appendRow en bucle)
-    if (data.action === 'sync_all') {
-      var rows = data.rows || [];
-      var matrix = [headers].concat(rows);
-      var prevLastRow = sheet.getLastRow();
-      sheet.getRange(1, 1, matrix.length, headers.length).setValues(matrix);
-      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-      sheet.setFrozenRows(1);
-      if (prevLastRow > matrix.length) {
-        sheet.getRange(matrix.length + 1, 1, prevLastRow - matrix.length, Math.max(sheet.getLastColumn(), headers.length)).clearContent();
+    // 1. Eliminar una candidatura de la hoja principal o de "Archivo"
+    if (data.action === 'delete') {
+      var delSheet = data.sheetName ? ss.getSheetByName(data.sheetName) : mainSheet;
+      var deleted = 0;
+      if (delSheet && data.id) {
+        var delRow = findRowById_(delSheet, data.id);
+        if (delRow > 1) {
+          delSheet.deleteRow(delRow);
+          deleted = 1;
+        }
       }
-      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 2, action: 'sync_all', rows: rows.length }))
+      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, action: 'delete', deleted: deleted }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    ensureHeaders_(sheet, headers);
+    // 2. Mover a hoja "Archivo" (elimina de hoja principal y añade/actualiza en "Archivo")
+    if (data.action === 'archive') {
+      if (data.id) {
+        var mainRow = findRowById_(mainSheet, data.id);
+        if (mainRow > 1) mainSheet.deleteRow(mainRow);
+      }
+      var archSheet = getOrCreateSheet_(ss, archiveName, archiveHeaders);
+      var archRow = data.archiveRow || [];
+      var archRes = upsertRow_(archSheet, data.id || archRow[0], archRow, null, archiveHeaders.length);
+      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, action: 'archive', updated: archRes.updated, inserted: archRes.inserted }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
-    // 2. Sincronización incremental por lote (solo filas nuevas o modificadas)
+    // 3. Restaurar desde hoja "Archivo" a la hoja principal
+    if (data.action === 'restore') {
+      var archSheet2 = ss.getSheetByName(archiveName);
+      if (archSheet2 && data.id) {
+        var rIdx = findRowById_(archSheet2, data.id);
+        if (rIdx > 1) archSheet2.deleteRow(rIdx);
+      }
+      ensureHeaders_(mainSheet, headers);
+      var resRest = upsertRow_(mainSheet, data.id || (data.row && data.row[0]), data.row || [], null, headers.length);
+      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, action: 'restore', updated: resRest.updated, inserted: resRest.inserted }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 4. Sincronizar hoja "Archivo" completa en un solo bloque
+    if (data.action === 'sync_archive') {
+      var archSheet3 = getOrCreateSheet_(ss, archiveName, archiveHeaders);
+      var archRows = data.rows || [];
+      var archMatrix = [archiveHeaders].concat(archRows);
+      var prevArchLast = archSheet3.getLastRow();
+      archSheet3.getRange(1, 1, archMatrix.length, archiveHeaders.length).setValues(archMatrix);
+      archSheet3.getRange(1, 1, 1, archiveHeaders.length).setFontWeight('bold');
+      archSheet3.setFrozenRows(1);
+      if (prevArchLast > archMatrix.length) {
+        archSheet3.getRange(archMatrix.length + 1, 1, prevArchLast - archMatrix.length, Math.max(archSheet3.getLastColumn(), archiveHeaders.length)).clearContent();
+      }
+      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, action: 'sync_archive', rows: archRows.length }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 5. Reconstrucción completa hoja principal en UNA sola llamada setValues
+    if (data.action === 'sync_all') {
+      var rows = data.rows || [];
+      var matrix = [headers].concat(rows);
+      var prevLastRow = mainSheet.getLastRow();
+      mainSheet.getRange(1, 1, matrix.length, headers.length).setValues(matrix);
+      mainSheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+      mainSheet.setFrozenRows(1);
+      if (prevLastRow > matrix.length) {
+        mainSheet.getRange(matrix.length + 1, 1, prevLastRow - matrix.length, Math.max(mainSheet.getLastColumn(), headers.length)).clearContent();
+      }
+      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, action: 'sync_all', rows: rows.length }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    ensureHeaders_(mainSheet, headers);
+
+    // 6. Sincronización incremental por lote
     if (data.action === 'upsert_batch') {
       var items = data.items || [];
-      var lastRow = sheet.getLastRow();
+      var lastRow = mainSheet.getLastRow();
       var idMap = {};
       if (lastRow > 1) {
-        var existingIds = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+        var existingIds = mainSheet.getRange(2, 1, lastRow - 1, 1).getValues();
         for (var i = 0; i < existingIds.length; i++) {
           var key = String(existingIds[i][0] || '');
           if (key) idMap[key] = i + 2;
@@ -959,43 +1162,24 @@ function doPost(e) {
         var itemId = String(item.id || item.row[0] || '');
         var rowNum = idMap[itemId];
         if (rowNum) {
-          sheet.getRange(rowNum, 1, 1, item.row.length).setValues([item.row]);
+          mainSheet.getRange(rowNum, 1, 1, item.row.length).setValues([item.row]);
           updatedCount++;
         } else {
           toInsert.push(item.row);
         }
       }
       if (toInsert.length) {
-        sheet.getRange(sheet.getLastRow() + 1, 1, toInsert.length, toInsert[0].length).setValues(toInsert);
+        mainSheet.getRange(mainSheet.getLastRow() + 1, 1, toInsert.length, toInsert[0].length).setValues(toInsert);
       }
-      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 2, action: 'upsert_batch', updated: updatedCount, inserted: toInsert.length }))
+      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, action: 'upsert_batch', updated: updatedCount, inserted: toInsert.length }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 3. Actualización quirúrgica de una sola candidatura (celda o fila en O(1) con TextFinder)
+    // 7. Actualización quirúrgica de una sola candidatura (O(1) con TextFinder)
     var row = data.row || [];
     var id = data.id || row[0];
-    var targetRow = findRowById_(sheet, id);
-    if (targetRow > 1) {
-      if (data.changedCols && typeof data.changedCols === 'object') {
-        var cols = Object.keys(data.changedCols);
-        for (var c = 0; c < cols.length; c++) {
-          var colNum = Number(cols[c]);
-          if (colNum >= 1 && colNum <= headers.length) {
-            sheet.getRange(targetRow, colNum).setValue(data.changedCols[cols[c]]);
-          }
-        }
-      } else if (row.length) {
-        sheet.getRange(targetRow, 1, 1, row.length).setValues([row]);
-      }
-      return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 2, action: 'upsert', updated: 1, inserted: 0 }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    if (row.length) {
-      sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length).setValues([row]);
-    }
-    return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 2, action: 'upsert', updated: 0, inserted: row.length ? 1 : 0 }))
+    var resUpsert = upsertRow_(mainSheet, id, row, data.changedCols, headers.length);
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, version: 3, action: 'upsert', updated: resUpsert.updated, inserted: resUpsert.inserted }))
       .setMimeType(ContentService.MimeType.JSON);
   } finally {
     lock.releaseLock();
@@ -1312,6 +1496,10 @@ async function cloudSaveUnit(v) {
 async function cloudSaveSol(sol) {
   saveSols();
   try { await setDoc(doc(fbDb, 'solicitudes', sol.id), sol); FB_DB_ONLINE = true; } catch (_) {}
+}
+async function cloudDeleteSol(id) {
+  saveSols();
+  try { await deleteDoc(doc(fbDb, 'solicitudes', String(id))); FB_DB_ONLINE = true; } catch (_) {}
 }
 async function cloudSaveBlog(b) {
   saveBlog();
@@ -1735,6 +1923,7 @@ function updateUserHeader() {
       </div>
       <a href="#admin/inventario" data-menu-close>${ICO('building')} Inventario (45 Viviendas)</a>
       <a href="#admin/candidatos" data-menu-close>${ICO('users')} Candidaturas y Solvencia</a>
+      <a href="#admin/archivo" data-menu-close>${ICO('file')} Archivo</a>
       <a href="#admin/qrs" data-menu-close>${ICO('qr')} Generador Códigos QR</a>
       <a href="#admin/blog" data-menu-close>${ICO('edit')} Consejos / Blog</a>
       <a href="#admin/usuarios" data-menu-close>${ICO('lock')} Usuarios y Roles</a>
@@ -3076,17 +3265,20 @@ function renderSolicitudCards(email) {
       </div>
       ${s.selecciones.map(item => {
         const prop = V.find(v => v.ref === item.ref);
-        const badgeClass = item.estado === 'Pre-aprobada' ? 'D' : item.estado === 'No aprobada' ? 'A' : 'R';
+        const st = normSolStatus(item.estado);
+        const badgeClass = st === 'Aprobado' || st === 'Vendido' ? 'D' : st === 'Rechazada' ? 'A' : 'R';
         return `
         <div style="padding:12px;border-radius:6px;background:var(--card);border:1px solid var(--line);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
           <div>
             <b>${item.ref}</b> ${prop ? `<span class="m">(${prop.h} hab · Planta ${prop.pl} · ${eur(prop.r)}/mes)</span>` : ''}
-            <div style="margin-top:4px"><span class="st ${badgeClass}">${item.estado}</span></div>
+            <div style="margin-top:4px"><span class="st ${badgeClass}">${esc(st)}</span></div>
           </div>
           <div>
-            ${item.estado === 'Pre-aprobada'
+            ${st === 'Aprobado'
               ? `<a class="btn ok sm" href="${esc(prop?.rentgerUrl || '#')}" target="_blank" rel="noopener">${ICO('file')} Subir documentación en Rentger →</a>`
-              : item.estado === 'No aprobada'
+              : st === 'Vendido'
+              ? `<span style="color:var(--ok-tx);font-weight:700;font-size:.84rem">${ICO('check')} Operación cerrada</span>`
+              : st === 'Rechazada'
               ? `<span class="m">Candidatura no seleccionada para esta unidad.</span>`
               : `<span class="m">Nuestro equipo está revisando tu perfil.</span>`}
           </div>
@@ -3400,6 +3592,8 @@ function renderAdmin(subTab) {
   const dCount = V.filter(v => v.st === 'D').length;
   const rCount = V.filter(v => v.st === 'R').length;
   const aCount = V.filter(v => v.st === 'A').length;
+  const activeSols = getActiveSols();
+  const archivedSols = getArchivedSols();
 
   sec.innerHTML = `
   <div class="head">
@@ -3415,14 +3609,15 @@ function renderAdmin(subTab) {
 
   <div class="stats" style="margin-bottom:20px">
     <div><b>${dCount} / ${rCount} / ${aCount}</b><span>Disp. / Reserv. / Alquil.</span></div>
-    <div><b>${SOLS.length}</b><span>Candidaturas recibidas</span></div>
+    <div><b>${activeSols.length}</b><span>Candidaturas activas</span></div>
+    <div><b>${archivedSols.length}</b><span>En Archivo</span></div>
     <div><b>${STATS.qrScans || 0}</b><span>Escaneos QR detectados</span></div>
-    <div><b>${Object.values(STATS.views || {}).reduce((a, b) => a + b, 0)}</b><span>Visitas a fichas</span></div>
   </div>
 
   <div class="tabs" id="admTabs">
-    <a class="chip ${adminTab === 'inventario' ? 'on' : ''}" href="#admin/inventario" style="text-decoration:none">${ICO('building')} Inventario (45)</a>
-    <a class="chip ${adminTab === 'candidatos' ? 'on' : ''}" href="#admin/candidatos" style="text-decoration:none">${ICO('users')} Candidaturas (${SOLS.length})</a>
+    <a class="chip ${adminTab === 'inventario' ? 'on' : ''}" href="#admin/inventario" style="text-decoration:none">${ICO('building')} Inventario (${V.length})</a>
+    <a class="chip ${adminTab === 'candidatos' ? 'on' : ''}" href="#admin/candidatos" style="text-decoration:none">${ICO('users')} Candidaturas (${activeSols.length})</a>
+    <a class="chip ${adminTab === 'archivo' ? 'on' : ''}" href="#admin/archivo" style="text-decoration:none">${ICO('file')} Archivo (${archivedSols.length})</a>
     <a class="chip ${adminTab === 'qrs' ? 'on' : ''}" href="#admin/qrs" style="text-decoration:none">${ICO('qr')} Códigos QR</a>
     <a class="chip ${adminTab === 'blog' ? 'on' : ''}" href="#admin/blog" style="text-decoration:none">${ICO('edit')} Consejos / Blog</a>
     <a class="chip ${adminTab === 'usuarios' ? 'on' : ''}" href="#admin/usuarios" style="text-decoration:none">${ICO('lock')} Usuarios y Roles</a>
@@ -3494,13 +3689,18 @@ function renderAdmin(subTab) {
     };
   }
 
-  /* TAB 2: CANDIDATURAS Y CRUCE DE SOLVENCIA */
+  /* TAB 2: CANDIDATURAS ACTIVAS Y CRUCE DE SOLVENCIA */
   if (adminTab === 'candidatos') {
     const avail = V.filter(v => v.st === 'D');
     const c = getCfg();
     const hasSheetLink = Boolean(c.googleSheetUrl);
     const hasLiveSync = Boolean(c.appsScriptUrl);
-    const pendingCount = getPendingSheetSols(SOLS).length;
+    const pendingCount = getPendingSheetSols(activeSols).length;
+    const statusCls = st => {
+      const n = normSolStatus(st);
+      return n === 'Aprobado' ? 'st-ok' : n === 'Vendido' ? 'st-sold' : 'st-rev';
+    };
+
     body.innerHTML = `
     <div class="panel" style="margin-bottom:16px;padding:16px 18px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
@@ -3508,7 +3708,7 @@ function renderAdmin(subTab) {
           <b style="font-size:.95rem">Resumen de candidaturas en Google Sheets</b>
           <div class="m" style="margin-top:2px">
             ${hasLiveSync
-              ? '<span class="dot ok"></span>Sincronización incremental activa: solo se actualiza la fila o celda modificada, sin recargar el resto de la hoja.'
+              ? '<span class="dot ok"></span>Sincronización incremental activa: actualiza fila/celda y gestiona la hoja «Archivo» automáticamente.'
               : hasSheetLink
               ? '<span class="dot warn"></span>Hoja enlazada. Puedes abrirla aquí o activar el volcado automático en Integraciones.'
               : 'Conecta un único enlace de Google Sheets para ver siempre todas las candidaturas actualizadas sin descargar archivos Excel.'}
@@ -3520,9 +3720,9 @@ function renderAdmin(subTab) {
             : `<button class="btn ok sm" type="button" id="quickLinkSheetBtn">${ICO('file')} Conectar enlace Google Sheets</button>`}
           ${hasLiveSync
             ? `<button class="btn sm" type="button" id="syncSheetsBtn">${ICO('check')} ${pendingCount > 0 ? `Sincronizar cambios (${pendingCount})` : 'Sincronizar pendientes'}</button>
-               <button class="btn g sm" type="button" id="rebuildSheetsBtn" title="Sobrescribe toda la hoja en un único bloque por si fue vaciada manualmente">Reconstruir hoja</button>`
+               <button class="btn g sm" type="button" id="rebuildSheetsBtn" title="Sobrescribe toda la hoja principal en un único bloque">Reconstruir hoja</button>`
             : ''}
-          <button class="btn g sm" type="button" id="copySheetsBtn">${ICO('columns')} Copiar tabla para Google Sheets</button>
+          <button class="btn g sm" type="button" id="copySheetsBtn">${ICO('columns')} Copiar tabla</button>
           <button class="btn g sm" type="button" id="exportCsvBtn">${ICO('download')} CSV</button>
         </div>
       </div>
@@ -3532,25 +3732,32 @@ function renderAdmin(subTab) {
             <input id="quickSheetUrl" type="url" value="${esc(c.googleSheetUrl)}" placeholder="https://docs.google.com/spreadsheets/d/...">
           </label>
           <button class="btn sm" type="button" id="saveQuickSheetBtn">Guardar enlace</button>
-          <a class="btn g sm" href="#admin/config">Configurar actualización automática →</a>
+          <a class="btn g sm" href="#admin/config">Integraciones →</a>
         </div>
       </div>
     </div>
-    <p class="m" style="margin-bottom:14px">Cruce automático de solvencia (ratio 3x) contra las viviendas elegidas y sugerencia de alternativas libres.</p>
-    ${!SOLS.length ? '<div class="panel"><p class="m">Aún no hay solicitudes registradas.</p></div>' :
-      SOLS.map((s, sIdx) => {
+
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <p class="m" style="margin:0">Cruce automático de solvencia (ratio 3x). Estados: <b style="color:var(--warn-tx)">En revisión</b> · <b style="color:var(--ok-tx)">Aprobado</b> · <b style="color:var(--b1)">Vendido (mueve a Archivo)</b>.</p>
+    </div>
+
+    ${!activeSols.length ? '<div class="panel"><p class="m">No hay candidaturas activas en este momento.</p></div>' :
+      activeSols.map(s => {
         const maxRent = Math.floor(s.ingresos / 3);
         const matchingOther = avail.filter(v => v.r <= maxRent && !s.selecciones.some(x => x.ref === v.ref));
         return `
-        <div class="panel" style="margin-bottom:14px">
-          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px">
+        <div class="panel" style="margin-bottom:14px" data-sol-card="${esc(s.id)}">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px">
             <div>
               <b>${esc(s.nombre)}</b> (${esc(s.tipoDoc)}: ${esc(s.dni)}) · <a href="mailto:${esc(s.email)}" style="color:var(--b1)">${esc(s.email)}</a> · Tel: ${esc(s.telefono)}
-              <div class="m" style="margin-top:2px">Unidad familiar: ${s.adultos} adultos, ${s.ninos} niños · Mascotas: ${esc(s.mascotas)} · Aval: <b>${esc(s.aval)}</b></div>
+              <div class="m" style="margin-top:2px">Unidad familiar: ${s.adultos} adultos, ${s.ninos} niños · Mascotas: ${esc(s.mascotas)} · Aval: <b>${esc(s.aval)}</b> · Ref: ${esc(s.id)}</div>
             </div>
-            <div style="text-align:right">
-              <div style="font-weight:800;color:var(--b1);font-size:1.05rem">Ingresos: ${eur(s.ingresos)}/mes</div>
-              <div class="m">Renta máx. 3x: <b>${eur(maxRent)}/mes</b> · ${esc(s.fecha)}</div>
+            <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+              <div style="text-align:right">
+                <div style="font-weight:800;color:var(--b1);font-size:1.05rem">Ingresos: ${eur(s.ingresos)}/mes</div>
+                <div class="m">Renta máx. 3x: <b>${eur(maxRent)}/mes</b> · ${esc(s.fecha)}</div>
+              </div>
+              <button type="button" class="btn bad sm" data-reject-sol="${esc(s.id)}">Rechazar candidatura</button>
             </div>
           </div>
 
@@ -3558,17 +3765,19 @@ function renderAdmin(subTab) {
             ${s.selecciones.map((sel, selIdx) => {
               const prop = V.find(v => v.ref === sel.ref);
               const cumple = prop && s.ingresos >= prop.r * 3;
+              const curSt = normSolStatus(sel.estado);
+              const cls = statusCls(curSt);
               return `
-              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;background:var(--card2);padding:10px 12px;border-radius:5px;border:1px solid var(--line)">
+              <div class="sol-sel-row ${cls}">
                 <div>
-                  <b>${sel.ref}</b> ${prop ? `(${prop.h} hab · ${eur(prop.r)}/mes)` : ''} ·
+                  <b>${esc(sel.ref)}</b> ${prop ? `(${prop.h} hab · ${eur(prop.r)}/mes)` : ''} ·
                   ${cumple ? `<span style="color:var(--ok-tx);font-weight:700">${ICO('check')} Solvencia OK</span>` : `<span style="color:var(--warn-tx);font-weight:700">${ICO('warn')} Requiere aval</span>`}
                 </div>
                 <div style="display:flex;align-items:center;gap:8px">
-                  <select data-sol="${sIdx}" data-sel="${selIdx}" style="width:175px;margin:0;padding:6px 10px">
-                    <option value="En estudio" ${sel.estado === 'En estudio' ? 'selected' : ''}>En estudio</option>
-                    <option value="Pre-aprobada" ${sel.estado === 'Pre-aprobada' ? 'selected' : ''}>Pre-aprobada (Rentger)</option>
-                    <option value="No aprobada" ${sel.estado === 'No aprobada' ? 'selected' : ''}>No aprobada (Sin email)</option>
+                  <select class="sol-select ${cls}" data-sol-id="${esc(s.id)}" data-sel="${selIdx}" data-prev="${esc(curSt)}">
+                    <option value="En revisión" ${curSt === 'En revisión' ? 'selected' : ''}>En revisión</option>
+                    <option value="Aprobado" ${curSt === 'Aprobado' ? 'selected' : ''}>Aprobado (Rentger)</option>
+                    <option value="Vendido" ${curSt === 'Vendido' ? 'selected' : ''}>Vendido → Archivo</option>
                   </select>
                 </div>
               </div>`;
@@ -3583,22 +3792,161 @@ function renderAdmin(subTab) {
         </div>`;
       }).join('')}`;
 
+    const openSoldModal = (sol, selIdx, selectEl, prevState) => {
+      const sel = sol.selecciones[selIdx];
+      const prop = V.find(v => v.ref === sel.ref);
+      const dlg = $('dlg');
+      dlg.classList.remove('wide');
+      dlg.innerHTML = `
+        <h3>Confirmar paso a «Vendido»</h3>
+        <p class="m" style="margin-top:6px">Al confirmar, esta candidatura saldrá de <b>Candidaturas</b> y pasará a la pestaña <b>Archivo</b> (y a la hoja <b>Archivo</b> en Google Sheets).</p>
+        <div class="confirm-box">
+          <b>${esc(sol.nombre)}</b> · ${esc(sol.id)}<br>
+          <span class="m">Vivienda: <b>${esc(sel.ref)}</b>${prop ? ` (${prop.h} hab · ${eur(prop.r)}/mes)` : ''}</span><br>
+          <span class="m">Administrador: <b>${esc(CURRENT_USER.email)}</b></span>
+        </div>
+        ${prop && prop.st !== 'A' ? `
+          <label class="confirm-check">
+            <input type="checkbox" id="soldMarkUnit" checked>
+            <span>Marcar también la vivienda ${esc(sel.ref)} como Alquilada en el inventario</span>
+          </label>` : ''}
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+          <button type="button" class="btn g sm" id="soldCancelBtn">Cancelar</button>
+          <button type="button" class="btn ok sm" id="soldConfirmBtn">Confirmar Vendido y Archivar</button>
+        </div>`;
+      dlg.showModal();
+
+      const revert = () => {
+        selectEl.value = prevState;
+        dlg.close();
+      };
+      $('soldCancelBtn').onclick = revert;
+      dlg.oncancel = e => { e.preventDefault(); revert(); };
+
+      $('soldConfirmBtn').onclick = async () => {
+        const btn = $('soldConfirmBtn');
+        btn.disabled = true;
+        btn.textContent = 'Archivando…';
+        sol.selecciones[selIdx].estado = 'Vendido';
+        sol.archived = true;
+        sol.archiveReason = 'Vendido';
+        sol.archivedAt = new Date().toLocaleString('es-ES');
+        sol.archivedBy = CURRENT_USER.email;
+        SHEET_PENDING_QUEUE.delete(sol.id);
+
+        if ($('soldMarkUnit')?.checked && prop) {
+          prop.st = 'A';
+          await cloudSaveUnit(prop);
+        }
+        await cloudSaveSol(sol);
+        if (getCfg().appsScriptUrl) {
+          await syncToGoogleSheets('archive', sol);
+        }
+        dlg.close();
+        notify(`${sol.nombre} (${sel.ref}) marcada como Vendido y movida a Archivo`);
+        renderAdmin('candidatos');
+      };
+    };
+
+    const openRejectModal = sol => {
+      const dlg = $('dlg');
+      dlg.classList.remove('wide');
+      const refsList = (sol.selecciones || []).map(x => x.ref).join(', ');
+      dlg.innerHTML = `
+        <h3>Rechazar candidatura</h3>
+        <p class="m" style="margin-top:6px">Esta acción retirará la candidatura de la web y de la hoja principal de Google Sheets.</p>
+        <div class="confirm-box">
+          <b>${esc(sol.nombre)}</b> · ${esc(sol.id)}<br>
+          <span class="m">${esc(sol.email)} · Viviendas: <b>${esc(refsList || 'Sin ref.')}</b></span><br>
+          <span class="m">Acción realizada por: <b>${esc(CURRENT_USER.email)}</b></span>
+        </div>
+        <label class="confirm-check">
+          <input type="checkbox" id="rejArchiveOpt">
+          <span>Guardar una copia en la pestaña <b>Archivo</b> (y en la hoja <b>Archivo</b> de Excel) de manera opcional</span>
+        </label>
+        <label class="confirm-check" style="background:var(--bad-bg);color:var(--bad-tx);padding:9px 10px;border-radius:4px;border:1px solid rgba(239,68,68,.3)">
+          <input type="checkbox" id="rejVerifyChk">
+          <span>Verificación: confirmo que deseo rechazar esta candidatura y eliminarla de Candidaturas y del Excel principal.</span>
+        </label>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+          <button type="button" class="btn g sm" id="rejCancelBtn">Cancelar</button>
+          <button type="button" class="btn bad sm" id="rejConfirmBtn" disabled>Confirmar rechazo</button>
+        </div>`;
+      dlg.showModal();
+
+      const verifyChk = $('rejVerifyChk');
+      const confirmBtn = $('rejConfirmBtn');
+      const archOpt = $('rejArchiveOpt');
+      verifyChk.onchange = () => { confirmBtn.disabled = !verifyChk.checked; };
+      $('rejCancelBtn').onclick = () => dlg.close();
+
+      confirmBtn.onclick = async () => {
+        if (!verifyChk.checked) return;
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Procesando…';
+        SHEET_PENDING_QUEUE.delete(sol.id);
+
+        if (archOpt.checked) {
+          sol.selecciones = (sol.selecciones || []).map(x => ({ ...x, estado: 'Rechazada' }));
+          sol.archived = true;
+          sol.archiveReason = 'Rechazada';
+          sol.archivedAt = new Date().toLocaleString('es-ES');
+          sol.archivedBy = CURRENT_USER.email;
+          await cloudSaveSol(sol);
+          if (getCfg().appsScriptUrl) {
+            await syncToGoogleSheets('archive', sol);
+          }
+          dlg.close();
+          notify(`Candidatura de ${sol.nombre} rechazada y guardada en Archivo`);
+        } else {
+          SOLS = SOLS.filter(x => x.id !== sol.id);
+          await cloudDeleteSol(sol.id);
+          if (getCfg().appsScriptUrl) {
+            await syncToGoogleSheets('delete', sol.id);
+          }
+          dlg.close();
+          notify(`Candidatura de ${sol.nombre} rechazada y eliminada de la web y del Excel`);
+        }
+        renderAdmin('candidatos');
+      };
+    };
+
     body.onchange = e => {
-      if (e.target.dataset.sol !== undefined) {
-        const sIdx = Number(e.target.dataset.sol), selIdx = Number(e.target.dataset.sel);
+      if (e.target.dataset.solId !== undefined) {
+        const sol = SOLS.find(x => x.id === e.target.dataset.solId);
+        const selIdx = Number(e.target.dataset.sel);
+        if (!sol || !sol.selecciones[selIdx]) return;
         const newSt = e.target.value;
-        const sol = SOLS[sIdx];
+        const prevSt = e.target.dataset.prev || 'En revisión';
+
+        if (newSt === 'Vendido') {
+          openSoldModal(sol, selIdx, e.target, prevSt);
+          return;
+        }
+
         sol.selecciones[selIdx].estado = newSt;
+        e.target.dataset.prev = newSt;
+        const cls = statusCls(newSt);
+        e.target.className = `sol-select ${cls}`;
+        const rowWrap = e.target.closest('.sol-sel-row');
+        if (rowWrap) rowWrap.className = `sol-sel-row ${cls}`;
+
         cloudSaveSol(sol);
-        const viviendasEstados = (sol.selecciones || []).map(x => `${x.ref} (${x.estado})`).join(' | ');
+        const viviendasEstados = (sol.selecciones || []).map(x => `${x.ref} (${normSolStatus(x.estado)})`).join(' | ');
         if (getCfg().appsScriptUrl) {
           queueSheetUpsert(sol, { 13: viviendasEstados });
         }
-        notify(newSt === 'Pre-aprobada'
-          ? 'Marcada como Pre-aprobada: el botón de Rentger ya es visible para el usuario'
-          : newSt === 'No aprobada'
-          ? 'Marcada como No aprobada (sin envío de correo)'
-          : 'Estado actualizado');
+        notify(newSt === 'Aprobado'
+          ? 'Marcada como Aprobado (verde): el botón de Rentger ya es visible para el usuario'
+          : 'Marcada En revisión (amarillo)');
+      }
+    };
+
+    body.onclick = e => {
+      const rejBtn = e.target.closest('[data-reject-sol]');
+      if (rejBtn) {
+        const sol = SOLS.find(x => x.id === rejBtn.dataset.rejectSol);
+        if (sol) openRejectModal(sol);
       }
     };
 
@@ -3623,7 +3971,7 @@ function renderAdmin(subTab) {
       $('syncSheetsBtn').onclick = async () => {
         clearTimeout(sheetFlushTimer);
         SHEET_PENDING_QUEUE.clear();
-        const pending = getPendingSheetSols(SOLS);
+        const pending = getPendingSheetSols(getActiveSols());
         if (!pending.length) {
           notify('Google Sheets ya está al día: no hay candidaturas nuevas ni modificadas');
           return;
@@ -3645,12 +3993,13 @@ function renderAdmin(subTab) {
         const btn = $('rebuildSheetsBtn');
         btn.disabled = true;
         btn.textContent = 'Reconstruyendo…';
-        const res = await syncToGoogleSheets('sync_all', SOLS);
+        const activeNow = getActiveSols();
+        const res = await syncToGoogleSheets('sync_all', activeNow);
         btn.disabled = false;
         btn.textContent = 'Reconstruir hoja';
         updateSheetSyncBadge();
         notify(res.ok
-          ? `Hoja reconstruida en bloque (${SOLS.length} candidaturas en una sola escritura)`
+          ? `Hoja reconstruida en bloque (${activeNow.length} candidaturas activas en una sola escritura)`
           : 'No se pudo reconstruir Google Sheets. Revisa la URL de conexión.');
       };
     }
@@ -3658,7 +4007,7 @@ function renderAdmin(subTab) {
     if ($('copySheetsBtn')) {
       $('copySheetsBtn').onclick = async () => {
         const cleanCell = v => String(v ?? '').replace(/[\t\r\n]+/g, ' ');
-        const tsv = [SHEET_HEADERS.join('\t'), ...SOLS.map(s => solToSheetRow(s).map(cleanCell).join('\t'))].join('\n');
+        const tsv = [SHEET_HEADERS.join('\t'), ...getActiveSols().map(s => solToSheetRow(s).map(cleanCell).join('\t'))].join('\n');
         try {
           await navigator.clipboard.writeText(tsv);
           notify('Tabla copiada: abre tu Google Sheets y pulsa Ctrl+V en la celda A1');
@@ -3670,10 +4019,10 @@ function renderAdmin(subTab) {
 
     $('exportCsvBtn').onclick = () => {
       const headers = ['ID', 'Fecha', 'Nombre', 'Doc', 'Email', 'Telefono', 'Adultos', 'Ninos', 'Mascotas', 'Ingresos_Mes', 'Aval', 'Viviendas_Estados'];
-      const rows = SOLS.map(s => [
+      const rows = getActiveSols().map(s => [
         s.id, s.fecha, s.nombre, `${s.tipoDoc}:${s.dni}`, s.email, s.telefono,
         s.adultos, s.ninos, s.mascotas, s.ingresos, s.aval,
-        s.selecciones.map(x => `${x.ref}(${x.estado})`).join(' | ')
+        s.selecciones.map(x => `${x.ref}(${normSolStatus(x.estado)})`).join(' | ')
       ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(';'));
       const csv = '\uFEFF' + [headers.join(';'), ...rows].join('\n');
       const a = document.createElement('a');
@@ -3682,6 +4031,159 @@ function renderAdmin(subTab) {
       a.click();
       notify('Archivo CSV compatible con Excel descargado');
     };
+  }
+
+  /* TAB 2B: ARCHIVO (Candidaturas Vendidas y Rechazadas guardadas opcionalmente) */
+  if (adminTab === 'archivo') {
+    const c = getCfg();
+    const hasSheetLink = Boolean(c.googleSheetUrl);
+    const hasLiveSync = Boolean(c.appsScriptUrl);
+    let archFilter = 'ALL';
+
+    const drawArchive = () => {
+      const allArch = getArchivedSols();
+      const soldCount = allArch.filter(s => s.archiveReason === 'Vendido').length;
+      const rejCount = allArch.filter(s => s.archiveReason === 'Rechazada').length;
+      const list = archFilter === 'ALL' ? allArch : allArch.filter(s => s.archiveReason === archFilter);
+
+      body.innerHTML = `
+      <div class="panel" style="margin-bottom:16px;padding:16px 18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+          <div>
+            <b style="font-size:.95rem">Archivo de candidaturas (Hoja «Archivo» en Google Sheets)</b>
+            <div class="m" style="margin-top:2px">Aquí se guardan automáticamente las operaciones marcadas como <b>Vendido</b> y, de manera opcional, las <b>Rechazadas</b> que decidas conservar.</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            ${hasSheetLink ? `<a class="btn ok sm" href="${esc(c.googleSheetUrl)}" target="_blank" rel="noopener">${ICO('file')} Abrir Google Sheets</a>` : ''}
+            ${hasLiveSync ? `<button class="btn sm" type="button" id="syncArchiveBtn">${ICO('check')} Sincronizar hoja Archivo</button>` : ''}
+          </div>
+        </div>
+      </div>
+
+      <div class="chips" style="margin-bottom:14px">
+        <button type="button" class="chip ${archFilter === 'ALL' ? 'on' : ''}" data-af="ALL">Todas (${allArch.length})</button>
+        <button type="button" class="chip ${archFilter === 'Vendido' ? 'on' : ''}" data-af="Vendido">Vendidas (${soldCount})</button>
+        <button type="button" class="chip ${archFilter === 'Rechazada' ? 'on' : ''}" data-af="Rechazada">Rechazadas (${rejCount})</button>
+      </div>
+
+      ${!list.length ? '<div class="panel"><p class="m">No hay candidaturas en el archivo para este filtro.</p></div>' :
+        list.map(s => {
+          const isSold = s.archiveReason === 'Vendido';
+          return `
+          <div class="panel" style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px">
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <b>${esc(s.nombre)}</b>
+                  <span class="arch-badge ${isSold ? 'sold' : 'rej'}">${esc(s.archiveReason || 'Archivada')}</span>
+                </div>
+                <div class="m" style="margin-top:4px">${esc(s.tipoDoc)}: ${esc(s.dni)} · <a href="mailto:${esc(s.email)}" style="color:var(--b1)">${esc(s.email)}</a> · Tel: ${esc(s.telefono)}</div>
+                <div class="m" style="margin-top:2px">Archivado el ${esc(s.archivedAt || s.fecha)}${s.archivedBy ? ` por <b>${esc(s.archivedBy)}</b>` : ''}</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">
+                <button type="button" class="btn g sm" data-restore-sol="${esc(s.id)}">Restaurar</button>
+                <button type="button" class="btn bad sm" data-purge-sol="${esc(s.id)}">Eliminar</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.84rem">
+              <b>Ingresos:</b> ${eur(s.ingresos)}/mes ·
+              <b>Viviendas:</b> ${(s.selecciones || []).map(x => `${esc(x.ref)} (${esc(normSolStatus(x.estado))})`).join(' | ')}
+            </div>
+            ${s.comentario ? `<div class="m" style="margin-top:6px">${ICO('note')} <i>"${esc(s.comentario)}"</i></div>` : ''}
+          </div>`;
+        }).join('')}`;
+
+      if ($('syncArchiveBtn')) {
+        $('syncArchiveBtn').onclick = async () => {
+          const btn = $('syncArchiveBtn');
+          btn.disabled = true;
+          btn.textContent = 'Sincronizando…';
+          const archNow = getArchivedSols();
+          const res = await syncToGoogleSheets('sync_archive', archNow);
+          btn.disabled = false;
+          btn.innerHTML = `${ICO('check')} Sincronizar hoja Archivo`;
+          notify(res.ok
+            ? `Hoja «Archivo» sincronizada en Google Sheets (${archNow.length} registros)`
+            : 'No se pudo sincronizar la hoja Archivo. Revisa la URL de Apps Script v3.');
+        };
+      }
+    };
+
+    body.onclick = e => {
+      const fBtn = e.target.closest('[data-af]');
+      if (fBtn) {
+        archFilter = fBtn.dataset.af;
+        drawArchive();
+        return;
+      }
+
+      const restBtn = e.target.closest('[data-restore-sol]');
+      if (restBtn) {
+        const sol = SOLS.find(x => x.id === restBtn.dataset.restoreSol);
+        if (!sol) return;
+        const dlg = $('dlg');
+        dlg.classList.remove('wide');
+        dlg.innerHTML = `
+          <h3>Restaurar candidatura</h3>
+          <p class="m" style="margin-top:6px">Se devolverá a <b>${esc(sol.nombre)}</b> a la pestaña <b>Candidaturas</b> en estado <i>En revisión</i> y se moverá de nuevo a la hoja principal de Google Sheets.</p>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+            <button type="button" class="btn g sm" id="restCancelBtn">Cancelar</button>
+            <button type="button" class="btn sm" id="restConfirmBtn">Confirmar restauración</button>
+          </div>`;
+        dlg.showModal();
+        $('restCancelBtn').onclick = () => dlg.close();
+        $('restConfirmBtn').onclick = async () => {
+          sol.archived = false;
+          delete sol.archiveReason;
+          delete sol.archivedAt;
+          delete sol.archivedBy;
+          sol.selecciones = (sol.selecciones || []).map(x => ({ ...x, estado: 'En revisión' }));
+          await cloudSaveSol(sol);
+          if (getCfg().appsScriptUrl) {
+            await syncToGoogleSheets('restore', sol);
+          }
+          dlg.close();
+          notify(`Candidatura de ${sol.nombre} restaurada a Candidaturas`);
+          renderAdmin('archivo');
+        };
+        return;
+      }
+
+      const purgeBtn = e.target.closest('[data-purge-sol]');
+      if (purgeBtn) {
+        const sol = SOLS.find(x => x.id === purgeBtn.dataset.purgeSol);
+        if (!sol) return;
+        const dlg = $('dlg');
+        dlg.classList.remove('wide');
+        dlg.innerHTML = `
+          <h3>Eliminar definitivamente del Archivo</h3>
+          <p class="m" style="margin-top:6px">Esta acción eliminará la candidatura de <b>${esc(sol.nombre)}</b> (${esc(sol.id)}) de la web, de Firestore y de la hoja <b>Archivo</b> en Google Sheets.</p>
+          <label class="confirm-check" style="background:var(--bad-bg);color:var(--bad-tx);padding:9px 10px;border-radius:4px;border:1px solid rgba(239,68,68,.3)">
+            <input type="checkbox" id="purgeVerifyChk">
+            <span>Verificación: confirmo que deseo eliminar definitivamente este registro (${esc(CURRENT_USER.email)}).</span>
+          </label>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+            <button type="button" class="btn g sm" id="purgeCancelBtn">Cancelar</button>
+            <button type="button" class="btn bad sm" id="purgeConfirmBtn" disabled>Eliminar definitivamente</button>
+          </div>`;
+        dlg.showModal();
+        $('purgeVerifyChk').onchange = () => { $('purgeConfirmBtn').disabled = !$('purgeVerifyChk').checked; };
+        $('purgeCancelBtn').onclick = () => dlg.close();
+        $('purgeConfirmBtn').onclick = async () => {
+          if (!$('purgeVerifyChk').checked) return;
+          SOLS = SOLS.filter(x => x.id !== sol.id);
+          await cloudDeleteSol(sol.id);
+          if (getCfg().appsScriptUrl) {
+            await syncToGoogleSheets('delete', sol.id, { sheetName: ARCHIVE_SHEET_NAME });
+          }
+          dlg.close();
+          notify(`Registro de ${sol.nombre} eliminado definitivamente`);
+          renderAdmin('archivo');
+        };
+      }
+    };
+
+    drawArchive();
   }
 
   /* TAB 3: GENERADOR DE CÓDIGOS QR (ISO/IEC 18004 REALES) */
@@ -3841,7 +4343,7 @@ function renderAdmin(subTab) {
             <label>URL de Apps Script
               <input id="cfgSheets" type="url" value="${esc(c.appsScriptUrl)}" placeholder="https://script.google.com/macros/s/XXXXX/exec">
             </label>
-            <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v2</button>
+            <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v3 (con hoja Archivo)</button>
           </div>
         </details>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -3854,7 +4356,7 @@ function renderAdmin(subTab) {
     $('copyAppsScriptBtn').onclick = async () => {
       try {
         await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-        notify('Código de Apps Script v2 copiado al portapapeles');
+        notify('Código de Apps Script v3 (con hoja Archivo) copiado al portapapeles');
       } catch (_) {
         notify('No se pudo copiar automáticamente');
       }
@@ -3952,92 +4454,11 @@ const CHAT_QUICK_PROMPTS = [
   '¿Qué pisos de 2 o 3 habitaciones siguen disponibles ahora mismo?'
 ];
 const CALC_QUICK_ACTIONS = [
-  { label: 'Calcular renta máxima con 3.300 €/mes', query: 'Ingresos 3300€' },
-  { label: 'Gastos de entrada y fianza (1.100 €/mes)', query: 'Entrada para 1100€' },
-  { label: 'Dividir un alquiler de 1.200 € entre 2', query: '1200 entre 2' },
-  { label: 'Ver precios por 2, 3 y 4 habitaciones', query: 'Precios por habitaciones' }
+  { label: 'Cobro 2.400 € en 14 pagas, ¿qué piso encaja?', query: 'Cobro 2.400 € netos al mes en 14 pagas, ¿qué renta máxima 3x tengo y qué pisos disponibles encajan?' },
+  { label: 'Gastos de entrada y fianza para 1.100 €/mes', query: 'Calcula los gastos de entrada, fianza y coste anual para un alquiler de 1.100 €/mes' },
+  { label: 'Dividir 1.250 €/mes entre 2 + suministros', query: 'Si compartimos un piso de 1.250 €/mes entre 2 personas, ¿cuánto pagamos al mes y al entrar?' },
+  { label: 'Comparar pisos disponibles de 2 y 3 hab.', query: 'Compara los pisos disponibles más económicos de 2 y 3 habitaciones y sus ingresos mínimos' }
 ];
-
-/* Evaluador aritmético seguro (sin eval / Function) */
-function safeEvalMath(raw) {
-  const cleaned = String(raw || '')
-    .replace(/€/g, '')
-    .replace(/×/g, '*')
-    .replace(/÷/g, '/')
-    .replace(/(\d)\.(\d{3})(?=\D|$)/g, '$1$2')
-    .replace(/,/g, '.')
-    .trim();
-  if (!cleaned || !/^[0-9+\-*/().\s]+$/.test(cleaned)) return null;
-  if (!/[+\-*/]/.test(cleaned)) return null;
-
-  const tokens = cleaned.match(/\d+(?:\.\d+)?|[+\-*/()]/g);
-  if (!tokens || tokens.join('') !== cleaned.replace(/\s+/g, '')) return null;
-
-  let pos = 0;
-  const peek = () => tokens[pos];
-  const consume = () => tokens[pos++];
-
-  function parseExpr() {
-    let val = parseTerm();
-    while (peek() === '+' || peek() === '-') {
-      const op = consume();
-      const rhs = parseTerm();
-      val = op === '+' ? val + rhs : val - rhs;
-    }
-    return val;
-  }
-  function parseTerm() {
-    let val = parseFactor();
-    while (peek() === '*' || peek() === '/') {
-      const op = consume();
-      const rhs = parseFactor();
-      if (op === '/') {
-        if (rhs === 0) throw new Error('div0');
-        val /= rhs;
-      } else {
-        val *= rhs;
-      }
-    }
-    return val;
-  }
-  function parseFactor() {
-    if (peek() === '+') { consume(); return parseFactor(); }
-    if (peek() === '-') { consume(); return -parseFactor(); }
-    if (peek() === '(') {
-      consume();
-      const val = parseExpr();
-      if (consume() !== ')') throw new Error('paren');
-      return val;
-    }
-    const tok = consume();
-    const num = Number(tok);
-    if (!Number.isFinite(num)) throw new Error('nan');
-    return num;
-  }
-
-  try {
-    const result = parseExpr();
-    if (pos !== tokens.length || !Number.isFinite(result)) return null;
-    return result;
-  } catch {
-    return null;
-  }
-}
-
-function extractAmounts(text) {
-  const normalized = String(text || '')
-    .replace(/\bref[-\s]?\d{1,2}\b/gi, ' ')
-    .replace(/\b[234]\s*(?:hab(?:itaciones)?|dorm(?:itorios)?)\b/gi, ' ')
-    .replace(/(\d)\.(\d{3})(?=\D|$)/g, '$1$2')
-    .replace(/(\d),(\d{1,2})(?=\D|$)/g, '$1.$2');
-  const matches = normalized.match(/\d+(?:\.\d+)?/g) || [];
-  return matches.map(Number).filter(n => Number.isFinite(n) && n > 0);
-}
-
-function fmtNum(n) {
-  const rounded = Math.round(n * 100) / 100;
-  return rounded.toLocaleString('es-ES', { maximumFractionDigits: 2 });
-}
 
 function initFloatingChat() {
   const fab = $('chatFab');
@@ -4079,7 +4500,7 @@ function initFloatingChat() {
   let linkedRef = '';
   let unlinkedManually = false;
   let editingIdentity = true;
-  let lastCalcIncome = 0;
+  let isCalcBusy = false;
 
   const ALLOWED_CHAT_ROLES = new Set(['user', 'ok', 'err', 'bot']);
   const loadHistory = () => {
@@ -4160,9 +4581,9 @@ function initFloatingChat() {
     tabMail.setAttribute('aria-selected', String(!isCalc));
     paneCalc.hidden = !isCalc;
     paneMail.hidden = isCalc;
-    titleEl.textContent = isCalc ? 'Calculadora · Móstoles' : 'Consultas · Móstoles';
+    titleEl.textContent = isCalc ? 'Calculadora IA · Móstoles' : 'Consultas · Móstoles';
     subEl.textContent = isCalc
-      ? 'Solvencia 3×, fianza y cuotas al instante'
+      ? 'Cálculos y solvencia con IA al instante'
       : 'Respuesta directa por correo · Obra nueva';
     syncClearButton();
     if (isOpen) {
@@ -4221,199 +4642,12 @@ function initFloatingChat() {
     setActiveTab('mail');
   };
 
-  /* Motor conversacional de cálculos inmobiliarios y aritméticos */
-  function evaluateCalcQuery(rawQuery) {
-    const q = String(rawQuery || '').trim();
-    const low = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const activeUnit = linkedRef ? V.find(v => v.ref === linkedRef) : null;
-    const availUnits = V.filter(v => v.st === 'D').sort((a, b) => a.r - b.r);
-
-    // 1. Expresión aritmética pura (ej: 1200 * 12, (1800 + 1600) / 3)
-    const mathVal = safeEvalMath(q);
-    if (mathVal !== null) {
-      const rows = [{ label: 'Operación', value: q }, { label: 'Resultado', value: fmtNum(mathVal), em: true }];
-      if (mathVal >= 1500 && mathVal <= 20000) {
-        rows.push({ label: 'Si son ingresos/mes (ratio 3×)', value: `hasta ${eur(Math.floor(mathVal / 3))}/mes` });
-      } else if (mathVal >= 600 && mathVal < 1500) {
-        rows.push({ label: 'Si es renta mensual (× 12 meses)', value: eur(Math.round(mathVal * 12)) });
-        rows.push({ label: 'Ingresos mínimos 3×', value: `${eur(Math.round(mathVal * 3))}/mes` });
-      }
-      return {
-        title: 'Resultado del cálculo',
-        rows,
-        handoff: `Hola, he realizado el cálculo (${q} = ${fmtNum(mathVal)}) y me gustaría consultar opciones en la promoción de Móstoles.`
-      };
-    }
-
-    // 2. Referencia concreta (REF-01 .. REF-45)
-    const refMatch = q.match(/\bREF[-\s]?0?(\d{1,2})\b/i);
-    const matchedUnit = refMatch
-      ? V.find(v => v.ref === `REF-${String(refMatch[1]).padStart(2, '0')}`)
-      : null;
-
-    // 3. Dividir alquiler entre personas (ej: "1200 entre 2", "REF-04 entre 3")
-    const splitMatch = low.match(/(?:entre|para|dividir\s+entre|compartir\s+entre)\s*(\d+)\b/);
-    if (splitMatch || /\b(dividir|compartir|por persona)\b/.test(low)) {
-      const people = Math.min(10, Math.max(2, Number(splitMatch ? splitMatch[1] : 2)));
-      const nums = extractAmounts(q).filter(n => n >= 400);
-      const targetUnit = matchedUnit || activeUnit || availUnits[0];
-      const rent = nums[0] || (targetUnit ? targetUnit.r : 1100);
-      const perPerson = rent / people;
-      const totalEntry = rent * 3;
-      const entryPerPerson = totalEntry / people;
-      return {
-        title: `Alquiler de ${eur(rent)}/mes entre ${people} personas`,
-        rows: [
-          { label: 'Cuota mensual por persona', value: `${fmtNum(perPerson)} €/mes`, em: true },
-          { label: 'Entrada total a la firma (3 meses)', value: eur(totalEntry) },
-          { label: 'Entrada inicial por persona', value: `${fmtNum(entryPerPerson)} €` },
-          { label: 'Ingresos mínimos por persona (3×)', value: `${fmtNum(perPerson * 3)} €/mes` }
-        ],
-        units: targetUnit && !nums[0] ? [targetUnit] : [],
-        handoff: `Hola, estamos valorando compartir un piso de ${eur(rent)}/mes entre ${people} personas (${fmtNum(perPerson)} €/persona). ¿Qué viviendas disponibles nos recomendáis?`
-      };
-    }
-
-    // 4. Ficha o simulación de una referencia concreta
-    if (matchedUnit) {
-      const nums = extractAmounts(q).filter(n => n >= 500);
-      const income = nums[0] || lastCalcIncome;
-      if (nums[0]) lastCalcIncome = nums[0];
-      const fianza = matchedUnit.r;
-      const garantia = matchedUnit.r;
-      const entrada = matchedUnit.r + fianza + garantia;
-      const reqIncome = matchedUnit.r * 3;
-      const rows = [
-        { label: 'Vivienda', value: `${matchedUnit.portal} · Planta ${matchedUnit.pl} · ${matchedUnit.h} hab · ${matchedUnit.m2} m²` },
-        { label: 'Renta mensual', value: `${eur(matchedUnit.r)}/mes (${(matchedUnit.r / matchedUnit.m2).toFixed(1)} €/m²)`, em: true },
-        { label: '1.er mes + fianza + garantía', value: eur(entrada) },
-        { label: 'Ingresos mínimos (ratio 3×)', value: `${eur(reqIncome)}/mes` }
-      ];
-      let status = null;
-      if (income > 0) {
-        const pct = Math.round((matchedUnit.r / income) * 100);
-        rows.push({ label: `Esfuerzo con ${eur(income)}/mes`, value: `${pct}% de tus ingresos` });
-        status = pct <= 33
-          ? { cls: 'ok', text: `Solvencia directa OK (${pct}%). Cumples el ratio 3×.` }
-          : pct <= 40
-            ? { cls: 'warn', text: `Ratio ajustado (${pct}%). Podría requerir aval o cotitular.` }
-            : { cls: 'bad', text: `Esfuerzo elevado (${pct}%). Se recomiendan ingresos ≥ ${eur(reqIncome)}/mes.` };
-      }
-      return {
-        title: `Cálculo para ${matchedUnit.ref} (${matchedUnit.st === 'D' ? 'Disponible' : matchedUnit.st === 'R' ? 'Reservada' : 'Alquilada'})`,
-        rows,
-        status,
-        units: [matchedUnit],
-        handoff: `Hola, he calculado los costes de ${matchedUnit.ref} (${eur(matchedUnit.r)}/mes, entrada ${eur(entrada)}) y me gustaría recibir más información.`
-      };
-    }
-
-    // 5. Gastos de entrada, fianza o firma
-    if (/\b(entrada|fianza|garantia|firma|inicial|deposito)\b/.test(low)) {
-      const nums = extractAmounts(q).filter(n => n >= 400);
-      const unitForEntry = !nums.length ? (activeUnit || availUnits[0]) : null;
-      const rent = nums[0] || (unitForEntry ? unitForEntry.r : 1100);
-      const total = rent * 3;
-      return {
-        title: `Desglose de entrada para ${eur(rent)}/mes`,
-        rows: [
-          { label: '1.ª mensualidad', value: eur(rent) },
-          { label: 'Fianza legal (1 mes · AVS Madrid)', value: eur(rent) },
-          { label: 'Garantía adicional (1 mes)', value: eur(rent) },
-          { label: 'Total estimado a la firma', value: eur(total), em: true },
-          { label: 'Coste anual de renta (12 meses)', value: eur(rent * 12) },
-          { label: 'Ingresos mínimos recomendados (3×)', value: `${eur(rent * 3)}/mes` }
-        ],
-        units: unitForEntry ? [unitForEntry] : [],
-        handoff: `Hola, he calculado los gastos de entrada para una renta de ${eur(rent)}/mes (total estimado ${eur(total)}) y tengo una duda sobre las garantías.`
-      };
-    }
-
-    // 6. Consulta de precios por habitaciones o disponibles
-    const habMatch = low.match(/\b([234])\s*(?:hab|dorm|cuart)/);
-    if (habMatch || /\b(habitacion|dormitorio|precio|barat|disponible|catalogo)\b/.test(low)) {
-      const targetH = habMatch ? Number(habMatch[1]) : 0;
-      const groups = targetH ? [targetH] : [2, 3, 4];
-      const rows = [];
-      groups.forEach(h => {
-        const list = availUnits.filter(v => v.h === h);
-        if (list.length) {
-          const minR = list[0].r;
-          const maxR = list[list.length - 1].r;
-          const range = minR === maxR ? `${eur(minR)}/mes` : `${eur(minR)} – ${eur(maxR)}/mes`;
-          rows.push({ label: `${h} hab. (${list.length} disp.)`, value: `${range} · 3× desde ${eur(minR * 3)}` });
-        } else {
-          rows.push({ label: `${h} hab.`, value: 'Sin unidades libres ahora' });
-        }
-      });
-      const sample = (targetH ? availUnits.filter(v => v.h === targetH) : availUnits).slice(0, 3);
-      return {
-        title: targetH ? `Viviendas de ${targetH} habitaciones en Móstoles` : 'Precios y solvencia por tipología',
-        rows,
-        units: sample,
-        handoff: `Hola, he revisado los precios de viviendas ${targetH ? `de ${targetH} habitaciones` : 'disponibles'} en Móstoles y me gustaría consultar disponibilidad.`
-      };
-    }
-
-    // 7. Ingresos mensuales -> Solvencia 3x + viviendas compatibles en vivo
-    const amounts = extractAmounts(q);
-    if (amounts.length) {
-      const totalIncome = amounts.reduce((sum, n) => sum + n, 0);
-      if (totalIncome < 300) {
-        return {
-          title: 'Indica un importe mensual mayor',
-          text: 'Para calcular tu solvencia escribe tus ingresos netos mensuales (por ejemplo: 3200 o 1800 + 1500), o indica una referencia como REF-04.'
-        };
-      }
-      lastCalcIncome = totalIncome;
-      const maxDirect = Math.floor(totalIncome / 3);
-      const maxAval = Math.floor(totalIncome * 0.4);
-      const matching = availUnits.filter(v => v.r <= maxDirect);
-      const withAval = availUnits.filter(v => v.r > maxDirect && v.r <= maxAval);
-      const rows = [
-        { label: amounts.length > 1 ? `Ingresos sumados (${amounts.length} titulares)` : 'Ingresos netos mensuales', value: `${eur(totalIncome)}/mes` },
-        { label: 'Renta máxima directa (ratio 3×)', value: `${eur(maxDirect)}/mes`, em: true },
-        { label: 'Con aval / cotitular (hasta 40%)', value: `${eur(maxAval)}/mes` },
-        { label: 'Margen mensual libre tras renta 3×', value: `${eur(totalIncome - maxDirect)}/mes` },
-        { label: 'Viviendas disponibles compatibles', value: `${matching.length} directas${withAval.length ? ` (+${withAval.length} con aval)` : ''}` }
-      ];
-      let status;
-      if (matching.length > 0) {
-        status = { cls: 'ok', text: `Tienes ${matching.length} ${matching.length === 1 ? 'vivienda disponible' : 'viviendas disponibles'} con solvencia directa.` };
-      } else if (withAval.length > 0) {
-        status = { cls: 'warn', text: `No alcanzas 3× directa, pero encajas en ${withAval.length} viviendas aportando aval.` };
-      } else {
-        const minAvail = availUnits[0];
-        status = {
-          cls: 'bad',
-          text: minAvail
-            ? `La vivienda libre más económica parte de ${eur(minAvail.r)}/mes (requiere ${eur(minAvail.r * 3)}/mes en ratio 3×).`
-            : 'Actualmente no hay viviendas libres en ese rango.'
-        };
-      }
-      const bestUnits = (matching.length ? matching : withAval).slice(0, 3);
-      return {
-        title: 'Estudio orientativo de solvencia',
-        rows,
-        status,
-        units: bestUnits,
-        handoff: `Hola, con unos ingresos netos de ${eur(totalIncome)}/mes (renta máxima 3× de ${eur(maxDirect)}/mes) me gustaría consultar qué viviendas disponibles encajan mejor.`
-      };
-    }
-
-    // 8. Ayuda contextual
-    return {
-      title: '¿Qué puedes calcular aquí?',
-      text: 'Escribe cualquiera de estos ejemplos:\n• Tus ingresos: "3200€" o "1800 y 1500"\n• Una vivienda concreta: "REF-04" o "REF-04 con 3500€"\n• Gastos iniciales: "entrada para 1100€"\n• Compartir piso: "1200 entre 2"\n• Operaciones: "(1800 + 1500) / 3" o "1150 * 12"'
-    };
-  }
-
   const renderCalcMessages = () => {
     calcBody.textContent = '';
 
     const welcome = document.createElement('div');
     welcome.className = 'chat-msg bot';
-    welcome.textContent = 'Hola. Calcula al instante tu renta máxima (ratio 3×), gastos de entrada y fianza, cuota por persona o cualquier operación para las viviendas de Móstoles.';
+    welcome.textContent = 'Hola. Soy tu calculadora con IA para la promoción de Móstoles. Pregunta en lenguaje natural sobre tu renta máxima (ratio 3×), fianza, pagas extras, gastos compartidos o qué pisos disponibles encajan contigo.';
     calcBody.appendChild(welcome);
 
     calcHistory.forEach(item => {
@@ -4504,12 +4738,19 @@ function initFloatingChat() {
       calcBody.appendChild(card);
     });
 
-    if (!calcHistory.length) {
+    if (isCalcBusy) {
+      const loadingEl = document.createElement('div');
+      loadingEl.className = 'calc-loading';
+      loadingEl.textContent = 'Calculando con IA…';
+      calcBody.appendChild(loadingEl);
+    }
+
+    if (!calcHistory.length && !isCalcBusy) {
       const quickWrap = document.createElement('div');
       quickWrap.className = 'chat-quick';
       const lbl = document.createElement('span');
       lbl.className = 'chat-quick-lbl';
-      lbl.textContent = 'Cálculos rápidos';
+      lbl.textContent = 'Cálculos rápidos con IA';
       const grid = document.createElement('div');
       grid.className = 'chat-quick-grid';
 
@@ -4535,16 +4776,79 @@ function initFloatingChat() {
     calcBody.scrollTop = calcBody.scrollHeight;
   };
 
-  const runCalcPrompt = text => {
+  const runCalcPrompt = async text => {
     const clean = String(text || '').trim();
-    if (!clean) return;
+    if (!clean || isCalcBusy) return;
+
     const now = formatNow();
-    const res = evaluateCalcQuery(clean);
-    const compactUnits = (res.units || []).map(u => ({ ref: u.ref, h: u.h, m2: u.m2, r: u.r }));
     calcHistory.push({ role: 'user', text: clean, time: now });
-    calcHistory.push({ role: 'calc', data: { ...res, units: compactUnits }, time: now });
+    isCalcBusy = true;
+    const calcBtn = $('calcSubmitBtn');
+    if (calcBtn) { calcBtn.disabled = true; calcBtn.textContent = '…'; }
     saveCalcHistory();
     renderCalcMessages();
+
+    const compactCatalog = V.map(v => ({
+      ref: v.ref, portal: v.portal, pl: v.pl, h: v.h, m2: v.m2, r: v.r, st: v.st, t: v.t, g: v.g, tr: v.tr
+    }));
+    const recentTurns = calcHistory
+      .slice(-7, -1)
+      .map(item => ({
+        role: item.role === 'user' ? 'user' : 'model',
+        text: item.role === 'user'
+          ? item.text
+          : [item.data?.title, item.data?.text, ...(item.data?.rows || []).map(r => `${r.label}: ${r.value}`)].filter(Boolean).join(' · ')
+      }));
+
+    try {
+      const resp = await fetch('/api/calc-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: clean,
+          activeRef: linkedRef || '',
+          history: recentTurns,
+          catalog: compactCatalog
+        })
+      });
+      const payload = await resp.json().catch(() => ({}));
+      if (!resp.ok || !payload.ok || !payload.result) {
+        throw new Error(payload.error || 'No se pudo obtener respuesta de la IA.');
+      }
+      const r = payload.result;
+      const units = (r.recommendedRefs || [])
+        .map(ref => V.find(v => v.ref === ref))
+        .filter(Boolean)
+        .map(u => ({ ref: u.ref, h: u.h, m2: u.m2, r: u.r }));
+
+      calcHistory.push({
+        role: 'calc',
+        data: {
+          title: r.title,
+          text: r.text,
+          rows: r.rows || [],
+          status: r.status || null,
+          units,
+          handoff: r.handoff || ''
+        },
+        time: formatNow()
+      });
+    } catch (err) {
+      calcHistory.push({
+        role: 'calc',
+        data: {
+          title: 'Error en la calculadora IA',
+          text: err?.message || 'No se pudo conectar con el servicio de IA. Inténtalo de nuevo.',
+          status: { cls: 'bad', text: 'Comprueba la conexión o la configuración de GEMINI_API_KEY.' }
+        },
+        time: formatNow()
+      });
+    } finally {
+      isCalcBusy = false;
+      if (calcBtn) { calcBtn.disabled = false; calcBtn.textContent = 'Calcular'; }
+      saveCalcHistory();
+      renderCalcMessages();
+    }
   };
 
   const renderMessages = () => {
@@ -4630,8 +4934,8 @@ function initFloatingChat() {
 
   clearBtn.onclick = () => {
     if (activeTab === 'calc') {
+      if (isCalcBusy) return;
       calcHistory = [];
-      lastCalcIncome = 0;
       saveCalcHistory();
       renderCalcMessages();
       calcInput.focus();
