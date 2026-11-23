@@ -528,6 +528,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .arch-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:3px;font-size:.73rem;font-weight:700;border:1px solid var(--line)}
 .arch-badge.sold{background:var(--ok-bg);color:var(--ok-tx);border-color:rgba(16,185,129,.4)}
 .arch-badge.rej{background:var(--bad-bg);color:var(--bad-tx);border-color:rgba(239,68,68,.4)}
+.card-leaving{opacity:0!important;transform:translateY(-6px) scale(.99)!important;transition:opacity .15s ease,transform .15s ease!important;pointer-events:none}
 .confirm-box{background:var(--card2);border:1px solid var(--line);border-radius:4px;padding:12px;margin:12px 0;font-size:.84rem}
 .confirm-check{display:flex;gap:9px;align-items:flex-start;cursor:pointer;font-size:.83rem;font-weight:600;margin:10px 0;color:var(--tx)}
 .confirm-check input{width:16px;height:16px;margin-top:2px;accent-color:var(--b1);flex-shrink:0}
@@ -873,7 +874,7 @@ let LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: 
 async function checkAppsScriptVersion(force = false) {
   const url = String(getCfg().appsScriptUrl || '').trim();
   if (!url) return { ok: false, version: 0, configured: false };
-  if (!force && LAST_APPS_SCRIPT_CHECK.url === url && Date.now() - LAST_APPS_SCRIPT_CHECK.checkedAt < 25000) {
+  if (!force && LAST_APPS_SCRIPT_CHECK.url === url && Date.now() - LAST_APPS_SCRIPT_CHECK.checkedAt < 300000) {
     return {
       ok: true,
       version: LAST_APPS_SCRIPT_CHECK.version,
@@ -1201,15 +1202,48 @@ function queueSheetUpsert(sol, changedCols = null) {
   sheetFlushTimer = setTimeout(flushSheetQueue, 650);
 }
 
+let SHEET_BG_CHAIN = Promise.resolve();
+let BG_OPS_INFLIGHT = 0;
+
+window.addEventListener('beforeunload', e => {
+  if (BG_OPS_INFLIGHT > 0) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+function trackBgOp(promise) {
+  BG_OPS_INFLIGHT++;
+  return Promise.resolve(promise).finally(() => {
+    BG_OPS_INFLIGHT = Math.max(0, BG_OPS_INFLIGHT - 1);
+  });
+}
+
+function enqueueSheetOp(mode, payload, options = {}, onResult = null) {
+  if (!getCfg().appsScriptUrl) return Promise.resolve({ ok: true, skipped: true });
+  const job = SHEET_BG_CHAIN.then(async () => {
+    const res = await syncToGoogleSheets(mode, payload, options);
+    if (typeof onResult === 'function') onResult(res);
+    return res;
+  }).catch(err => {
+    console.warn('Background Sheets sync error:', err);
+    const fail = { ok: false, error: err?.message || String(err) };
+    if (typeof onResult === 'function') onResult(fail);
+    return fail;
+  });
+  SHEET_BG_CHAIN = job.then(() => undefined, () => undefined);
+  return trackBgOp(job);
+}
+
 async function flushSheetQueue() {
   if (!SHEET_PENDING_QUEUE.size) return;
   const entries = Array.from(SHEET_PENDING_QUEUE.values()).filter(e => e.sol && !e.sol.archived);
   SHEET_PENDING_QUEUE.clear();
   if (!entries.length) return;
   if (entries.length === 1) {
-    await syncToGoogleSheets('upsert', entries[0].sol, { changedCols: entries[0].changedCols });
+    enqueueSheetOp('upsert', entries[0].sol, { changedCols: entries[0].changedCols });
   } else {
-    await syncToGoogleSheets('upsert_batch', entries.map(e => e.sol));
+    enqueueSheetOp('upsert_batch', entries.map(e => e.sol));
   }
 }
 
@@ -3942,22 +3976,49 @@ function renderAdmin(subTab) {
   </div>
 
   <div class="stats" style="margin-bottom:20px">
-    <div><b>${dCount} / ${rCount} / ${aCount}</b><span>Disp. / Reserv. / Alquil.</span></div>
-    <div><b>${activeSols.length}</b><span>Candidaturas activas</span></div>
-    <div><b>${archivedSols.length}</b><span>En Archivo</span></div>
+    <div><b id="admStatInv">${dCount} / ${rCount} / ${aCount}</b><span>Disp. / Reserv. / Alquil.</span></div>
+    <div><b id="admStatActive">${activeSols.length}</b><span>Candidaturas activas</span></div>
+    <div><b id="admStatArch">${archivedSols.length}</b><span>En Archivo</span></div>
     <div><b>${STATS.qrScans || 0}</b><span>Escaneos QR detectados</span></div>
   </div>
 
   <div class="tabs" id="admTabs">
-    <a class="chip ${adminTab === 'inventario' ? 'on' : ''}" href="#admin/inventario" style="text-decoration:none">${ICO('building')} Inventario (${V.length})</a>
-    <a class="chip ${adminTab === 'candidatos' ? 'on' : ''}" href="#admin/candidatos" style="text-decoration:none">${ICO('users')} Candidaturas (${activeSols.length})</a>
-    <a class="chip ${adminTab === 'archivo' ? 'on' : ''}" href="#admin/archivo" style="text-decoration:none">${ICO('file')} Archivo (${archivedSols.length})</a>
+    <a class="chip ${adminTab === 'inventario' ? 'on' : ''}" id="admTabInv" href="#admin/inventario" style="text-decoration:none">${ICO('building')} Inventario (${V.length})</a>
+    <a class="chip ${adminTab === 'candidatos' ? 'on' : ''}" id="admTabCand" href="#admin/candidatos" style="text-decoration:none">${ICO('users')} Candidaturas (${activeSols.length})</a>
+    <a class="chip ${adminTab === 'archivo' ? 'on' : ''}" id="admTabArch" href="#admin/archivo" style="text-decoration:none">${ICO('file')} Archivo (${archivedSols.length})</a>
     <a class="chip ${adminTab === 'qrs' ? 'on' : ''}" href="#admin/qrs" style="text-decoration:none">${ICO('qr')} Códigos QR</a>
     <a class="chip ${adminTab === 'blog' ? 'on' : ''}" href="#admin/blog" style="text-decoration:none">${ICO('edit')} Consejos / Blog</a>
     <a class="chip ${adminTab === 'usuarios' ? 'on' : ''}" href="#admin/usuarios" style="text-decoration:none">${ICO('lock')} Usuarios y Roles</a>
     <a class="chip ${adminTab === 'config' ? 'on' : ''}" href="#admin/config" style="text-decoration:none">${ICO('sliders')} Integraciones</a>
   </div>
   <div id="admBody"></div>`;
+
+  const refreshAdminHeaderCounts = () => {
+    const dNow = V.filter(v => v.st === 'D').length;
+    const rNow = V.filter(v => v.st === 'R').length;
+    const aNow = V.filter(v => v.st === 'A').length;
+    const actNow = getActiveSols().length;
+    const archNow = getArchivedSols().length;
+    if ($('admStatInv')) $('admStatInv').textContent = `${dNow} / ${rNow} / ${aNow}`;
+    if ($('admStatActive')) $('admStatActive').textContent = String(actNow);
+    if ($('admStatArch')) $('admStatArch').textContent = String(archNow);
+    if ($('admTabInv')) $('admTabInv').innerHTML = `${ICO('building')} Inventario (${V.length})`;
+    if ($('admTabCand')) $('admTabCand').innerHTML = `${ICO('users')} Candidaturas (${actNow})`;
+    if ($('admTabArch')) $('admTabArch').innerHTML = `${ICO('file')} Archivo (${archNow})`;
+    updateSheetSyncBadge();
+  };
+
+  const removeCardSmoothly = (cardEl, containerId, emptyHtml) => {
+    if (!cardEl) return;
+    cardEl.classList.add('card-leaving');
+    setTimeout(() => {
+      cardEl.remove();
+      const wrap = $(containerId);
+      if (wrap && !wrap.querySelector('[data-sol-card],[data-arch-card]')) {
+        wrap.innerHTML = emptyHtml;
+      }
+    }, 150);
+  };
 
   const body = $('admBody');
   body.onclick = null;
@@ -4001,28 +4062,31 @@ function renderAdmin(subTab) {
     drawRows();
     $('admSearch').oninput = drawRows;
 
-    body.onchange = async e => {
+    body.onchange = e => {
       if (e.target.dataset.st) {
         const v = V.find(x => x.ref === e.target.dataset.st);
-        if (v) { v.st = e.target.value; await cloudSaveUnit(v); notify(`${v.ref} actualizada a ${stLabel(v.st)}`); }
+        if (v) { v.st = e.target.value; refreshAdminHeaderCounts(); trackBgOp(cloudSaveUnit(v)); notify(`${v.ref} actualizada a ${stLabel(v.st)}`); }
       } else if (e.target.dataset.rent) {
         const v = V.find(x => x.ref === e.target.dataset.rent);
-        if (v) { v.r = Number(e.target.value); await cloudSaveUnit(v); notify(`Renta de ${v.ref} guardada`); }
+        if (v) { v.r = Number(e.target.value); trackBgOp(cloudSaveUnit(v)); notify(`Renta de ${v.ref} guardada`); }
       } else if (e.target.dataset.rg) {
         const v = V.find(x => x.ref === e.target.dataset.rg);
-        if (v) { v.rentgerUrl = e.target.value.trim(); await cloudSaveUnit(v); notify(`URL Rentger de ${v.ref} actualizada`); }
+        if (v) { v.rentgerUrl = e.target.value.trim(); trackBgOp(cloudSaveUnit(v)); notify(`URL Rentger de ${v.ref} actualizada`); }
       } else if (e.target.dataset.img) {
         const v = V.find(x => x.ref === e.target.dataset.img);
-        if (v) { v.customPhotoUrl = e.target.value.trim(); await cloudSaveUnit(v); notify(`Fotografía de ${v.ref} actualizada`); }
+        if (v) { v.customPhotoUrl = e.target.value.trim(); trackBgOp(cloudSaveUnit(v)); notify(`Fotografía de ${v.ref} actualizada`); }
       }
     };
 
-    $('addUnitBtn').onclick = async () => {
+    $('addUnitBtn').onclick = () => {
       const nextNum = V.length + 1;
       const ref = 'REF-' + String(nextNum).padStart(2, '0');
       const unit = { ref, nombre: 'Tipología Nueva · 3D', portal: 'Portal C', h: 3, pl: 2, m2: 88, b: 2, t: true, g: true, tr: true, ori: 'Sur', r: 1180, st: 'D', cee: 'A', photoIdx: 1, customPhotoUrl: '', rentgerUrl: '', desc: 'Nueva vivienda añadida desde el panel de gestión.' };
       V.push(unit);
-      await cloudSaveUnit(unit); drawRows(); notify(`Vivienda ${ref} creada`);
+      drawRows();
+      refreshAdminHeaderCounts();
+      trackBgOp(cloudSaveUnit(unit));
+      notify(`Vivienda ${ref} creada`);
     };
   }
 
@@ -4079,6 +4143,7 @@ function renderAdmin(subTab) {
       <p class="m" style="margin:0">Cruce automático de solvencia (ratio 3x). Estados: <b style="color:var(--warn-tx)">En revisión</b> · <b style="color:var(--ok-tx)">Aprobado</b> · <b style="color:var(--b1)">Vendido (mueve a Archivo)</b>.</p>
     </div>
 
+    <div id="candCardsList">
     ${!activeSols.length ? '<div class="panel"><p class="m">No hay candidaturas activas en este momento.</p></div>' :
       activeSols.map(s => {
         const maxRent = Math.floor(s.ingresos / 3);
@@ -4128,7 +4193,10 @@ function renderAdmin(subTab) {
           </div>
           ${s.comentario ? `<div class="m" style="margin-top:6px">${ICO('note')} <i>"${esc(s.comentario)}"</i></div>` : ''}
         </div>`;
-      }).join('')}`;
+      }).join('')}
+    </div>`;
+
+    const findSolCard = id => Array.from(body.querySelectorAll('[data-sol-card]')).find(el => el.dataset.solCard === id);
 
     const openSoldModal = (sol, selIdx, selectEl, prevState) => {
       const sel = sol.selecciones[selIdx];
@@ -4163,43 +4231,31 @@ function renderAdmin(subTab) {
       $('soldCancelBtn').onclick = revert;
       dlg.oncancel = e => { e.preventDefault(); revert(); };
 
-      $('soldConfirmBtn').onclick = async () => {
-        const btn = $('soldConfirmBtn');
-        btn.disabled = true;
-        btn.textContent = 'Archivando…';
-        try {
-          sol.selecciones[selIdx].estado = 'Vendido';
-          sol.archived = true;
-          sol.archiveReason = 'Vendido';
-          sol.archivedAt = new Date().toLocaleString('es-ES');
-          sol.archivedBy = CURRENT_USER.email;
-          SHEET_PENDING_QUEUE.delete(sol.id);
+      $('soldConfirmBtn').onclick = () => {
+        const markUnit = Boolean($('soldMarkUnit')?.checked && prop);
+        sol.selecciones[selIdx].estado = 'Vendido';
+        sol.archived = true;
+        sol.archiveReason = 'Vendido';
+        sol.archivedAt = new Date().toLocaleString('es-ES');
+        sol.archivedBy = CURRENT_USER.email;
+        SHEET_PENDING_QUEUE.delete(sol.id);
+        if (markUnit) prop.st = 'A';
 
-          if ($('soldMarkUnit')?.checked && prop) {
-            prop.st = 'A';
-            await cloudSaveUnit(prop);
-          }
-          await cloudSaveSol(sol);
-          let sheetRes = null;
-          if (getCfg().appsScriptUrl) {
-            sheetRes = await syncToGoogleSheets('archive', sol);
-          }
-          dlg.oncancel = null;
-          dlg.close();
+        dlg.oncancel = null;
+        dlg.close();
+        removeCardSmoothly(findSolCard(sol.id), 'candCardsList', '<div class="panel"><p class="m">No hay candidaturas activas en este momento.</p></div>');
+        refreshAdminHeaderCounts();
+        notify(`${sol.nombre} (${sel.ref}) marcada como Vendido y movida a Archivo`);
+
+        if (markUnit) trackBgOp(cloudSaveUnit(prop));
+        trackBgOp(cloudSaveSol(sol));
+        enqueueSheetOp('archive', sol, {}, sheetRes => {
           if (sheetRes?.outdatedScript) {
             notify('Movida a Archivo en la web, pero Google Sheets sigue en Apps Script v1: actualiza a v3.2 y publica «Nueva versión».');
           } else if (sheetRes && !sheetRes.ok) {
             notify(`Movida a Archivo en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
-          } else {
-            notify(`${sol.nombre} (${sel.ref}) marcada como Vendido y movida a Archivo`);
           }
-          renderAdmin('candidatos');
-        } catch (err) {
-          console.warn('Error archivando vendido:', err);
-          btn.disabled = false;
-          btn.textContent = 'Confirmar Vendido y Archivar';
-          notify('No se pudo completar el archivado. Inténtalo de nuevo.');
-        }
+        });
       };
     };
 
@@ -4236,54 +4292,46 @@ function renderAdmin(subTab) {
       verifyChk.onchange = () => { confirmBtn.disabled = !verifyChk.checked; };
       $('rejCancelBtn').onclick = () => dlg.close();
 
-      confirmBtn.onclick = async () => {
+      confirmBtn.onclick = () => {
         if (!verifyChk.checked) return;
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Procesando…';
-        try {
-          SHEET_PENDING_QUEUE.delete(sol.id);
+        const keepInArchive = Boolean(archOpt.checked);
+        SHEET_PENDING_QUEUE.delete(sol.id);
 
-          if (archOpt.checked) {
-            sol.selecciones = (sol.selecciones || []).map(x => ({ ...x, estado: 'Rechazada' }));
-            sol.archived = true;
-            sol.archiveReason = 'Rechazada';
-            sol.archivedAt = new Date().toLocaleString('es-ES');
-            sol.archivedBy = CURRENT_USER.email;
-            await cloudSaveSol(sol);
-            let sheetRes = null;
-            if (getCfg().appsScriptUrl) {
-              sheetRes = await syncToGoogleSheets('archive', sol);
-            }
-            dlg.close();
+        if (keepInArchive) {
+          sol.selecciones = (sol.selecciones || []).map(x => ({ ...x, estado: 'Rechazada' }));
+          sol.archived = true;
+          sol.archiveReason = 'Rechazada';
+          sol.archivedAt = new Date().toLocaleString('es-ES');
+          sol.archivedBy = CURRENT_USER.email;
+        } else {
+          SOLS = SOLS.filter(x => x.id !== sol.id);
+        }
+
+        dlg.close();
+        removeCardSmoothly(findSolCard(sol.id), 'candCardsList', '<div class="panel"><p class="m">No hay candidaturas activas en este momento.</p></div>');
+        refreshAdminHeaderCounts();
+        notify(keepInArchive
+          ? `Candidatura de ${sol.nombre} rechazada y guardada en Archivo`
+          : `Candidatura de ${sol.nombre} rechazada y eliminada`);
+
+        if (keepInArchive) {
+          trackBgOp(cloudSaveSol(sol));
+          enqueueSheetOp('archive', sol, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
               notify('Guardada en Archivo en la web, pero tu Google Apps Script sigue en v1: publica «Nueva versión» con v3.2.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Guardada en Archivo en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
-            } else {
-              notify(`Candidatura de ${sol.nombre} rechazada y guardada en Archivo`);
             }
-          } else {
-            SOLS = SOLS.filter(x => x.id !== sol.id);
-            await cloudDeleteSol(sol.id, sol);
-            let sheetRes = null;
-            if (getCfg().appsScriptUrl) {
-              sheetRes = await syncToGoogleSheets('delete', sol.id);
-            }
-            dlg.close();
+          });
+        } else {
+          trackBgOp(cloudDeleteSol(sol.id, sol));
+          enqueueSheetOp('delete', sol.id, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
               notify('Eliminada de la web, pero Excel sigue en Apps Script v1: publica «Nueva versión» con v3.2 para borrar filas.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Eliminada de la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
-            } else {
-              notify(`Candidatura de ${sol.nombre} rechazada y eliminada de la web y del Excel`);
             }
-          }
-          renderAdmin('candidatos');
-        } catch (err) {
-          console.warn('Error rechazando candidatura:', err);
-          confirmBtn.disabled = false;
-          confirmBtn.textContent = 'Confirmar rechazo';
-          notify('No se pudo procesar el rechazo. Inténtalo de nuevo.');
+          });
         }
       };
     };
@@ -4443,16 +4491,17 @@ function renderAdmin(subTab) {
       </div>
 
       <div class="chips" style="margin-bottom:14px">
-        <button type="button" class="chip ${archFilter === 'ALL' ? 'on' : ''}" data-af="ALL">Todas (${allArch.length})</button>
-        <button type="button" class="chip ${archFilter === 'Vendido' ? 'on' : ''}" data-af="Vendido">Vendidas (${soldCount})</button>
-        <button type="button" class="chip ${archFilter === 'Rechazada' ? 'on' : ''}" data-af="Rechazada">Rechazadas (${rejCount})</button>
+        <button type="button" class="chip ${archFilter === 'ALL' ? 'on' : ''}" id="archChipAll" data-af="ALL">Todas (${allArch.length})</button>
+        <button type="button" class="chip ${archFilter === 'Vendido' ? 'on' : ''}" id="archChipSold" data-af="Vendido">Vendidas (${soldCount})</button>
+        <button type="button" class="chip ${archFilter === 'Rechazada' ? 'on' : ''}" id="archChipRej" data-af="Rechazada">Rechazadas (${rejCount})</button>
       </div>
 
+      <div id="archCardsList">
       ${!list.length ? '<div class="panel"><p class="m">No hay candidaturas en el archivo para este filtro.</p></div>' :
         list.map(s => {
           const isSold = s.archiveReason === 'Vendido';
           return `
-          <div class="panel" style="margin-bottom:14px">
+          <div class="panel" style="margin-bottom:14px" data-arch-card="${esc(s.id)}">
             <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px">
               <div>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -4473,7 +4522,8 @@ function renderAdmin(subTab) {
             </div>
             ${s.comentario ? `<div class="m" style="margin-top:6px">${ICO('note')} <i>"${esc(s.comentario)}"</i></div>` : ''}
           </div>`;
-        }).join('')}`;
+        }).join('')}
+      </div>`;
 
       if ($('syncArchiveBtn')) {
         $('syncArchiveBtn').onclick = async () => {
@@ -4493,6 +4543,17 @@ function renderAdmin(subTab) {
       }
       if (hasLiveSync) renderScriptVersionBanner('archScriptBanner');
     };
+
+    const refreshArchiveChips = () => {
+      const allArchNow = getArchivedSols();
+      const soldNow = allArchNow.filter(s => s.archiveReason === 'Vendido').length;
+      const rejNow = allArchNow.filter(s => s.archiveReason === 'Rechazada').length;
+      if ($('archChipAll')) $('archChipAll').textContent = `Todas (${allArchNow.length})`;
+      if ($('archChipSold')) $('archChipSold').textContent = `Vendidas (${soldNow})`;
+      if ($('archChipRej')) $('archChipRej').textContent = `Rechazadas (${rejNow})`;
+      refreshAdminHeaderCounts();
+    };
+    const findArchCard = id => Array.from(body.querySelectorAll('[data-arch-card]')).find(el => el.dataset.archCard === id);
 
     body.onclick = e => {
       const fBtn = e.target.closest('[data-af]');
@@ -4518,34 +4579,26 @@ function renderAdmin(subTab) {
           </div>`;
         dlg.showModal();
         $('restCancelBtn').onclick = () => dlg.close();
-        $('restConfirmBtn').onclick = async () => {
-          const btn = $('restConfirmBtn');
-          btn.disabled = true;
-          btn.textContent = 'Restaurando…';
-          try {
-            sol.archived = false;
-            delete sol.archiveReason;
-            delete sol.archivedAt;
-            delete sol.archivedBy;
-            sol.selecciones = (sol.selecciones || []).map(x => ({ ...x, estado: 'En revisión' }));
-            await cloudSaveSol(sol);
-            let sheetRes = null;
-            if (getCfg().appsScriptUrl) {
-              sheetRes = await syncToGoogleSheets('restore', sol);
+        $('restConfirmBtn').onclick = () => {
+          sol.archived = false;
+          delete sol.archiveReason;
+          delete sol.archivedAt;
+          delete sol.archivedBy;
+          sol.selecciones = (sol.selecciones || []).map(x => ({ ...x, estado: 'En revisión' }));
+
+          dlg.close();
+          removeCardSmoothly(findArchCard(sol.id), 'archCardsList', '<div class="panel"><p class="m">No hay candidaturas en el archivo para este filtro.</p></div>');
+          refreshArchiveChips();
+          notify(`Candidatura de ${sol.nombre} restaurada a Candidaturas`);
+
+          trackBgOp(cloudSaveSol(sol));
+          enqueueSheetOp('restore', sol, {}, sheetRes => {
+            if (sheetRes?.outdatedScript) {
+              notify('Restaurada en la web, pero actualiza Apps Script a v3.2 («Nueva versión») para moverla en Excel.');
+            } else if (sheetRes && !sheetRes.ok) {
+              notify(`Restaurada en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
-            dlg.close();
-            notify(sheetRes?.outdatedScript
-              ? 'Restaurada en la web, pero actualiza Apps Script a v3.2 («Nueva versión») para moverla en Excel.'
-              : sheetRes && !sheetRes.ok
-                ? `Restaurada en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`
-                : `Candidatura de ${sol.nombre} restaurada a Candidaturas`);
-            renderAdmin('archivo');
-          } catch (err) {
-            console.warn('Error restaurando candidatura:', err);
-            btn.disabled = false;
-            btn.textContent = 'Confirmar restauración';
-            notify('No se pudo restaurar la candidatura. Inténtalo de nuevo.');
-          }
+          });
         };
         return;
       }
@@ -4571,31 +4624,23 @@ function renderAdmin(subTab) {
         dlg.showModal();
         $('purgeVerifyChk').onchange = () => { $('purgeConfirmBtn').disabled = !$('purgeVerifyChk').checked; };
         $('purgeCancelBtn').onclick = () => dlg.close();
-        $('purgeConfirmBtn').onclick = async () => {
+        $('purgeConfirmBtn').onclick = () => {
           if (!$('purgeVerifyChk').checked) return;
-          const btn = $('purgeConfirmBtn');
-          btn.disabled = true;
-          btn.textContent = 'Eliminando…';
-          try {
-            SOLS = SOLS.filter(x => x.id !== sol.id);
-            await cloudDeleteSol(sol.id, sol);
-            let sheetRes = null;
-            if (getCfg().appsScriptUrl) {
-              sheetRes = await syncToGoogleSheets('delete', sol.id, { sheetName: ARCHIVE_SHEET_NAME });
+          SOLS = SOLS.filter(x => x.id !== sol.id);
+
+          dlg.close();
+          removeCardSmoothly(findArchCard(sol.id), 'archCardsList', '<div class="panel"><p class="m">No hay candidaturas en el archivo para este filtro.</p></div>');
+          refreshArchiveChips();
+          notify(`Registro de ${sol.nombre} eliminado definitivamente`);
+
+          trackBgOp(cloudDeleteSol(sol.id, sol));
+          enqueueSheetOp('delete', sol.id, { sheetName: ARCHIVE_SHEET_NAME }, sheetRes => {
+            if (sheetRes?.outdatedScript) {
+              notify('Eliminada de la web, pero actualiza Apps Script a v3.2 («Nueva versión») para borrarla del Excel.');
+            } else if (sheetRes && !sheetRes.ok) {
+              notify(`Eliminada de la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
-            dlg.close();
-            notify(sheetRes?.outdatedScript
-              ? 'Eliminada de la web, pero actualiza Apps Script a v3.2 («Nueva versión») para borrarla del Excel.'
-              : sheetRes && !sheetRes.ok
-                ? `Eliminada de la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`
-                : `Registro de ${sol.nombre} eliminado definitivamente`);
-            renderAdmin('archivo');
-          } catch (err) {
-            console.warn('Error eliminando registro:', err);
-            btn.disabled = false;
-            btn.textContent = 'Eliminar definitivamente';
-            notify('No se pudo eliminar el registro. Inténtalo de nuevo.');
-          }
+          });
         };
       }
     };
@@ -4677,7 +4722,7 @@ function renderAdmin(subTab) {
       </div>
     </div>`;
 
-    $('newBlogForm').onsubmit = async e => {
+    $('newBlogForm').onsubmit = e => {
       e.preventDefault();
       const post = {
         id: Date.now(),
@@ -4687,12 +4732,21 @@ function renderAdmin(subTab) {
         body: $('bBody').value.trim()
       };
       BLOG.unshift(post);
-      await cloudSaveBlog(post); renderBlogList(); renderAdmin('blog'); notify('Artículo publicado en Consejos');
+      trackBgOp(cloudSaveBlog(post));
+      renderBlogList();
+      renderAdmin('blog');
+      notify('Artículo publicado en Consejos');
     };
 
-    body.onclick = async e => {
+    body.onclick = e => {
       const id = Number(e.target.dataset.delBlog);
-      if (id) { BLOG = BLOG.filter(x => x.id !== id); await cloudDeleteBlog(id); renderBlogList(); renderAdmin('blog'); notify('Artículo eliminado'); }
+      if (id) {
+        BLOG = BLOG.filter(x => x.id !== id);
+        trackBgOp(cloudDeleteBlog(id));
+        renderBlogList();
+        renderAdmin('blog');
+        notify('Artículo eliminado');
+      }
     };
   }
 
