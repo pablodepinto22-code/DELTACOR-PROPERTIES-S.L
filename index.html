@@ -876,7 +876,20 @@ const DEFAULT_CFG = {
   adminEmails: 'admin@invercor.es, deltacor.properties@gmail.com, estrella.deltacorproperties@gmail.com'
 };
 
-const SHEET_HEADERS = ['ID', 'Fecha', 'Nombre', 'Documento', 'Email', 'Teléfono', 'Adultos', 'Niños', 'Mascotas', 'Ingresos (€/mes)', 'Renta máx. 3x (€)', 'Aval', 'Viviendas y estados', 'Otras opciones', 'Habitaciones', 'Comentarios'];
+const SHEET_HEADERS = ['ID', 'Fecha', 'Nombre', 'Documento', 'Email', 'Teléfono', 'Adultos', 'Niños', 'Mascotas', 'Ingresos (€/mes)', 'Renta máx. 3x (€)', 'Aval', 'Viviendas y estados', 'Otras opciones', 'Habitaciones', 'Comentarios', 'Estado'];
+
+function getSolOverallStatus(s) {
+  if (!s) return 'En revisión';
+  if (s.archived) {
+    if (s.archiveReason === 'Vendido') return 'Vendido';
+    if (s.archiveReason === 'Rechazada' || s.archiveReason === 'Rechazado') return 'Rechazada';
+  }
+  const states = (s.selecciones || []).map(x => normSolStatus(x?.estado));
+  if (states.includes('Vendido')) return 'Vendido';
+  if (states.includes('Aprobado')) return 'Aprobado';
+  if (states.length && states.every(st => st === 'Rechazada')) return 'Rechazada';
+  return 'En revisión';
+}
 
 function solToSheetRow(s) {
   return [
@@ -895,7 +908,8 @@ function solToSheetRow(s) {
     (s.selecciones || []).map(x => `${x.ref} (${normSolStatus(x.estado)})`).join(' | '),
     s.otrasOpciones || 'No',
     s.habitacionesDeseadas || 'Indiferente',
-    s.comentario || ''
+    s.comentario || '',
+    getSolOverallStatus(s)
   ];
 }
 
@@ -1065,23 +1079,23 @@ async function renderScriptVersionBanner(hostId) {
   const currentHost = $(hostId);
   if (!currentHost || !info.configured) return;
 
-  if (info.version !== null && info.version < 4) {
+  if (info.version !== null && info.version < 4.1) {
     const curUrl = getCfg().appsScriptUrl || '';
     currentHost.innerHTML = `
       <div class="panel" style="margin-bottom:14px;padding:14px 16px;background:var(--warn-bg);border-color:rgba(245,158,11,.5)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:260px">
-            <b style="color:var(--warn-tx);font-size:.92rem">Actualización disponible de Google Apps Script (versión activa en tu enlace: v${esc(info.version)} → nueva v4.0)</b>
+            <b style="color:var(--warn-tx);font-size:.92rem">Actualización disponible de Google Apps Script (versión activa en tu enlace: v${esc(info.version)} → nueva v4.1)</b>
             <div style="font-size:.82rem;color:var(--tx);margin-top:5px;line-height:1.5">
-              Para usar <b>una hoja por cada promoción</b> y añadir automáticamente la columna <b>«Promoción»</b> en la hoja <b>Archivo</b> de Excel, actualiza el script a <b>v4.0</b>:
+              Para usar <b>una hoja por promoción</b>, columna <b>«Promoción»</b> en Archivo y <b>celda «Estado» con colores automáticos</b> (amarillo, verde clarito, azul y rojo), actualiza el script a <b>v4.1</b>:
               <ol style="margin:6px 0 0 18px;padding:0">
-                <li>Pulsa <b>Copiar Apps Script v4.0</b> y pégalo entero en <b>Extensiones → Apps Script</b> (sustituyendo el código anterior).</li>
+                <li>Pulsa <b>Copiar Apps Script v4.1</b> y pégalo entero en <b>Extensiones → Apps Script</b> (sustituyendo el código anterior).</li>
                 <li>Pulsa <b>Implementar → Administrar implementaciones → Editar (lápiz) → Versión: Nueva versión → Implementar</b>.</li>
                 <li>Si creaste una <i>Nueva implementación</i> con otra URL <code>/exec</code>, pégala aquí abajo y pulsa <b>Guardar URL</b>.</li>
               </ol>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
-              <button type="button" class="btn sm" id="${esc(hostId)}CopyBtn">${ICO('file')} Copiar Apps Script v4.0</button>
+              <button type="button" class="btn sm" id="${esc(hostId)}CopyBtn">${ICO('file')} Copiar Apps Script v4.1</button>
               <button type="button" class="btn g sm" id="${esc(hostId)}RecheckBtn">Comprobar ahora</button>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
@@ -1099,7 +1113,7 @@ async function renderScriptVersionBanner(hostId) {
       copyBtn.onclick = async () => {
         try {
           await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-          notify('Apps Script v4.0 copiado: pégalo en Apps Script y publica «Nueva versión»');
+          notify('Apps Script v4.1 copiado: pégalo en Apps Script y publica «Nueva versión»');
         } catch {
           notify('No se pudo copiar automáticamente');
         }
@@ -1110,9 +1124,9 @@ async function renderScriptVersionBanner(hostId) {
         recheckBtn.disabled = true;
         recheckBtn.textContent = 'Comprobando…';
         const next = await checkAppsScriptVersion(true);
-        if (next.version >= 4) {
+        if (next.version >= 4.1) {
           renderScriptVersionBanner(hostId);
-          notify(`Apps Script v4.0 conectado (${(next.promoSheets || []).join(', ') || 'Promociones'} + ${next.archiveSheet || 'Archivo'})`);
+          notify(`Apps Script v4.1 conectado (${(next.promoSheets || []).join(', ') || 'Promociones'} + ${next.archiveSheet || 'Archivo'})`);
         } else {
           recheckBtn.disabled = false;
           recheckBtn.textContent = 'Comprobar ahora';
@@ -1134,23 +1148,23 @@ async function renderScriptVersionBanner(hostId) {
         LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '', promoSheets: [] };
         await cloudSaveConfig({ ...getCfg(), appsScriptUrl: nextUrl });
         const next = await checkAppsScriptVersion(true);
-        if (next.version >= 4) {
+        if (next.version >= 4.1) {
           renderScriptVersionBanner(hostId);
-          notify(`URL guardada y verificada: Apps Script v4.0 activo (${(next.promoSheets || []).join(', ') || 'Promociones'} + ${next.archiveSheet || 'Archivo'})`);
+          notify(`URL guardada y verificada: Apps Script v4.1 activo (${(next.promoSheets || []).join(', ') || 'Promociones'} + ${next.archiveSheet || 'Archivo'})`);
         } else {
           saveUrlBtn.disabled = false;
           saveUrlBtn.textContent = 'Guardar URL';
           notify(next.invalidResponse
             ? 'URL guardada, pero Apps Script devolvió error/login. Configura Acceso: «Cualquier usuario».'
-            : `URL guardada, pero responde v${next.version || 1}. Publica una «Nueva versión» con el código v4.0.`);
+            : `URL guardada, pero responde v${next.version || 1}. Publica una «Nueva versión» con el código v4.1.`);
         }
       };
     }
-  } else if (info.version >= 4 && hostId === 'cfgScriptBanner') {
+  } else if (info.version >= 4.1 && hostId === 'cfgScriptBanner') {
     const pList = (info.promoSheets || []).length ? info.promoSheets.join(', ') : (info.mainSheet || 'Por promoción');
     currentHost.innerHTML = `
       <div class="panel" style="margin-bottom:14px;padding:11px 14px;background:var(--ok-bg);border-color:rgba(16,185,129,.35);color:var(--ok-tx);font-size:.84rem">
-        <b>Apps Script v4.0 conectado correctamente</b> · Hojas de promociones: <b>${esc(pList)}</b> · Hoja archivo: <b>${esc(info.archiveSheet || 'Archivo')}</b> (con columna «Promoción»)
+        <b>Apps Script v4.1 conectado correctamente</b> · Hojas: <b>${esc(pList)}</b> · Archivo: <b>${esc(info.archiveSheet || 'Archivo')}</b> (Estado con colores + columna «Promoción»)
       </div>`;
   } else if (info.invalidResponse) {
     currentHost.innerHTML = `
@@ -1210,8 +1224,8 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
   if (!url) return { ok: false, skipped: true };
 
   const isOutdatedV4 = res => {
-    if (!res.opaque && res.data && Number(res.data.version || 0) < 4) return true;
-    if (res.opaque && LAST_APPS_SCRIPT_CHECK.url === url && LAST_APPS_SCRIPT_CHECK.version !== null && LAST_APPS_SCRIPT_CHECK.version < 4) return true;
+    if (!res.opaque && res.data && Number(res.data.version || 0) < 4.1) return true;
+    if (res.opaque && LAST_APPS_SCRIPT_CHECK.url === url && LAST_APPS_SCRIPT_CHECK.version !== null && LAST_APPS_SCRIPT_CHECK.version < 4.1) return true;
     return false;
   };
 
@@ -1428,8 +1442,9 @@ async function flushSheetQueue() {
   }
 }
 
-const APPS_SCRIPT_TEMPLATE = `// DELTACOR PROPERTIES · Google Sheets Sync v4.0
-// Una hoja por cada promoción + hoja «Archivo» con columna «Promoción» (solo en Excel)
+const APPS_SCRIPT_TEMPLATE = `// DELTACOR PROPERTIES · Google Sheets Sync v4.1
+// Una hoja por promoción + hoja «Archivo» con columna «Promoción» (solo Excel)
+// + Columna «Estado» con colores automáticos: En revisión (amarillo), Aprobado (verde clarito), Vendido (azul), Rechazada (rojo)
 function jsonOut_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
@@ -1469,50 +1484,182 @@ function getPromoSheets_(ss, archiveName) {
   return out;
 }
 
+function getStatusColIndex_(headers) {
+  if (!headers || !headers.length) return 17;
+  for (var i = 0; i < headers.length; i++) {
+    if (String(headers[i] || '').trim().toLowerCase() === 'estado') return i + 1;
+  }
+  return 17;
+}
+
+function getStatusStyle_(value) {
+  var st = String(value || '').trim().toLowerCase();
+  if (st === 'en revisión' || st === 'en revision' || st === 'en estudio') {
+    return { bg: '#fef08a', fg: '#854d0e' }; // Amarillo
+  }
+  if (st === 'aprobado' || st === 'aprobada' || st === 'pre-aprobada') {
+    return { bg: '#dcfce7', fg: '#166534' }; // Verde clarito
+  }
+  if (st === 'vendido' || st === 'vendida') {
+    return { bg: '#bfdbfe', fg: '#1e40af' }; // Azul
+  }
+  if (st === 'rechazada' || st === 'rechazado' || st === 'no aprobada') {
+    return { bg: '#fecaca', fg: '#991b1b' }; // Rojo
+  }
+  return { bg: null, fg: null };
+}
+
+function styleStatusCell_(sheet, rowNum, statusCol, value) {
+  if (!sheet || rowNum < 2 || statusCol < 1) return;
+  var style = getStatusStyle_(value);
+  var cell = sheet.getRange(rowNum, statusCol);
+  cell.setBackground(style.bg);
+  cell.setFontColor(style.fg);
+  cell.setFontWeight(style.bg ? 'bold' : 'normal');
+  cell.setHorizontalAlignment('center');
+}
+
+function styleStatusColumn_(sheet, startRow, rowsData, statusCol) {
+  if (!sheet || !rowsData || !rowsData.length || statusCol < 1) return;
+  var bgs = [];
+  var fgs = [];
+  var wts = [];
+  var als = [];
+  var idx = statusCol - 1;
+  for (var i = 0; i < rowsData.length; i++) {
+    var style = getStatusStyle_(rowsData[i][idx]);
+    bgs.push([style.bg]);
+    fgs.push([style.fg]);
+    wts.push([style.bg ? 'bold' : 'normal']);
+    als.push(['center']);
+  }
+  var range = sheet.getRange(startRow, statusCol, rowsData.length, 1);
+  range.setBackgrounds(bgs);
+  range.setFontColors(fgs);
+  range.setFontWeights(wts);
+  range.setHorizontalAlignments(als);
+}
+
+function applyStatusConditionalRules_(sheet, statusCol) {
+  if (!sheet || statusCol < 1) return;
+  try {
+    var existing = sheet.getConditionalFormatRules() || [];
+    var kept = [];
+    for (var i = 0; i < existing.length; i++) {
+      var ranges = existing[i].getRanges();
+      var onStatusCol = false;
+      for (var r = 0; r < ranges.length; r++) {
+        if (ranges[r].getColumn() === statusCol && ranges[r].getNumColumns() === 1) {
+          onStatusCol = true;
+          break;
+        }
+      }
+      if (!onStatusCol) kept.push(existing[i]);
+    }
+    var maxR = Math.max(sheet.getMaxRows(), 200);
+    var statusRange = sheet.getRange(2, statusCol, maxR - 1, 1);
+    var defs = [
+      { text: 'En revisión', bg: '#fef08a', fg: '#854d0e' },
+      { text: 'Aprobado', bg: '#dcfce7', fg: '#166534' },
+      { text: 'Vendido', bg: '#bfdbfe', fg: '#1e40af' },
+      { text: 'Rechazada', bg: '#fecaca', fg: '#991b1b' },
+      { text: 'Rechazado', bg: '#fecaca', fg: '#991b1b' }
+    ];
+    for (var d = 0; d < defs.length; d++) {
+      kept.push(
+        SpreadsheetApp.newConditionalFormatRule()
+          .whenTextEqualTo(defs[d].text)
+          .setBackground(defs[d].bg)
+          .setFontColor(defs[d].fg)
+          .setBold(true)
+          .setRanges([statusRange])
+          .build()
+      );
+    }
+    sheet.setConditionalFormatRules(kept);
+  } catch (e) {}
+}
+
 function ensureHeaders_(sheet, headers) {
   if (!sheet || !headers || !headers.length) return;
+  var statusCol = getStatusColIndex_(headers);
   if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
     sheet.setFrozenRows(1);
-  }
-}
-
-function ensureArchiveHeaders_(sheet, archiveHeaders) {
-  if (!sheet || !archiveHeaders || !archiveHeaders.length) return;
-  var lastRow = sheet.getLastRow();
-  if (lastRow === 0) {
-    sheet.getRange(1, 1, 1, archiveHeaders.length).setValues([archiveHeaders]).setFontWeight('bold');
-    sheet.setFrozenRows(1);
+    applyStatusConditionalRules_(sheet, statusCol);
     return;
   }
   var lastCol = Math.max(sheet.getLastColumn(), 1);
   var current = sheet.getRange(1, 1, 1, lastCol).getDisplayValues()[0].map(function(v) {
-    return String(v || '').trim();
+    return String(v || '').trim().toLowerCase();
   });
-  var hasPromoCol = current.some(function(h) {
+  if (current.indexOf('estado') === -1) {
+    sheet.getRange(1, statusCol).setValue('Estado').setFontWeight('bold');
+  }
+  applyStatusConditionalRules_(sheet, statusCol);
+}
+
+function ensureArchiveHeaders_(sheet, archiveHeaders) {
+  if (!sheet || !archiveHeaders || !archiveHeaders.length) return;
+  var statusCol = getStatusColIndex_(archiveHeaders);
+  var lastRow = sheet.getLastRow();
+  if (lastRow === 0) {
+    sheet.getRange(1, 1, 1, archiveHeaders.length).setValues([archiveHeaders]).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    applyStatusConditionalRules_(sheet, statusCol);
+    return;
+  }
+  if (lastRow === 1) {
+    sheet.getRange(1, 1, 1, archiveHeaders.length).setValues([archiveHeaders]).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    applyStatusConditionalRules_(sheet, statusCol);
+    return;
+  }
+  var readHeaders = function() {
+    var lc = Math.max(sheet.getLastColumn(), 1);
+    return sheet.getRange(1, 1, 1, lc).getDisplayValues()[0].map(function(v) {
+      return String(v || '').trim();
+    });
+  };
+  var current = readHeaders();
+  var hasEstado = current.some(function(h) { return h.toLowerCase() === 'estado'; });
+  if (!hasEstado) {
+    var insertBeforeIdx = -1;
+    for (var i = 0; i < current.length; i++) {
+      var low = current[i].toLowerCase();
+      if (low === 'promoción' || low === 'promocion' || low.indexOf('motivo') === 0) {
+        insertBeforeIdx = i + 1;
+        break;
+      }
+    }
+    if (insertBeforeIdx > 1) {
+      sheet.insertColumnBefore(insertBeforeIdx);
+      sheet.getRange(1, insertBeforeIdx).setValue('Estado').setFontWeight('bold');
+    } else {
+      sheet.getRange(1, statusCol).setValue('Estado').setFontWeight('bold');
+    }
+    current = readHeaders();
+  }
+  var hasPromo = current.some(function(h) {
     var low = h.toLowerCase();
     return low === 'promoción' || low === 'promocion';
   });
-  if (!hasPromoCol) {
-    if (lastRow === 1) {
-      sheet.getRange(1, 1, 1, archiveHeaders.length).setValues([archiveHeaders]).setFontWeight('bold');
-      sheet.setFrozenRows(1);
-    } else {
-      var motivoIdx = -1;
-      for (var i = 0; i < current.length; i++) {
-        if (current[i].toLowerCase().indexOf('motivo') === 0) {
-          motivoIdx = i + 1;
-          break;
-        }
-      }
-      if (motivoIdx > 1) {
-        sheet.insertColumnBefore(motivoIdx);
-        sheet.getRange(1, motivoIdx).setValue('Promoción').setFontWeight('bold');
-      } else {
-        sheet.getRange(1, 1, 1, archiveHeaders.length).setValues([archiveHeaders]).setFontWeight('bold');
+  if (!hasPromo) {
+    var motivoIdx = -1;
+    for (var j = 0; j < current.length; j++) {
+      if (current[j].toLowerCase().indexOf('motivo') === 0) {
+        motivoIdx = j + 1;
+        break;
       }
     }
+    if (motivoIdx > 1) {
+      sheet.insertColumnBefore(motivoIdx);
+      sheet.getRange(1, motivoIdx).setValue('Promoción').setFontWeight('bold');
+    } else {
+      sheet.getRange(1, statusCol + 1).setValue('Promoción').setFontWeight('bold');
+    }
   }
+  applyStatusConditionalRules_(sheet, statusCol);
 }
 
 function getOrCreateSheet_(ss, name, headers, isArchive) {
@@ -1566,7 +1713,7 @@ function deleteRowsById_(sheet, id) {
       sheet.deleteRow(r);
     } catch (delErr) {
       var cols = Math.max(sheet.getLastColumn(), 1);
-      sheet.getRange(r, 1, 1, cols).clearContent();
+      sheet.getRange(r, 1, 1, cols).clearContent().setBackground(null).setFontColor(null);
     }
   }
   return rows.length;
@@ -1586,7 +1733,7 @@ function deleteIdFromAllPromoSheets_(ss, archiveName, id) {
   return { total: total, sheets: removedFrom };
 }
 
-function upsertRow_(sheet, id, row, changedCols, headersLen) {
+function upsertRow_(sheet, id, row, changedCols, headersLen, statusCol) {
   var rows = findRowsById_(sheet, id);
   if (rows.length > 0) {
     var targetRow = rows[0];
@@ -1596,20 +1743,30 @@ function upsertRow_(sheet, id, row, changedCols, headersLen) {
         var colNum = Number(cols[c]);
         if (colNum >= 1 && colNum <= headersLen) {
           sheet.getRange(targetRow, colNum).setValue(changedCols[cols[c]]);
+          if (colNum === statusCol) {
+            styleStatusCell_(sheet, targetRow, statusCol, changedCols[cols[c]]);
+          }
         }
+      }
+      if (statusCol && row && row.length >= statusCol && changedCols[String(statusCol)] === undefined) {
+        sheet.getRange(targetRow, statusCol).setValue(row[statusCol - 1]);
+        styleStatusCell_(sheet, targetRow, statusCol, row[statusCol - 1]);
       }
     } else if (row && row.length) {
       var cleanRow = normalizeRow_(row, headersLen);
       sheet.getRange(targetRow, 1, 1, headersLen).setValues([cleanRow]);
+      if (statusCol) styleStatusCell_(sheet, targetRow, statusCol, cleanRow[statusCol - 1]);
     }
-    return { updated: 1, inserted: 0 };
+    return { updated: 1, inserted: 0, rowNum: targetRow };
   }
   if (row && row.length) {
     var insertRow = normalizeRow_(row, headersLen);
-    sheet.getRange(sheet.getLastRow() + 1, 1, 1, headersLen).setValues([insertRow]);
-    return { updated: 0, inserted: 1 };
+    var newRowNum = sheet.getLastRow() + 1;
+    sheet.getRange(newRowNum, 1, 1, headersLen).setValues([insertRow]);
+    if (statusCol) styleStatusCell_(sheet, newRowNum, statusCol, insertRow[statusCol - 1]);
+    return { updated: 0, inserted: 1, rowNum: newRowNum };
   }
-  return { updated: 0, inserted: 0 };
+  return { updated: 0, inserted: 0, rowNum: 0 };
 }
 
 function resolveTargetSheetNames_(ss, data, archiveName) {
@@ -1637,30 +1794,32 @@ function doGet() {
     var archSheet = findSheetByNameInsensitive_(ss, 'Archivo');
     return jsonOut_({
       ok: true,
-      version: 4,
-      revision: '4.0',
+      version: 4.1,
+      revision: '4.1',
       mainSheet: promoSheets[0] || '',
       promoSheets: promoSheets,
       archiveSheet: archSheet ? archSheet.getName() : '',
-      status: 'DELTACOR Sheets sync v4.0 activo (1 hoja por promoción + Archivo con columna Promoción)'
+      status: 'DELTACOR Sheets sync v4.1 activo (1 hoja por promoción + Archivo con Promoción + Estado con colores)'
     });
   } catch (err) {
-    return jsonOut_({ ok: false, version: 4, error: String(err && err.message || err) });
+    return jsonOut_({ ok: false, version: 4.1, error: String(err && err.message || err) });
   }
 }
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(15000)) {
-    return jsonOut_({ ok: false, version: 4, error: 'busy' });
+    return jsonOut_({ ok: false, version: 4.1, error: 'busy' });
   }
   try {
     var raw = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
     var data = JSON.parse(raw);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var archiveName = data.archiveSheet || 'Archivo';
-    var headers = data.headers || ['ID','Fecha','Nombre','Documento','Email','Teléfono','Adultos','Niños','Mascotas','Ingresos (€/mes)','Renta máx. 3x (€)','Aval','Viviendas y estados','Otras opciones','Habitaciones','Comentarios'];
+    var headers = data.headers || ['ID','Fecha','Nombre','Documento','Email','Teléfono','Adultos','Niños','Mascotas','Ingresos (€/mes)','Renta máx. 3x (€)','Aval','Viviendas y estados','Otras opciones','Habitaciones','Comentarios','Estado'];
     var archiveHeaders = data.archiveHeaders || headers.concat(['Promoción', 'Motivo archivo', 'Fecha archivo', 'Archivado por']);
+    var statusCol = getStatusColIndex_(headers);
+    var archStatusCol = getStatusColIndex_(archiveHeaders);
 
     // 1. Eliminar candidatura de Archivo o de todas las hojas de promociones
     if (data.action === 'delete') {
@@ -1678,14 +1837,14 @@ function doPost(e) {
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 4,
+        version: 4.1,
         action: 'delete',
         sheets: sheetList,
         deleted: deleted
       });
     }
 
-    // 2. Mover a hoja "Archivo" (elimina de la hoja de su promoción y añade a Archivo con columna Promoción)
+    // 2. Mover a hoja "Archivo" (elimina de su promoción y añade a Archivo con Estado en color + Promoción)
     if (data.action === 'archive') {
       var delRes = deleteIdFromAllPromoSheets_(ss, archiveName, data.id);
       var archSheet = getOrCreateSheet_(ss, archiveName, archiveHeaders, true);
@@ -1695,11 +1854,11 @@ function doPost(e) {
       if (!archRow[promoColIdx]) {
         archRow[promoColIdx] = data.promoName || (delRes.sheets.length ? delRes.sheets.join(' · ') : '');
       }
-      var archRes = upsertRow_(archSheet, data.id || archRow[0], archRow, null, archiveHeaders.length);
+      var archRes = upsertRow_(archSheet, data.id || archRow[0], archRow, null, archiveHeaders.length, archStatusCol);
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 4,
+        version: 4.1,
         action: 'archive',
         removedFrom: delRes.sheets,
         removed: delRes.total,
@@ -1709,7 +1868,7 @@ function doPost(e) {
       });
     }
 
-    // 3. Restaurar desde "Archivo" a la hoja de su promoción
+    // 3. Restaurar desde "Archivo" a la hoja de su promoción (con Estado en amarillo)
     if (data.action === 'restore') {
       var archSheet2 = findSheetByNameInsensitive_(ss, archiveName);
       var removedArch = deleteRowsById_(archSheet2, data.id);
@@ -1717,14 +1876,14 @@ function doPost(e) {
       var restUpd = 0, restIns = 0;
       for (var rt = 0; rt < restTargets.length; rt++) {
         var shRest = getOrCreateSheet_(ss, restTargets[rt], headers, false);
-        var rOut = upsertRow_(shRest, data.id || (data.row && data.row[0]), data.row || [], null, headers.length);
+        var rOut = upsertRow_(shRest, data.id || (data.row && data.row[0]), data.row || [], null, headers.length, statusCol);
         restUpd += rOut.updated;
         restIns += rOut.inserted;
       }
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 4,
+        version: 4.1,
         action: 'restore',
         sheets: restTargets,
         removedFromArchive: removedArch,
@@ -1733,7 +1892,7 @@ function doPost(e) {
       });
     }
 
-    // 4. Sincronizar hoja "Archivo" completa en un solo bloque (incluye columna Promoción)
+    // 4. Sincronizar hoja "Archivo" completa en un solo bloque (Estado con colores + Promoción)
     if (data.action === 'sync_archive') {
       var archSheet3 = getOrCreateSheet_(ss, archiveName, archiveHeaders, true);
       var archRows = (data.rows || []).map(function(r) { return normalizeRow_(r, archiveHeaders.length); });
@@ -1742,14 +1901,17 @@ function doPost(e) {
       archSheet3.getRange(1, 1, archMatrix.length, archiveHeaders.length).setValues(archMatrix);
       archSheet3.getRange(1, 1, 1, archiveHeaders.length).setFontWeight('bold');
       archSheet3.setFrozenRows(1);
+      if (archRows.length) styleStatusColumn_(archSheet3, 2, archRows, archStatusCol);
       if (prevArchLast > archMatrix.length) {
-        archSheet3.getRange(archMatrix.length + 1, 1, prevArchLast - archMatrix.length, Math.max(archSheet3.getLastColumn(), archiveHeaders.length)).clearContent();
+        archSheet3.getRange(archMatrix.length + 1, 1, prevArchLast - archMatrix.length, Math.max(archSheet3.getLastColumn(), archiveHeaders.length))
+          .clearContent().setBackground(null).setFontColor(null);
       }
+      applyStatusConditionalRules_(archSheet3, archStatusCol);
       SpreadsheetApp.flush();
-      return jsonOut_({ ok: true, version: 4, action: 'sync_archive', archiveSheet: archSheet3.getName(), rows: archRows.length });
+      return jsonOut_({ ok: true, version: 4.1, action: 'sync_archive', archiveSheet: archSheet3.getName(), rows: archRows.length });
     }
 
-    // 5. Reconstrucción completa de todas las hojas por promoción en un bloque por hoja
+    // 5. Reconstrucción completa de todas las hojas por promoción (Estado con colores)
     if (data.action === 'sync_all') {
       var sheetGroups = (data.sheets && data.sheets.length)
         ? data.sheets
@@ -1765,14 +1927,17 @@ function doPost(e) {
         sh.getRange(1, 1, matrix.length, headers.length).setValues(matrix);
         sh.getRange(1, 1, 1, headers.length).setFontWeight('bold');
         sh.setFrozenRows(1);
+        if (grpRows.length) styleStatusColumn_(sh, 2, grpRows, statusCol);
         if (prevLastRow > matrix.length) {
-          sh.getRange(matrix.length + 1, 1, prevLastRow - matrix.length, Math.max(sh.getLastColumn(), headers.length)).clearContent();
+          sh.getRange(matrix.length + 1, 1, prevLastRow - matrix.length, Math.max(sh.getLastColumn(), headers.length))
+            .clearContent().setBackground(null).setFontColor(null);
         }
+        applyStatusConditionalRules_(sh, statusCol);
         syncedNames.push(sh.getName());
         totalRows += grpRows.length;
       }
       SpreadsheetApp.flush();
-      return jsonOut_({ ok: true, version: 4, action: 'sync_all', promoSheets: syncedNames, rows: totalRows });
+      return jsonOut_({ ok: true, version: 4.1, action: 'sync_all', promoSheets: syncedNames, rows: totalRows });
     }
 
     // 6. Sincronización incremental por lote agrupada por hoja de promoción
@@ -1813,18 +1978,21 @@ function doPost(e) {
           var rowNum = idMap[itemId];
           if (rowNum) {
             sheet.getRange(rowNum, 1, 1, headers.length).setValues([cleanItemRow]);
+            styleStatusCell_(sheet, rowNum, statusCol, cleanItemRow[statusCol - 1]);
             updatedCount++;
           } else {
             toInsert.push(cleanItemRow);
           }
         }
         if (toInsert.length) {
-          sheet.getRange(sheet.getLastRow() + 1, 1, toInsert.length, headers.length).setValues(toInsert);
+          var insertStart = sheet.getLastRow() + 1;
+          sheet.getRange(insertStart, 1, toInsert.length, headers.length).setValues(toInsert);
+          styleStatusColumn_(sheet, insertStart, toInsert, statusCol);
           insertedCount += toInsert.length;
         }
       }
       SpreadsheetApp.flush();
-      return jsonOut_({ ok: true, version: 4, action: 'upsert_batch', sheets: groupKeys, updated: updatedCount, inserted: insertedCount });
+      return jsonOut_({ ok: true, version: 4.1, action: 'upsert_batch', sheets: groupKeys, updated: updatedCount, inserted: insertedCount });
     }
 
     // 7. Actualización quirúrgica de una sola candidatura en su(s) hoja(s) de promoción
@@ -1834,14 +2002,14 @@ function doPost(e) {
     var upd = 0, ins = 0;
     for (var t = 0; t < targets.length; t++) {
       var targetSheet = getOrCreateSheet_(ss, targets[t], headers, false);
-      var resUpsert = upsertRow_(targetSheet, id, row, data.changedCols, headers.length);
+      var resUpsert = upsertRow_(targetSheet, id, row, data.changedCols, headers.length, statusCol);
       upd += resUpsert.updated;
       ins += resUpsert.inserted;
     }
     SpreadsheetApp.flush();
-    return jsonOut_({ ok: true, version: 4, action: 'upsert', sheets: targets, updated: upd, inserted: ins });
+    return jsonOut_({ ok: true, version: 4.1, action: 'upsert', sheets: targets, updated: upd, inserted: ins });
   } catch (err) {
-    return jsonOut_({ ok: false, version: 4, error: String(err && err.message || err) });
+    return jsonOut_({ ok: false, version: 4.1, error: String(err && err.message || err) });
   } finally {
     lock.releaseLock();
   }
@@ -6667,7 +6835,7 @@ function renderAdmin(subTab) {
         trackBgOp(cloudSaveSol(sol));
         enqueueSheetOp('archive', sol, {}, sheetRes => {
           if (sheetRes?.outdatedScript) {
-            notify('Movida a Archivo en la web, pero actualiza Apps Script a v4.0 («Nueva versión») para usar hojas por promoción y la columna Promoción en Archivo.');
+            notify('Movida a Archivo en la web, pero actualiza Apps Script a v4.1 («Nueva versión») para usar hojas por promoción, Estado con colores y Promoción en Archivo.');
           } else if (sheetRes && !sheetRes.ok) {
             notify(`Movida a Archivo en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
           }
@@ -6735,7 +6903,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudSaveSol(sol));
           enqueueSheetOp('archive', sol, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Guardada en Archivo en la web, pero actualiza Apps Script a v4.0 («Nueva versión») para moverla en Excel.');
+              notify('Guardada en Archivo en la web, pero actualiza Apps Script a v4.1 («Nueva versión») para moverla en Excel.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Guardada en Archivo en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -6744,7 +6912,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudDeleteSol(sol.id, sol));
           enqueueSheetOp('delete', sol.id, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Eliminada de la web, pero actualiza Apps Script a v4.0 («Nueva versión») para borrar filas por promoción.');
+              notify('Eliminada de la web, pero actualiza Apps Script a v4.1 («Nueva versión») para borrar filas por promoción.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Eliminada de la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -6776,7 +6944,7 @@ function renderAdmin(subTab) {
         cloudSaveSol(sol);
         const viviendasEstados = (sol.selecciones || []).map(x => `${x.ref} (${normSolStatus(x.estado)})`).join(' | ');
         if (getCfg().appsScriptUrl) {
-          queueSheetUpsert(sol, { 13: viviendasEstados });
+          queueSheetUpsert(sol, { 13: viviendasEstados, 17: getSolOverallStatus(sol) });
         }
         notify(newSt === 'Aprobado'
           ? 'Marcada como Aprobado (verde): el botón de Rentger ya es visible para el usuario'
@@ -6841,7 +7009,7 @@ function renderAdmin(subTab) {
         btn.textContent = 'Reconstruir hojas';
         updateSheetSyncBadge();
         notify(res.outdatedScript
-          ? 'Actualiza Google Apps Script a v4.0 («Nueva versión») para reconstruir las hojas por promoción.'
+          ? 'Actualiza Google Apps Script a v4.1 («Nueva versión») para reconstruir las hojas por promoción con colores de Estado.'
           : res.ok
             ? `Hojas por promoción reconstruidas (${activeNow.length} candidaturas activas en ${res.sheetsCount || 1} hoja${res.sheetsCount === 1 ? '' : 's'})`
             : 'No se pudo reconstruir Google Sheets. Revisa la URL de conexión.');
@@ -6862,11 +7030,12 @@ function renderAdmin(subTab) {
     }
 
     $('exportCsvBtn').onclick = () => {
-      const headers = ['ID', 'Fecha', 'Nombre', 'Doc', 'Email', 'Telefono', 'Adultos', 'Ninos', 'Mascotas', 'Ingresos_Mes', 'Aval', 'Viviendas_Estados'];
+      const headers = ['ID', 'Fecha', 'Nombre', 'Doc', 'Email', 'Telefono', 'Adultos', 'Ninos', 'Mascotas', 'Ingresos_Mes', 'Aval', 'Viviendas_Estados', 'Estado'];
       const rows = getActiveSols().map(s => [
         s.id, s.fecha, s.nombre, `${s.tipoDoc}:${s.dni}`, s.email, s.telefono,
         s.adultos, s.ninos, s.mascotas, s.ingresos, s.aval,
-        s.selecciones.map(x => `${x.ref}(${normSolStatus(x.estado)})`).join(' | ')
+        s.selecciones.map(x => `${x.ref}(${normSolStatus(x.estado)})`).join(' | '),
+        getSolOverallStatus(s)
       ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(';'));
       const csv = '\uFEFF' + [headers.join(';'), ...rows].join('\n');
       const blobUrl = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
@@ -6954,10 +7123,10 @@ function renderAdmin(subTab) {
           btn.disabled = false;
           btn.innerHTML = `${ICO('check')} Sincronizar hoja Archivo`;
           notify(res.outdatedScript
-            ? 'Actualiza Google Apps Script a v4.0 e implementa una «Nueva versión».'
+            ? 'Actualiza Google Apps Script a v4.1 e implementa una «Nueva versión».'
             : res.ok
-              ? `Hoja «Archivo» sincronizada en Google Sheets (${archNow.length} registros con columna Promoción)`
-              : `No se pudo sincronizar la hoja Archivo: ${res.error || 'revisa la URL de Apps Script v4.0'}`);
+              ? `Hoja «Archivo» sincronizada en Google Sheets (${archNow.length} registros con Estado en color y columna Promoción)`
+              : `No se pudo sincronizar la hoja Archivo: ${res.error || 'revisa la URL de Apps Script v4.1'}`);
         };
       }
       if (hasLiveSync) renderScriptVersionBanner('archScriptBanner');
@@ -7014,7 +7183,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudSaveSol(sol));
           enqueueSheetOp('restore', sol, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Restaurada en la web, pero actualiza Apps Script a v4.0 («Nueva versión») para moverla a su hoja de promoción.');
+              notify('Restaurada en la web, pero actualiza Apps Script a v4.1 («Nueva versión») para moverla a su hoja de promoción.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Restaurada en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -7056,7 +7225,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudDeleteSol(sol.id, sol));
           enqueueSheetOp('delete', sol.id, { sheetName: ARCHIVE_SHEET_NAME }, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Eliminada de la web, pero actualiza Apps Script a v4.0 («Nueva versión») para borrarla del Excel.');
+              notify('Eliminada de la web, pero actualiza Apps Script a v4.1 («Nueva versión») para borrarla del Excel.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Eliminada de la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -7675,13 +7844,13 @@ function renderAdmin(subTab) {
           <input id="cfgUrl" type="url" value="${esc(c.baseUrl)}" required>
         </label>
         <details open style="margin:12px 0 16px;padding:10px 14px;box-shadow:none;background:var(--card2)">
-          <summary style="font-size:.82rem;color:var(--mut)">Sincronización con Google Apps Script v4.0 (1 hoja por promoción + Archivo)</summary>
+          <summary style="font-size:.82rem;color:var(--mut)">Sincronización con Google Apps Script v4.1 (1 hoja por promoción + Archivo + Estados con color)</summary>
           <div style="margin-top:12px">
             <label>URL de Apps Script (debe acabar en /exec)
               <input id="cfgSheets" type="url" value="${esc(c.appsScriptUrl)}" placeholder="https://script.google.com/macros/s/XXXXX/exec">
             </label>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v4.0 (Por promoción + Archivo)</button>
+              <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v4.1 (Promociones + Archivo + Colores)</button>
               <button type="button" class="btn g sm" id="testAppsScriptBtn">Comprobar versión</button>
             </div>
           </div>
@@ -7698,7 +7867,7 @@ function renderAdmin(subTab) {
     $('copyAppsScriptBtn').onclick = async () => {
       try {
         await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-        notify('Apps Script v4.0 copiado: pégalo en Apps Script y publica una «Nueva versión»');
+        notify('Apps Script v4.1 copiado: pégalo en Apps Script y publica una «Nueva versión»');
       } catch (_) {
         notify('No se pudo copiar automáticamente');
       }
@@ -7712,8 +7881,8 @@ function renderAdmin(subTab) {
       btn.disabled = false;
       btn.textContent = 'Comprobar versión';
       renderScriptVersionBanner('cfgScriptBanner');
-      if (info.version >= 4) {
-        notify(`Conectado a Apps Script v4.0 (${(info.promoSheets || []).join(', ') || 'Promociones'} + ${info.archiveSheet || 'Archivo'})`);
+      if (info.version >= 4.1) {
+        notify(`Conectado a Apps Script v4.1 (${(info.promoSheets || []).join(', ') || 'Promociones'} + ${info.archiveSheet || 'Archivo'})`);
       } else if (info.version) {
         notify(`Tu enlace sigue en v${info.version}. En Apps Script pulsa Implementar → Administrar implementaciones → Editar → Nueva versión.`);
       } else {
