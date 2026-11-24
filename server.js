@@ -33,16 +33,19 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.static(__dirname, {
+const staticOptions = {
   dotfiles: 'ignore',
   index: false,
   setHeaders: (res, filePath) => {
-    if (/\.(png|jpe?g|webp|ico)$/i.test(filePath)) {
+    if (/\.(png|jpe?g|webp|ico|svg)$/i.test(filePath)) {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Cache-Control', 'public, max-age=86400');
     }
   }
-}));
+};
+
+app.use(express.static(path.join(__dirname, 'public'), staticOptions));
+app.use(express.static(__dirname, staticOptions));
 
 const sendIndexWithDynamicOg = (req, res) => {
   try {
