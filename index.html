@@ -900,7 +900,47 @@ function solToSheetRow(s) {
 }
 
 const ARCHIVE_SHEET_NAME = 'Archivo';
-const ARCHIVE_HEADERS = [...SHEET_HEADERS, 'Motivo archivo', 'Fecha archivo', 'Archivado por'];
+const ARCHIVE_HEADERS = [...SHEET_HEADERS, 'Promoción', 'Motivo archivo', 'Fecha archivo', 'Archivado por'];
+
+function sanitizeSheetName(name) {
+  return String(name || 'Residencial Cadmia')
+    .replace(/[:\\/?*\[\]]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 95) || 'Residencial Cadmia';
+}
+
+function getSolSheetNames(s) {
+  const names = [];
+  const addName = raw => {
+    const clean = sanitizeSheetName(raw);
+    if (clean && !names.some(n => n.toLowerCase() === clean.toLowerCase())) names.push(clean);
+  };
+  if (s && Array.isArray(s.selecciones) && typeof V !== 'undefined' && Array.isArray(V)) {
+    s.selecciones.forEach(sel => {
+      const unit = V.find(v => String(v.ref || '').toUpperCase() === String(sel?.ref || '').toUpperCase());
+      if (unit) {
+        const promo = typeof getPromoById === 'function' ? getPromoById(unit.promoId || 'cadmia') : null;
+        if (promo?.name) addName(promo.name);
+      }
+    });
+  }
+  if (!names.length && s?.archivePromo) addName(s.archivePromo);
+  if (!names.length && s?.promoName) addName(s.promoName);
+  if (!names.length) {
+    const fallback = (typeof getFeaturedPromo === 'function' && getFeaturedPromo())
+      || (typeof PROMOS !== 'undefined' && PROMOS[0])
+      || { name: 'Residencial Cadmia' };
+    addName(fallback.name);
+  }
+  return names;
+}
+
+function getSolPromoLabel(s) {
+  if (s?.archivePromo) return String(s.archivePromo).trim();
+  const names = getSolSheetNames(s);
+  return names.join(' · ') || 'Residencial Cadmia';
+}
 
 function normSolStatus(st) {
   if (st === 'Pre-aprobada' || st === 'Aprobado') return 'Aprobado';
@@ -920,19 +960,20 @@ function getArchivedSols() {
 function solToArchiveRow(s) {
   return [
     ...solToSheetRow(s),
+    getSolPromoLabel(s),
     s.archiveReason || 'Archivada',
     s.archivedAt || new Date().toLocaleString('es-ES'),
     s.archivedBy || ''
   ];
 }
 
-const SHEET_SYNC_CACHE_KEY = 'inv-sheets-synced-v2';
+const SHEET_SYNC_CACHE_KEY = 'inv-sheets-synced-v4';
 const SHEET_BATCH_SIZE = 100;
 const SHEET_PENDING_QUEUE = new Map();
 let sheetFlushTimer = null;
 
 function solSyncHash(s) {
-  return JSON.stringify(solToSheetRow(s));
+  return JSON.stringify({ sheets: getSolSheetNames(s), row: solToSheetRow(s) });
 }
 
 function getSyncedSheetHashes() {
@@ -970,7 +1011,7 @@ function updateSheetSyncBadge() {
     : `${ICO('check')} Sincronizar pendientes`;
 }
 
-let LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '' };
+let LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '', promoSheets: [] };
 
 async function checkAppsScriptVersion(force = false) {
   const url = String(getCfg().appsScriptUrl || '').trim();
@@ -981,7 +1022,8 @@ async function checkAppsScriptVersion(force = false) {
       version: LAST_APPS_SCRIPT_CHECK.version,
       configured: true,
       mainSheet: LAST_APPS_SCRIPT_CHECK.mainSheet,
-      archiveSheet: LAST_APPS_SCRIPT_CHECK.archiveSheet
+      archiveSheet: LAST_APPS_SCRIPT_CHECK.archiveSheet,
+      promoSheets: LAST_APPS_SCRIPT_CHECK.promoSheets || []
     };
   }
   try {
@@ -993,20 +1035,23 @@ async function checkAppsScriptVersion(force = false) {
       return { ok: false, version: null, configured: true, invalidResponse: true };
     }
     const ver = Number(data.version || (data.ok ? 1 : 0));
+    const pSheets = Array.isArray(data.promoSheets) ? data.promoSheets : (data.mainSheet ? [data.mainSheet] : []);
     LAST_APPS_SCRIPT_CHECK = {
       url,
       version: ver,
       checkedAt: Date.now(),
-      mainSheet: data.mainSheet || '',
-      archiveSheet: data.archiveSheet || ''
+      mainSheet: data.mainSheet || pSheets[0] || '',
+      archiveSheet: data.archiveSheet || '',
+      promoSheets: pSheets
     };
     return {
       ok: Boolean(data.ok),
       version: ver,
       configured: true,
       status: data.status || '',
-      mainSheet: data.mainSheet || '',
-      archiveSheet: data.archiveSheet || ''
+      mainSheet: data.mainSheet || pSheets[0] || '',
+      archiveSheet: data.archiveSheet || '',
+      promoSheets: pSheets
     };
   } catch {
     return { ok: false, version: null, configured: true };
@@ -1020,23 +1065,23 @@ async function renderScriptVersionBanner(hostId) {
   const currentHost = $(hostId);
   if (!currentHost || !info.configured) return;
 
-  if (info.version !== null && info.version < 3) {
+  if (info.version !== null && info.version < 4) {
     const curUrl = getCfg().appsScriptUrl || '';
     currentHost.innerHTML = `
       <div class="panel" style="margin-bottom:14px;padding:14px 16px;background:var(--warn-bg);border-color:rgba(245,158,11,.5)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:260px">
-            <b style="color:var(--warn-tx);font-size:.92rem">Google Apps Script desactualizado (versión activa en tu enlace: v${esc(info.version)})</b>
+            <b style="color:var(--warn-tx);font-size:.92rem">Actualización disponible de Google Apps Script (versión activa en tu enlace: v${esc(info.version)} → nueva v4.0)</b>
             <div style="font-size:.82rem;color:var(--tx);margin-top:5px;line-height:1.5">
-              Aunque ya tengas creadas las hojas <b>Activos</b> y <b>Archivo</b> en Google Sheets, tu enlace actual sigue ejecutando la versión antigua (v${esc(info.version)}), que solo sabe añadir filas y <b>no borra ni escribe en «Archivo»</b>.
+              Para usar <b>una hoja por cada promoción</b> y añadir automáticamente la columna <b>«Promoción»</b> en la hoja <b>Archivo</b> de Excel, actualiza el script a <b>v4.0</b>:
               <ol style="margin:6px 0 0 18px;padding:0">
-                <li>Pulsa <b>Copiar Apps Script v3.2</b> y pégalo entero en <b>Extensiones → Apps Script</b> (borrando lo anterior).</li>
+                <li>Pulsa <b>Copiar Apps Script v4.0</b> y pégalo entero en <b>Extensiones → Apps Script</b> (sustituyendo el código anterior).</li>
                 <li>Pulsa <b>Implementar → Administrar implementaciones → Editar (lápiz) → Versión: Nueva versión → Implementar</b>.</li>
                 <li>Si creaste una <i>Nueva implementación</i> con otra URL <code>/exec</code>, pégala aquí abajo y pulsa <b>Guardar URL</b>.</li>
               </ol>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
-              <button type="button" class="btn sm" id="${esc(hostId)}CopyBtn">${ICO('file')} Copiar Apps Script v3.2</button>
+              <button type="button" class="btn sm" id="${esc(hostId)}CopyBtn">${ICO('file')} Copiar Apps Script v4.0</button>
               <button type="button" class="btn g sm" id="${esc(hostId)}RecheckBtn">Comprobar ahora</button>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
@@ -1054,7 +1099,7 @@ async function renderScriptVersionBanner(hostId) {
       copyBtn.onclick = async () => {
         try {
           await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-          notify('Apps Script v3.2 copiado: pégalo en Apps Script y publica «Nueva versión»');
+          notify('Apps Script v4.0 copiado: pégalo en Apps Script y publica «Nueva versión»');
         } catch {
           notify('No se pudo copiar automáticamente');
         }
@@ -1065,9 +1110,9 @@ async function renderScriptVersionBanner(hostId) {
         recheckBtn.disabled = true;
         recheckBtn.textContent = 'Comprobando…';
         const next = await checkAppsScriptVersion(true);
-        if (next.version >= 3) {
+        if (next.version >= 4) {
           renderScriptVersionBanner(hostId);
-          notify(`Apps Script v3.2 conectado (${next.mainSheet || 'Activos'} + ${next.archiveSheet || 'Archivo'})`);
+          notify(`Apps Script v4.0 conectado (${(next.promoSheets || []).join(', ') || 'Promociones'} + ${next.archiveSheet || 'Archivo'})`);
         } else {
           recheckBtn.disabled = false;
           recheckBtn.textContent = 'Comprobar ahora';
@@ -1086,25 +1131,26 @@ async function renderScriptVersionBanner(hostId) {
         }
         saveUrlBtn.disabled = true;
         saveUrlBtn.textContent = 'Guardando…';
-        LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '' };
+        LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '', promoSheets: [] };
         await cloudSaveConfig({ ...getCfg(), appsScriptUrl: nextUrl });
         const next = await checkAppsScriptVersion(true);
-        if (next.version >= 3) {
+        if (next.version >= 4) {
           renderScriptVersionBanner(hostId);
-          notify(`URL guardada y verificada: Apps Script v3.2 activo (${next.mainSheet || 'Activos'} + ${next.archiveSheet || 'Archivo'})`);
+          notify(`URL guardada y verificada: Apps Script v4.0 activo (${(next.promoSheets || []).join(', ') || 'Promociones'} + ${next.archiveSheet || 'Archivo'})`);
         } else {
           saveUrlBtn.disabled = false;
           saveUrlBtn.textContent = 'Guardar URL';
           notify(next.invalidResponse
             ? 'URL guardada, pero Apps Script devolvió error/login. Configura Acceso: «Cualquier usuario».'
-            : `URL guardada, pero responde v${next.version || 1}. Publica una «Nueva versión» con el código v3.2.`);
+            : `URL guardada, pero responde v${next.version || 1}. Publica una «Nueva versión» con el código v4.0.`);
         }
       };
     }
-  } else if (info.version >= 3 && hostId === 'cfgScriptBanner') {
+  } else if (info.version >= 4 && hostId === 'cfgScriptBanner') {
+    const pList = (info.promoSheets || []).length ? info.promoSheets.join(', ') : (info.mainSheet || 'Por promoción');
     currentHost.innerHTML = `
       <div class="panel" style="margin-bottom:14px;padding:11px 14px;background:var(--ok-bg);border-color:rgba(16,185,129,.35);color:var(--ok-tx);font-size:.84rem">
-        <b>Apps Script v3 conectado correctamente</b> · Hoja principal: <b>${esc(info.mainSheet || 'Activos')}</b> · Hoja archivo: <b>${esc(info.archiveSheet || 'Archivo (se creará al archivar)')}</b>
+        <b>Apps Script v4.0 conectado correctamente</b> · Hojas de promociones: <b>${esc(pList)}</b> · Hoja archivo: <b>${esc(info.archiveSheet || 'Archivo')}</b> (con columna «Promoción»)
       </div>`;
   } else if (info.invalidResponse) {
     currentHost.innerHTML = `
@@ -1133,10 +1179,11 @@ async function postToAppsScript(url, body) {
           version: data.version,
           checkedAt: Date.now(),
           mainSheet: data.mainSheet || LAST_APPS_SCRIPT_CHECK.mainSheet || '',
-          archiveSheet: data.archiveSheet || LAST_APPS_SCRIPT_CHECK.archiveSheet || ''
+          archiveSheet: data.archiveSheet || LAST_APPS_SCRIPT_CHECK.archiveSheet || '',
+          promoSheets: Array.isArray(data.promoSheets) ? data.promoSheets : (LAST_APPS_SCRIPT_CHECK.promoSheets || [])
         };
       } else if (data && data.ok) {
-        LAST_APPS_SCRIPT_CHECK = { url, version: 1, checkedAt: Date.now(), mainSheet: '', archiveSheet: '' };
+        LAST_APPS_SCRIPT_CHECK = { url, version: 1, checkedAt: Date.now(), mainSheet: '', archiveSheet: '', promoSheets: [] };
       }
       return { ok: res.ok && data.ok !== false, data, error: data?.error || '', opaque: false };
     } catch {
@@ -1162,12 +1209,22 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
   const url = String(getCfg().appsScriptUrl || '').trim();
   if (!url) return { ok: false, skipped: true };
 
+  const isOutdatedV4 = res => {
+    if (!res.opaque && res.data && Number(res.data.version || 0) < 4) return true;
+    if (res.opaque && LAST_APPS_SCRIPT_CHECK.url === url && LAST_APPS_SCRIPT_CHECK.version !== null && LAST_APPS_SCRIPT_CHECK.version < 4) return true;
+    return false;
+  };
+
   if (mode === 'upsert') {
     const sol = payloadOrAll;
     if (!sol || !sol.id) return { ok: false, skipped: true };
+    const sheetNames = getSolSheetNames(sol);
     const body = {
       action: 'upsert',
       headers: SHEET_HEADERS,
+      archiveSheet: ARCHIVE_SHEET_NAME,
+      sheetName: sheetNames[0],
+      sheetNames,
       id: sol.id,
       row: solToSheetRow(sol)
     };
@@ -1194,7 +1251,11 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
       const res = await postToAppsScript(url, {
         action: 'upsert_batch',
         headers: SHEET_HEADERS,
-        items: chunk.map(s => ({ id: s.id, row: solToSheetRow(s) }))
+        archiveSheet: ARCHIVE_SHEET_NAME,
+        items: chunk.map(s => {
+          const sNames = getSolSheetNames(s);
+          return { id: s.id, sheetName: sNames[0], sheetNames: sNames, row: solToSheetRow(s) };
+        })
       });
       if (!res.ok) return { ok: false, count: syncedCount, error: res.error };
       markSolsSynced(chunk);
@@ -1204,21 +1265,16 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
     return { ok: true, count: syncedCount };
   }
 
-  const isOutdatedV3 = res => {
-    if (!res.opaque && res.data && Number(res.data.version || 0) < 3) return true;
-    if (res.opaque && LAST_APPS_SCRIPT_CHECK.url === url && LAST_APPS_SCRIPT_CHECK.version !== null && LAST_APPS_SCRIPT_CHECK.version < 3) return true;
-    return false;
-  };
-
   if (mode === 'delete') {
     const id = typeof payloadOrAll === 'string' ? payloadOrAll : payloadOrAll?.id;
     if (!id) return { ok: false, skipped: true };
     const res = await postToAppsScript(url, {
       action: 'delete',
       id,
+      archiveSheet: ARCHIVE_SHEET_NAME,
       sheetName: options.sheetName || ''
     });
-    if (isOutdatedV3(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || LAST_APPS_SCRIPT_CHECK.version || 1) };
+    if (isOutdatedV4(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || LAST_APPS_SCRIPT_CHECK.version || 1) };
     if (res.ok && !options.sheetName) {
       unmarkSolSynced(id);
       updateSheetSyncBadge();
@@ -1229,14 +1285,17 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
   if (mode === 'archive') {
     const sol = payloadOrAll;
     if (!sol || !sol.id) return { ok: false, skipped: true };
+    const sheetNames = getSolSheetNames(sol);
     const res = await postToAppsScript(url, {
       action: 'archive',
       id: sol.id,
+      promoName: getSolPromoLabel(sol),
+      sheetNames,
       archiveSheet: ARCHIVE_SHEET_NAME,
       archiveHeaders: ARCHIVE_HEADERS,
       archiveRow: solToArchiveRow(sol)
     });
-    if (isOutdatedV3(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || LAST_APPS_SCRIPT_CHECK.version || 1) };
+    if (isOutdatedV4(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || LAST_APPS_SCRIPT_CHECK.version || 1) };
     if (res.ok) {
       unmarkSolSynced(sol.id);
       updateSheetSyncBadge();
@@ -1247,14 +1306,17 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
   if (mode === 'restore') {
     const sol = payloadOrAll;
     if (!sol || !sol.id) return { ok: false, skipped: true };
+    const sheetNames = getSolSheetNames(sol);
     const res = await postToAppsScript(url, {
       action: 'restore',
       id: sol.id,
+      sheetName: sheetNames[0],
+      sheetNames,
       headers: SHEET_HEADERS,
       row: solToSheetRow(sol),
       archiveSheet: ARCHIVE_SHEET_NAME
     });
-    if (isOutdatedV3(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || LAST_APPS_SCRIPT_CHECK.version || 1) };
+    if (isOutdatedV4(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || LAST_APPS_SCRIPT_CHECK.version || 1) };
     if (res.ok) {
       markSolsSynced([sol]);
       updateSheetSyncBadge();
@@ -1270,22 +1332,40 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
       archiveHeaders: ARCHIVE_HEADERS,
       rows: list.map(solToArchiveRow)
     });
-    if (isOutdatedV3(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || LAST_APPS_SCRIPT_CHECK.version || 1) };
+    if (isOutdatedV4(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || LAST_APPS_SCRIPT_CHECK.version || 1) };
     return { ...res, count: list.length };
   }
 
   if (mode === 'sync_all') {
     const list = (payloadOrAll || []).filter(s => s && s.id && !s.archived);
+    const bySheet = new Map();
+    if (typeof PROMOS !== 'undefined' && Array.isArray(PROMOS)) {
+      PROMOS.forEach(p => {
+        if (p?.name) bySheet.set(sanitizeSheetName(p.name), []);
+      });
+    }
+    list.forEach(s => {
+      const sNames = getSolSheetNames(s);
+      const row = solToSheetRow(s);
+      sNames.forEach(sn => {
+        if (!bySheet.has(sn)) bySheet.set(sn, []);
+        bySheet.get(sn).push(row);
+      });
+    });
+    const sheetsPayload = Array.from(bySheet.entries()).map(([name, rows]) => ({ name, rows }));
     const res = await postToAppsScript(url, {
       action: 'sync_all',
       headers: SHEET_HEADERS,
+      archiveSheet: ARCHIVE_SHEET_NAME,
+      sheets: sheetsPayload,
       rows: list.map(solToSheetRow)
     });
+    if (isOutdatedV4(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || LAST_APPS_SCRIPT_CHECK.version || 1) };
     if (res.ok) {
       markSolsSynced(list);
       updateSheetSyncBadge();
     }
-    return { ...res, count: list.length };
+    return { ...res, count: list.length, sheetsCount: sheetsPayload.length };
   }
 
   return { ok: false, skipped: true };
@@ -1348,10 +1428,19 @@ async function flushSheetQueue() {
   }
 }
 
-const APPS_SCRIPT_TEMPLATE = `// INVERCOR Google Sheets Sync v3.2 (Activos + Archivo + Borrado seguro con filtros y filas inmovilizadas)
+const APPS_SCRIPT_TEMPLATE = `// DELTACOR PROPERTIES · Google Sheets Sync v4.0
+// Una hoja por cada promoción + hoja «Archivo» con columna «Promoción» (solo en Excel)
 function jsonOut_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function sanitizeSheetName_(name) {
+  return String(name || 'Residencial Cadmia')
+    .replace(/[:\\\\/?*\\[\\]]+/g, ' ')
+    .replace(/\\s+/g, ' ')
+    .trim()
+    .slice(0, 95) || 'Residencial Cadmia';
 }
 
 function findSheetByNameInsensitive_(ss, name) {
@@ -1368,18 +1457,16 @@ function findSheetByNameInsensitive_(ss, name) {
   return null;
 }
 
-function getMainSheet_(ss, archiveName) {
-  var preferred = ['Activos', 'Candidaturas'];
-  for (var p = 0; p < preferred.length; p++) {
-    var byName = findSheetByNameInsensitive_(ss, preferred[p]);
-    if (byName) return byName;
-  }
-  var sheets = ss.getSheets();
+function getPromoSheets_(ss, archiveName) {
   var archLower = String(archiveName || 'Archivo').trim().toLowerCase();
+  var out = [];
+  var sheets = ss.getSheets();
   for (var i = 0; i < sheets.length; i++) {
-    if (String(sheets[i].getName() || '').trim().toLowerCase() !== archLower) return sheets[i];
+    if (String(sheets[i].getName() || '').trim().toLowerCase() !== archLower) {
+      out.push(sheets[i]);
+    }
   }
-  return sheets[0];
+  return out;
 }
 
 function ensureHeaders_(sheet, headers) {
@@ -1390,12 +1477,54 @@ function ensureHeaders_(sheet, headers) {
   }
 }
 
-function getOrCreateSheet_(ss, name, headers) {
-  var s = findSheetByNameInsensitive_(ss, name);
-  if (!s) {
-    s = ss.insertSheet(name);
+function ensureArchiveHeaders_(sheet, archiveHeaders) {
+  if (!sheet || !archiveHeaders || !archiveHeaders.length) return;
+  var lastRow = sheet.getLastRow();
+  if (lastRow === 0) {
+    sheet.getRange(1, 1, 1, archiveHeaders.length).setValues([archiveHeaders]).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    return;
   }
-  if (headers && headers.length) ensureHeaders_(s, headers);
+  var lastCol = Math.max(sheet.getLastColumn(), 1);
+  var current = sheet.getRange(1, 1, 1, lastCol).getDisplayValues()[0].map(function(v) {
+    return String(v || '').trim();
+  });
+  var hasPromoCol = current.some(function(h) {
+    var low = h.toLowerCase();
+    return low === 'promoción' || low === 'promocion';
+  });
+  if (!hasPromoCol) {
+    if (lastRow === 1) {
+      sheet.getRange(1, 1, 1, archiveHeaders.length).setValues([archiveHeaders]).setFontWeight('bold');
+      sheet.setFrozenRows(1);
+    } else {
+      var motivoIdx = -1;
+      for (var i = 0; i < current.length; i++) {
+        if (current[i].toLowerCase().indexOf('motivo') === 0) {
+          motivoIdx = i + 1;
+          break;
+        }
+      }
+      if (motivoIdx > 1) {
+        sheet.insertColumnBefore(motivoIdx);
+        sheet.getRange(1, motivoIdx).setValue('Promoción').setFontWeight('bold');
+      } else {
+        sheet.getRange(1, 1, 1, archiveHeaders.length).setValues([archiveHeaders]).setFontWeight('bold');
+      }
+    }
+  }
+}
+
+function getOrCreateSheet_(ss, name, headers, isArchive) {
+  var cleanName = sanitizeSheetName_(name);
+  var s = findSheetByNameInsensitive_(ss, cleanName);
+  if (!s) {
+    s = ss.insertSheet(cleanName);
+  }
+  if (headers && headers.length) {
+    if (isArchive) ensureArchiveHeaders_(s, headers);
+    else ensureHeaders_(s, headers);
+  }
   return s;
 }
 
@@ -1443,6 +1572,20 @@ function deleteRowsById_(sheet, id) {
   return rows.length;
 }
 
+function deleteIdFromAllPromoSheets_(ss, archiveName, id) {
+  var promoSheets = getPromoSheets_(ss, archiveName);
+  var total = 0;
+  var removedFrom = [];
+  for (var i = 0; i < promoSheets.length; i++) {
+    var count = deleteRowsById_(promoSheets[i], id);
+    if (count > 0) {
+      total += count;
+      removedFrom.push(promoSheets[i].getName());
+    }
+  }
+  return { total: total, sheets: removedFrom };
+}
+
 function upsertRow_(sheet, id, row, changedCols, headersLen) {
   var rows = findRowsById_(sheet, id);
   if (rows.length > 0) {
@@ -1469,91 +1612,130 @@ function upsertRow_(sheet, id, row, changedCols, headersLen) {
   return { updated: 0, inserted: 0 };
 }
 
+function resolveTargetSheetNames_(ss, data, archiveName) {
+  var out = [];
+  var rawList = (data.sheetNames && data.sheetNames.length)
+    ? data.sheetNames
+    : (data.sheetName ? [data.sheetName] : []);
+  for (var i = 0; i < rawList.length; i++) {
+    var clean = sanitizeSheetName_(rawList[i]);
+    if (clean && clean.toLowerCase() !== String(archiveName || 'Archivo').trim().toLowerCase()) {
+      if (out.indexOf(clean) === -1) out.push(clean);
+    }
+  }
+  if (!out.length) {
+    var promoSheets = getPromoSheets_(ss, archiveName);
+    out.push(promoSheets.length ? promoSheets[0].getName() : 'Residencial Cadmia');
+  }
+  return out;
+}
+
 function doGet() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var mainSheet = getMainSheet_(ss, 'Archivo');
+    var promoSheets = getPromoSheets_(ss, 'Archivo').map(function(s) { return s.getName(); });
     var archSheet = findSheetByNameInsensitive_(ss, 'Archivo');
     return jsonOut_({
       ok: true,
-      version: 3,
-      revision: '3.2',
-      mainSheet: mainSheet ? mainSheet.getName() : '',
+      version: 4,
+      revision: '4.0',
+      mainSheet: promoSheets[0] || '',
+      promoSheets: promoSheets,
       archiveSheet: archSheet ? archSheet.getName() : '',
-      status: 'INVERCOR Sheets sync v3.2 activo (Activos + Archivo)'
+      status: 'DELTACOR Sheets sync v4.0 activo (1 hoja por promoción + Archivo con columna Promoción)'
     });
   } catch (err) {
-    return jsonOut_({ ok: false, version: 3, error: String(err && err.message || err) });
+    return jsonOut_({ ok: false, version: 4, error: String(err && err.message || err) });
   }
 }
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(15000)) {
-    return jsonOut_({ ok: false, version: 3, error: 'busy' });
+    return jsonOut_({ ok: false, version: 4, error: 'busy' });
   }
   try {
     var raw = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
     var data = JSON.parse(raw);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var archiveName = data.archiveSheet || 'Archivo';
-    var mainSheet = getMainSheet_(ss, archiveName);
     var headers = data.headers || ['ID','Fecha','Nombre','Documento','Email','Teléfono','Adultos','Niños','Mascotas','Ingresos (€/mes)','Renta máx. 3x (€)','Aval','Viviendas y estados','Otras opciones','Habitaciones','Comentarios'];
-    var archiveHeaders = data.archiveHeaders || headers.concat(['Motivo archivo', 'Fecha archivo', 'Archivado por']);
+    var archiveHeaders = data.archiveHeaders || headers.concat(['Promoción', 'Motivo archivo', 'Fecha archivo', 'Archivado por']);
 
-    // 1. Eliminar una candidatura de Activos o de Archivo
+    // 1. Eliminar candidatura de Archivo o de todas las hojas de promociones
     if (data.action === 'delete') {
-      var delSheet = data.sheetName ? findSheetByNameInsensitive_(ss, data.sheetName) : mainSheet;
-      var deleted = deleteRowsById_(delSheet, data.id);
+      var deleted = 0;
+      var sheetList = [];
+      if (data.sheetName) {
+        var delSheet = findSheetByNameInsensitive_(ss, data.sheetName);
+        deleted = deleteRowsById_(delSheet, data.id);
+        if (delSheet) sheetList.push(delSheet.getName());
+      } else {
+        var delAll = deleteIdFromAllPromoSheets_(ss, archiveName, data.id);
+        deleted = delAll.total;
+        sheetList = delAll.sheets;
+      }
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 3,
+        version: 4,
         action: 'delete',
-        sheet: delSheet ? delSheet.getName() : '',
+        sheets: sheetList,
         deleted: deleted
       });
     }
 
-    // 2. Mover a hoja "Archivo" (elimina de Activos y añade/actualiza en Archivo)
+    // 2. Mover a hoja "Archivo" (elimina de la hoja de su promoción y añade a Archivo con columna Promoción)
     if (data.action === 'archive') {
-      var removed = deleteRowsById_(mainSheet, data.id);
-      var archSheet = getOrCreateSheet_(ss, archiveName, archiveHeaders);
-      var archRow = data.archiveRow || [];
+      var delRes = deleteIdFromAllPromoSheets_(ss, archiveName, data.id);
+      var archSheet = getOrCreateSheet_(ss, archiveName, archiveHeaders, true);
+      var archRow = (data.archiveRow || []).slice();
+      var promoColIdx = archiveHeaders.indexOf('Promoción');
+      if (promoColIdx === -1) promoColIdx = headers.length;
+      if (!archRow[promoColIdx]) {
+        archRow[promoColIdx] = data.promoName || (delRes.sheets.length ? delRes.sheets.join(' · ') : '');
+      }
       var archRes = upsertRow_(archSheet, data.id || archRow[0], archRow, null, archiveHeaders.length);
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 3,
+        version: 4,
         action: 'archive',
-        mainSheet: mainSheet.getName(),
+        removedFrom: delRes.sheets,
+        removed: delRes.total,
         archiveSheet: archSheet.getName(),
-        removed: removed,
         updated: archRes.updated,
         inserted: archRes.inserted
       });
     }
 
-    // 3. Restaurar desde hoja "Archivo" a Activos
+    // 3. Restaurar desde "Archivo" a la hoja de su promoción
     if (data.action === 'restore') {
       var archSheet2 = findSheetByNameInsensitive_(ss, archiveName);
       var removedArch = deleteRowsById_(archSheet2, data.id);
-      ensureHeaders_(mainSheet, headers);
-      var resRest = upsertRow_(mainSheet, data.id || (data.row && data.row[0]), data.row || [], null, headers.length);
+      var restTargets = resolveTargetSheetNames_(ss, data, archiveName);
+      var restUpd = 0, restIns = 0;
+      for (var rt = 0; rt < restTargets.length; rt++) {
+        var shRest = getOrCreateSheet_(ss, restTargets[rt], headers, false);
+        var rOut = upsertRow_(shRest, data.id || (data.row && data.row[0]), data.row || [], null, headers.length);
+        restUpd += rOut.updated;
+        restIns += rOut.inserted;
+      }
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 3,
+        version: 4,
         action: 'restore',
+        sheets: restTargets,
         removedFromArchive: removedArch,
-        updated: resRest.updated,
-        inserted: resRest.inserted
+        updated: restUpd,
+        inserted: restIns
       });
     }
 
-    // 4. Sincronizar hoja "Archivo" completa en un solo bloque
+    // 4. Sincronizar hoja "Archivo" completa en un solo bloque (incluye columna Promoción)
     if (data.action === 'sync_archive') {
-      var archSheet3 = getOrCreateSheet_(ss, archiveName, archiveHeaders);
+      var archSheet3 = getOrCreateSheet_(ss, archiveName, archiveHeaders, true);
       var archRows = (data.rows || []).map(function(r) { return normalizeRow_(r, archiveHeaders.length); });
       var archMatrix = [archiveHeaders].concat(archRows);
       var prevArchLast = archSheet3.getLastRow();
@@ -1564,68 +1746,102 @@ function doPost(e) {
         archSheet3.getRange(archMatrix.length + 1, 1, prevArchLast - archMatrix.length, Math.max(archSheet3.getLastColumn(), archiveHeaders.length)).clearContent();
       }
       SpreadsheetApp.flush();
-      return jsonOut_({ ok: true, version: 3, action: 'sync_archive', archiveSheet: archSheet3.getName(), rows: archRows.length });
+      return jsonOut_({ ok: true, version: 4, action: 'sync_archive', archiveSheet: archSheet3.getName(), rows: archRows.length });
     }
 
-    // 5. Reconstrucción completa hoja principal (Activos) en UNA sola escritura
+    // 5. Reconstrucción completa de todas las hojas por promoción en un bloque por hoja
     if (data.action === 'sync_all') {
-      var rows = (data.rows || []).map(function(r) { return normalizeRow_(r, headers.length); });
-      var matrix = [headers].concat(rows);
-      var prevLastRow = mainSheet.getLastRow();
-      mainSheet.getRange(1, 1, matrix.length, headers.length).setValues(matrix);
-      mainSheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-      mainSheet.setFrozenRows(1);
-      if (prevLastRow > matrix.length) {
-        mainSheet.getRange(matrix.length + 1, 1, prevLastRow - matrix.length, Math.max(mainSheet.getLastColumn(), headers.length)).clearContent();
+      var sheetGroups = (data.sheets && data.sheets.length)
+        ? data.sheets
+        : [{ name: resolveTargetSheetNames_(ss, data, archiveName)[0], rows: data.rows || [] }];
+      var syncedNames = [];
+      var totalRows = 0;
+      for (var sg = 0; sg < sheetGroups.length; sg++) {
+        var grp = sheetGroups[sg];
+        var sh = getOrCreateSheet_(ss, grp.name, headers, false);
+        var grpRows = (grp.rows || []).map(function(r) { return normalizeRow_(r, headers.length); });
+        var matrix = [headers].concat(grpRows);
+        var prevLastRow = sh.getLastRow();
+        sh.getRange(1, 1, matrix.length, headers.length).setValues(matrix);
+        sh.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+        sh.setFrozenRows(1);
+        if (prevLastRow > matrix.length) {
+          sh.getRange(matrix.length + 1, 1, prevLastRow - matrix.length, Math.max(sh.getLastColumn(), headers.length)).clearContent();
+        }
+        syncedNames.push(sh.getName());
+        totalRows += grpRows.length;
       }
       SpreadsheetApp.flush();
-      return jsonOut_({ ok: true, version: 3, action: 'sync_all', mainSheet: mainSheet.getName(), rows: rows.length });
+      return jsonOut_({ ok: true, version: 4, action: 'sync_all', promoSheets: syncedNames, rows: totalRows });
     }
 
-    ensureHeaders_(mainSheet, headers);
-
-    // 6. Sincronización incremental por lote
+    // 6. Sincronización incremental por lote agrupada por hoja de promoción
     if (data.action === 'upsert_batch') {
       var items = data.items || [];
-      var lastRow = mainSheet.getLastRow();
-      var idMap = {};
-      if (lastRow > 1) {
-        var existingIds = mainSheet.getRange(2, 1, lastRow - 1, 1).getDisplayValues();
-        for (var i = 0; i < existingIds.length; i++) {
-          var key = String(existingIds[i][0] || '').trim().toLowerCase();
-          if (key) idMap[key] = i + 2;
-        }
-      }
-      var toInsert = [];
-      var updatedCount = 0;
+      var grouped = {};
       for (var j = 0; j < items.length; j++) {
-        var item = items[j];
-        if (!item || !item.row || !item.row.length) continue;
-        var itemId = String(item.id || item.row[0] || '').trim().toLowerCase();
-        var cleanItemRow = normalizeRow_(item.row, headers.length);
-        var rowNum = idMap[itemId];
-        if (rowNum) {
-          mainSheet.getRange(rowNum, 1, 1, headers.length).setValues([cleanItemRow]);
-          updatedCount++;
-        } else {
-          toInsert.push(cleanItemRow);
+        var it = items[j];
+        if (!it || !it.row || !it.row.length) continue;
+        var tNames = resolveTargetSheetNames_(ss, it, archiveName);
+        for (var tn = 0; tn < tNames.length; tn++) {
+          var sKey = tNames[tn];
+          if (!grouped[sKey]) grouped[sKey] = [];
+          grouped[sKey].push(it);
         }
       }
-      if (toInsert.length) {
-        mainSheet.getRange(mainSheet.getLastRow() + 1, 1, toInsert.length, headers.length).setValues(toInsert);
+      var updatedCount = 0;
+      var insertedCount = 0;
+      var groupKeys = Object.keys(grouped);
+      for (var gk = 0; gk < groupKeys.length; gk++) {
+        var sheetName = groupKeys[gk];
+        var sheet = getOrCreateSheet_(ss, sheetName, headers, false);
+        var lastRow = sheet.getLastRow();
+        var idMap = {};
+        if (lastRow > 1) {
+          var existingIds = sheet.getRange(2, 1, lastRow - 1, 1).getDisplayValues();
+          for (var i = 0; i < existingIds.length; i++) {
+            var key = String(existingIds[i][0] || '').trim().toLowerCase();
+            if (key) idMap[key] = i + 2;
+          }
+        }
+        var toInsert = [];
+        var list = grouped[sheetName];
+        for (var k = 0; k < list.length; k++) {
+          var item = list[k];
+          var itemId = String(item.id || item.row[0] || '').trim().toLowerCase();
+          var cleanItemRow = normalizeRow_(item.row, headers.length);
+          var rowNum = idMap[itemId];
+          if (rowNum) {
+            sheet.getRange(rowNum, 1, 1, headers.length).setValues([cleanItemRow]);
+            updatedCount++;
+          } else {
+            toInsert.push(cleanItemRow);
+          }
+        }
+        if (toInsert.length) {
+          sheet.getRange(sheet.getLastRow() + 1, 1, toInsert.length, headers.length).setValues(toInsert);
+          insertedCount += toInsert.length;
+        }
       }
       SpreadsheetApp.flush();
-      return jsonOut_({ ok: true, version: 3, action: 'upsert_batch', updated: updatedCount, inserted: toInsert.length });
+      return jsonOut_({ ok: true, version: 4, action: 'upsert_batch', sheets: groupKeys, updated: updatedCount, inserted: insertedCount });
     }
 
-    // 7. Actualización quirúrgica de una sola candidatura
+    // 7. Actualización quirúrgica de una sola candidatura en su(s) hoja(s) de promoción
     var row = data.row || [];
     var id = data.id || row[0];
-    var resUpsert = upsertRow_(mainSheet, id, row, data.changedCols, headers.length);
+    var targets = resolveTargetSheetNames_(ss, data, archiveName);
+    var upd = 0, ins = 0;
+    for (var t = 0; t < targets.length; t++) {
+      var targetSheet = getOrCreateSheet_(ss, targets[t], headers, false);
+      var resUpsert = upsertRow_(targetSheet, id, row, data.changedCols, headers.length);
+      upd += resUpsert.updated;
+      ins += resUpsert.inserted;
+    }
     SpreadsheetApp.flush();
-    return jsonOut_({ ok: true, version: 3, action: 'upsert', updated: resUpsert.updated, inserted: resUpsert.inserted });
+    return jsonOut_({ ok: true, version: 4, action: 'upsert', sheets: targets, updated: upd, inserted: ins });
   } catch (err) {
-    return jsonOut_({ ok: false, version: 3, error: String(err && err.message || err) });
+    return jsonOut_({ ok: false, version: 4, error: String(err && err.message || err) });
   } finally {
     lock.releaseLock();
   }
@@ -3262,6 +3478,7 @@ function bindUniqueForm() {
       comentario: $('tx').value.trim(),
       selecciones: SEL.map(r => ({ ref: r, estado: 'En estudio' }))
     };
+    payload.promoName = getSolPromoLabel(payload);
 
     const submitBtn = fm.querySelector('button[type="submit"]');
     const prevBtnTxt = submitBtn ? submitBtn.textContent : '';
@@ -6307,7 +6524,7 @@ function renderAdmin(subTab) {
           <b style="font-size:.95rem">Resumen de candidaturas en Google Sheets</b>
           <div class="m" style="margin-top:2px">
             ${hasLiveSync
-              ? '<span class="dot ok"></span>Sincronización incremental activa: actualiza fila/celda y gestiona la hoja «Archivo» automáticamente.'
+              ? '<span class="dot ok"></span>Sincronización activa por promoción: una hoja por promoción y columna «Promoción» automática en «Archivo».'
               : hasSheetLink
               ? '<span class="dot warn"></span>Hoja enlazada. Puedes abrirla aquí o activar el volcado automático en Integraciones.'
               : 'Conecta un único enlace de Google Sheets para ver siempre todas las candidaturas actualizadas sin descargar archivos Excel.'}
@@ -6319,7 +6536,7 @@ function renderAdmin(subTab) {
             : `<button class="btn ok sm" type="button" id="quickLinkSheetBtn">${ICO('file')} Conectar enlace Google Sheets</button>`}
           ${hasLiveSync
             ? `<button class="btn sm" type="button" id="syncSheetsBtn">${ICO('check')} ${pendingCount > 0 ? `Sincronizar cambios (${pendingCount})` : 'Sincronizar pendientes'}</button>
-               <button class="btn g sm" type="button" id="rebuildSheetsBtn" title="Sobrescribe toda la hoja principal en un único bloque">Reconstruir hoja</button>`
+               <button class="btn g sm" type="button" id="rebuildSheetsBtn" title="Reconstruye todas las hojas de promociones en bloque">Reconstruir hojas</button>`
             : ''}
           <button class="btn g sm" type="button" id="copySheetsBtn">${ICO('columns')} Copiar tabla</button>
           <button class="btn g sm" type="button" id="exportCsvBtn">${ICO('download')} CSV</button>
@@ -6430,8 +6647,10 @@ function renderAdmin(subTab) {
 
       $('soldConfirmBtn').onclick = () => {
         const markUnit = Boolean($('soldMarkUnit')?.checked && prop);
+        const soldPromo = prop ? getPromoById(prop.promoId || 'cadmia') : null;
         sol.selecciones[selIdx].estado = 'Vendido';
         sol.archived = true;
+        sol.archivePromo = soldPromo?.name || getSolPromoLabel(sol);
         sol.archiveReason = 'Vendido';
         sol.archivedAt = new Date().toLocaleString('es-ES');
         sol.archivedBy = CURRENT_USER.email;
@@ -6448,7 +6667,7 @@ function renderAdmin(subTab) {
         trackBgOp(cloudSaveSol(sol));
         enqueueSheetOp('archive', sol, {}, sheetRes => {
           if (sheetRes?.outdatedScript) {
-            notify('Movida a Archivo en la web, pero Google Sheets sigue en Apps Script v1: actualiza a v3.2 y publica «Nueva versión».');
+            notify('Movida a Archivo en la web, pero actualiza Apps Script a v4.0 («Nueva versión») para usar hojas por promoción y la columna Promoción en Archivo.');
           } else if (sheetRes && !sheetRes.ok) {
             notify(`Movida a Archivo en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
           }
@@ -6497,6 +6716,7 @@ function renderAdmin(subTab) {
         if (keepInArchive) {
           sol.selecciones = (sol.selecciones || []).map(x => ({ ...x, estado: 'Rechazada' }));
           sol.archived = true;
+          sol.archivePromo = getSolPromoLabel(sol);
           sol.archiveReason = 'Rechazada';
           sol.archivedAt = new Date().toLocaleString('es-ES');
           sol.archivedBy = CURRENT_USER.email;
@@ -6515,7 +6735,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudSaveSol(sol));
           enqueueSheetOp('archive', sol, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Guardada en Archivo en la web, pero tu Google Apps Script sigue en v1: publica «Nueva versión» con v3.2.');
+              notify('Guardada en Archivo en la web, pero actualiza Apps Script a v4.0 («Nueva versión») para moverla en Excel.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Guardada en Archivo en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -6524,7 +6744,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudDeleteSol(sol.id, sol));
           enqueueSheetOp('delete', sol.id, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Eliminada de la web, pero Excel sigue en Apps Script v1: publica «Nueva versión» con v3.2 para borrar filas.');
+              notify('Eliminada de la web, pero actualiza Apps Script a v4.0 («Nueva versión») para borrar filas por promoción.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Eliminada de la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -6618,11 +6838,13 @@ function renderAdmin(subTab) {
         const activeNow = getActiveSols();
         const res = await syncToGoogleSheets('sync_all', activeNow);
         btn.disabled = false;
-        btn.textContent = 'Reconstruir hoja';
+        btn.textContent = 'Reconstruir hojas';
         updateSheetSyncBadge();
-        notify(res.ok
-          ? `Hoja reconstruida en bloque (${activeNow.length} candidaturas activas en una sola escritura)`
-          : 'No se pudo reconstruir Google Sheets. Revisa la URL de conexión.');
+        notify(res.outdatedScript
+          ? 'Actualiza Google Apps Script a v4.0 («Nueva versión») para reconstruir las hojas por promoción.'
+          : res.ok
+            ? `Hojas por promoción reconstruidas (${activeNow.length} candidaturas activas en ${res.sheetsCount || 1} hoja${res.sheetsCount === 1 ? '' : 's'})`
+            : 'No se pudo reconstruir Google Sheets. Revisa la URL de conexión.');
       };
     }
 
@@ -6732,10 +6954,10 @@ function renderAdmin(subTab) {
           btn.disabled = false;
           btn.innerHTML = `${ICO('check')} Sincronizar hoja Archivo`;
           notify(res.outdatedScript
-            ? 'Tu Google Apps Script sigue en v1: pega el código v3.2 e implementa una «Nueva versión».'
+            ? 'Actualiza Google Apps Script a v4.0 e implementa una «Nueva versión».'
             : res.ok
-              ? `Hoja «Archivo» sincronizada en Google Sheets (${archNow.length} registros)`
-              : `No se pudo sincronizar la hoja Archivo: ${res.error || 'revisa la URL de Apps Script v3.2'}`);
+              ? `Hoja «Archivo» sincronizada en Google Sheets (${archNow.length} registros con columna Promoción)`
+              : `No se pudo sincronizar la hoja Archivo: ${res.error || 'revisa la URL de Apps Script v4.0'}`);
         };
       }
       if (hasLiveSync) renderScriptVersionBanner('archScriptBanner');
@@ -6778,6 +7000,7 @@ function renderAdmin(subTab) {
         $('restCancelBtn').onclick = () => dlg.close();
         $('restConfirmBtn').onclick = () => {
           sol.archived = false;
+          delete sol.archivePromo;
           delete sol.archiveReason;
           delete sol.archivedAt;
           delete sol.archivedBy;
@@ -6791,7 +7014,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudSaveSol(sol));
           enqueueSheetOp('restore', sol, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Restaurada en la web, pero actualiza Apps Script a v3.2 («Nueva versión») para moverla en Excel.');
+              notify('Restaurada en la web, pero actualiza Apps Script a v4.0 («Nueva versión») para moverla a su hoja de promoción.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Restaurada en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -6833,7 +7056,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudDeleteSol(sol.id, sol));
           enqueueSheetOp('delete', sol.id, { sheetName: ARCHIVE_SHEET_NAME }, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Eliminada de la web, pero actualiza Apps Script a v3.2 («Nueva versión») para borrarla del Excel.');
+              notify('Eliminada de la web, pero actualiza Apps Script a v4.0 («Nueva versión») para borrarla del Excel.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Eliminada de la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -7452,13 +7675,13 @@ function renderAdmin(subTab) {
           <input id="cfgUrl" type="url" value="${esc(c.baseUrl)}" required>
         </label>
         <details open style="margin:12px 0 16px;padding:10px 14px;box-shadow:none;background:var(--card2)">
-          <summary style="font-size:.82rem;color:var(--mut)">Sincronización con Google Apps Script (Activos y Archivo)</summary>
+          <summary style="font-size:.82rem;color:var(--mut)">Sincronización con Google Apps Script v4.0 (1 hoja por promoción + Archivo)</summary>
           <div style="margin-top:12px">
             <label>URL de Apps Script (debe acabar en /exec)
               <input id="cfgSheets" type="url" value="${esc(c.appsScriptUrl)}" placeholder="https://script.google.com/macros/s/XXXXX/exec">
             </label>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v3.2 (Activos + Archivo)</button>
+              <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v4.0 (Por promoción + Archivo)</button>
               <button type="button" class="btn g sm" id="testAppsScriptBtn">Comprobar versión</button>
             </div>
           </div>
@@ -7475,7 +7698,7 @@ function renderAdmin(subTab) {
     $('copyAppsScriptBtn').onclick = async () => {
       try {
         await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-        notify('Apps Script v3.2 copiado: pégalo en Apps Script y publica una «Nueva versión»');
+        notify('Apps Script v4.0 copiado: pégalo en Apps Script y publica una «Nueva versión»');
       } catch (_) {
         notify('No se pudo copiar automáticamente');
       }
@@ -7489,8 +7712,8 @@ function renderAdmin(subTab) {
       btn.disabled = false;
       btn.textContent = 'Comprobar versión';
       renderScriptVersionBanner('cfgScriptBanner');
-      if (info.version >= 3) {
-        notify(`Conectado a Apps Script v3.2 (${info.mainSheet || 'Activos'} + ${info.archiveSheet || 'Archivo'})`);
+      if (info.version >= 4) {
+        notify(`Conectado a Apps Script v4.0 (${(info.promoSheets || []).join(', ') || 'Promociones'} + ${info.archiveSheet || 'Archivo'})`);
       } else if (info.version) {
         notify(`Tu enlace sigue en v${info.version}. En Apps Script pulsa Implementar → Administrar implementaciones → Editar → Nueva versión.`);
       } else {
@@ -7500,7 +7723,7 @@ function renderAdmin(subTab) {
 
     $('cfgForm').onsubmit = async e => {
       e.preventDefault();
-      LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '' };
+      LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '', promoSheets: [] };
       await cloudSaveConfig({
         ...getCfg(),
         baseUrl: $('cfgUrl').value.trim(),
