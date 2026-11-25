@@ -91,7 +91,7 @@ function buildCspHeader(isHttps) {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
-    "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.google-analytics.com https://region1.google-analytics.com https://api.web3forms.com https://script.google.com https://script.googleusercontent.com",
+    "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://invencor-a1477.firebaseapp.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.google-analytics.com https://region1.google-analytics.com https://api.web3forms.com https://script.google.com https://script.googleusercontent.com",
     "frame-src 'self' https://invencor-a1477.firebaseapp.com https://accounts.google.com https://www.openstreetmap.org https://www.google.com https://maps.google.com",
     "object-src 'none'",
     "base-uri 'self'",
@@ -189,6 +189,9 @@ app.get('/:rootAsset', (req, res, next) => {
   const filePath = path.join(__dirname, name);
   if (!fs.existsSync(filePath)) return res.status(404).type('text/plain').send('Not Found');
 
+  if (name.endsWith('.webmanifest')) {
+    res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+  }
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'public, max-age=86400');

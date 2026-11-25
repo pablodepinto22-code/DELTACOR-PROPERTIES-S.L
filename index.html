@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Deltacor">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.google-analytics.com https://region1.google-analytics.com https://api.web3forms.com https://script.google.com https://script.googleusercontent.com; frame-src 'self' https://invencor-a1477.firebaseapp.com https://accounts.google.com https://www.openstreetmap.org https://www.google.com https://maps.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://invencor-a1477.firebaseapp.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.google-analytics.com https://region1.google-analytics.com https://api.web3forms.com https://script.google.com https://script.googleusercontent.com; frame-src 'self' https://invencor-a1477.firebaseapp.com https://accounts.google.com https://www.openstreetmap.org https://www.google.com https://maps.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="canonical" href="https://pablodepinto22-code.github.io/DELTACOR-PROPERTIES-S.L/">
 <link rel="icon" type="image/png" sizes="512x512" href="https://pablodepinto22-code.github.io/DELTACOR-PROPERTIES-S.L/logo-deltacor-icon.png">
@@ -185,7 +185,8 @@ h1 em{color:var(--b1);font-style:normal}
 .bldg-preview{background:var(--card2);border:1px solid var(--line);border-radius:4px;padding:12px 14px;margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 
 /* Property Comparator Bar */
-.cmp-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:4px;z-index:85;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow-lg);max-width:94vw}
+.cmp-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:4px;z-index:95;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow-lg);max-width:94vw}
+.cmp-bar.has-cookie{bottom:112px}
 .cmp-bar[hidden]{display:none}
 .cmp-chips{display:flex;gap:6px;flex-wrap:wrap}
 .cmp-chips span{background:rgba(255,255,255,.15);padding:3px 9px;border-radius:3px;font-size:.76rem;font-weight:700}
@@ -1006,6 +1007,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
     left:10px;right:10px;bottom:calc(64px + env(safe-area-inset-bottom,0px));
     transform:none;max-width:none;width:auto;padding:9px 12px;gap:8px;justify-content:space-between;border-radius:10px;
   }
+  .cmp-bar.has-cookie{bottom:calc(182px + env(safe-area-inset-bottom,0px))}
 
   /* Compact, sleek mobile Cookie Banner (vertical stack + equal button row) */
   .cookie-bar{
@@ -2864,6 +2866,10 @@ const notify = m => { const t = $('toast'); if (!t) return; t.textContent = m; t
       }
       dlgMouseDownOnBackdrop = false;
     });
+    dlgEl.addEventListener('close', () => {
+      dlgEl.classList.remove('wide');
+      dlgEl.oncancel = null;
+    });
   }
 })();
 
@@ -2914,15 +2920,20 @@ const applyTheme = t => {
   document.documentElement.setAttribute('data-theme', safeT);
   safeSetItem(localStorage, 'inv-theme', safeT);
 };
-applyTheme(localStorage.getItem('inv-theme') || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'));
+let savedTheme = null;
+let savedCookies = null;
+try { savedTheme = localStorage.getItem('inv-theme'); } catch {}
+try { savedCookies = localStorage.getItem('inv-ck'); } catch {}
+applyTheme(savedTheme || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'));
 $('themeBtn').onclick = () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 
 /* Banner Cookies RGPD */
 const syncCookieOffset = () => {
   const visible = Boolean($('cookieBar') && !$('cookieBar').hidden);
   $('chatFab')?.classList.toggle('has-cookie', visible);
+  $('compareBar')?.classList.toggle('has-cookie', visible);
 };
-if (!localStorage.getItem('inv-ck')) {
+if (!savedCookies) {
   $('cookieBar').hidden = false;
   syncCookieOffset();
 }
@@ -4482,11 +4493,13 @@ function openAuthModal(defaultEmail = '') {
     const forgotBtn = $('mForgotPassBtn');
     if (forgotBtn) {
       forgotBtn.onclick = async () => {
-        $('mLoginErr').hidden = true;
-        const res = await requestPasswordReset($('mLoginEmail').value);
+        if ($('mLoginErr')) $('mLoginErr').hidden = true;
+        const res = await requestPasswordReset($('mLoginEmail')?.value || '');
         if (!res.ok) {
-          $('mLoginErr').textContent = res.msg;
-          $('mLoginErr').hidden = false;
+          if ($('mLoginErr')) {
+            $('mLoginErr').textContent = res.msg;
+            $('mLoginErr').hidden = false;
+          }
         } else {
           notify(res.msg);
         }
@@ -4497,46 +4510,55 @@ function openAuthModal(defaultEmail = '') {
       const gBtn = $('modalGoogleBtn');
       gBtn.disabled = true;
       signInWithGoogle(user => {
-        $('dlg').close();
-        if (isVerifiedAdmin()) {
-          notify(`Bienvenido, ${user.name}. Desplegable de administración activado.`);
-          $('userMenu').classList.add('open');
-        } else {
-          notify(`Bienvenido, ${user.name}`);
+        if ($('dlg')?.open) $('dlg').close();
+        const isAdm = isVerifiedAdmin();
+        notify(isAdm
+          ? `Bienvenido, ${user.name}. Desplegable de administración activado.`
+          : `Bienvenido, ${user.name}`);
+        if (location.hash === '#mi-solicitud' || location.hash.startsWith('#admin')) route();
+        else refreshAllPropertyViews();
+        if (isAdm) {
+          requestAnimationFrame(() => {
+            $('userMenu')?.classList.add('open');
+            $('userBtn')?.setAttribute('aria-expanded', 'true');
+          });
         }
-        if (location.hash !== '#inicio') location.hash = 'inicio';
-        else route();
       }).finally(() => { if (gBtn) gBtn.disabled = false; });
     };
 
     $('modalLoginForm').onsubmit = async e => {
       e.preventDefault();
-      $('mLoginErr').hidden = true;
+      if ($('mLoginErr')) $('mLoginErr').hidden = true;
       const btn = $('mLoginSubmit');
       const prevText = btn.textContent;
       btn.disabled = true;
       btn.textContent = isSignup ? 'Creando cuenta…' : 'Entrando…';
 
       const res = isSignup
-        ? await registerWithEmail($('mLoginName').value, $('mLoginEmail').value, $('mLoginPass').value)
-        : await loginUser($('mLoginEmail').value, $('mLoginPass').value);
+        ? await registerWithEmail($('mLoginName')?.value || '', $('mLoginEmail')?.value || '', $('mLoginPass')?.value || '')
+        : await loginUser($('mLoginEmail')?.value || '', $('mLoginPass')?.value || '');
 
       if (!res.ok) {
-        btn.disabled = false;
-        btn.textContent = prevText;
-        $('mLoginErr').textContent = res.msg;
-        $('mLoginErr').hidden = false;
+        if (btn) { btn.disabled = false; btn.textContent = prevText; }
+        if ($('mLoginErr')) {
+          $('mLoginErr').textContent = res.msg;
+          $('mLoginErr').hidden = false;
+        }
         return;
       }
-      $('dlg').close();
-      if (isVerifiedAdmin()) {
-        notify(`Bienvenido, ${res.user.name}. Desplegable de administración activado.`);
-        $('userMenu').classList.add('open');
-      } else {
-        notify(`Bienvenido, ${res.user.name}`);
+      if ($('dlg')?.open) $('dlg').close();
+      const isAdm = isVerifiedAdmin();
+      notify(isAdm
+        ? `Bienvenido, ${res.user.name}. Desplegable de administración activado.`
+        : `Bienvenido, ${res.user.name}`);
+      if (location.hash === '#mi-solicitud' || location.hash.startsWith('#admin')) route();
+      else refreshAllPropertyViews();
+      if (isAdm) {
+        requestAnimationFrame(() => {
+          $('userMenu')?.classList.add('open');
+          $('userBtn')?.setAttribute('aria-expanded', 'true');
+        });
       }
-      if (location.hash !== '#inicio') location.hash = 'inicio';
-      else route();
     };
   };
   draw();
@@ -4596,11 +4618,13 @@ function saveFavs() {
 let FAVS = loadFavs();
 
 function syncFavUi() {
-  const pubRefs = new Set(getPublicUnits('ALL').map(v => v.ref));
-  const cleaned = FAVS.filter(r => pubRefs.has(r));
-  if (cleaned.length !== FAVS.length) {
-    FAVS = cleaned;
-    saveFavs();
+  if (PUBLIC_SYNC_DONE) {
+    const pubRefs = new Set(getPublicUnits('ALL').map(v => v.ref));
+    const cleaned = FAVS.filter(r => pubRefs.has(r));
+    if (cleaned.length !== FAVS.length) {
+      FAVS = cleaned;
+      saveFavs();
+    }
   }
   document.querySelectorAll('[data-fav]').forEach(btn => {
     const ref = btn.dataset.fav;
@@ -5897,7 +5921,7 @@ function renderApp() {
             <div class="alz-sim-row"><span>Ingresos mínimos (regla 3x)</span><b>${eur(cur.r * 3)} / mes</b></div>
           </div>
           <label style="margin-bottom:6px;font-size:.78rem">Tus ingresos netos mensuales (€)
-            <input id="alzIncomeInp" type="number" inputmode="decimal" min="0" max="1000000" step="50" value="${esc(alzadoIncome)}" placeholder="Ej: 3200">
+            <input id="alzIncomeInp" type="number" inputmode="decimal" min="0" max="1000000" step="any" value="${esc(alzadoIncome)}" placeholder="Ej: 3200">
           </label>
           <div id="alzRatioBox" class="alz-ratio-box ${incNum > 0 ? ratioCls : ''}">${ratioMsg}</div>`;
       }
@@ -6367,7 +6391,10 @@ function renderApp() {
     const portals = [...new Set(featUnits.map(v => String(v.portal || 'Portal A').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
 
     if ($('heroTag') && featuredPromo) {
-      $('heroTag').textContent = `${featuredPromo.isNew ? 'NUEVA PROMOCIÓN · OBRA NUEVA' : getPromoStatusMeta(featuredPromo).label.toUpperCase()} · ${featuredPromo.location.toUpperCase()}`;
+      const hasCustomHeroTag = sc.heroTag && sc.heroTag.trim() !== DEFAULT_SITE_CONTENT.heroTag.trim();
+      $('heroTag').textContent = (hasCustomHeroTag && featuredPromo.id === 'cadmia')
+        ? sc.heroTag
+        : `${featuredPromo.isNew ? 'NUEVA PROMOCIÓN · OBRA NUEVA' : getPromoStatusMeta(featuredPromo).label.toUpperCase()} · ${featuredPromo.location.toUpperCase()}`;
     }
     if ($('heroBtnUnits')) $('heroBtnUnits').textContent = `Explorar las ${pubUnits.length} viviendas`;
     if ($('homeStats')) {
@@ -6525,6 +6552,7 @@ function renderApp() {
       return;
     }
     bar.hidden = false;
+    bar.classList.toggle('has-cookie', Boolean($('cookieBar') && !$('cookieBar').hidden));
     $('chatFab')?.classList.add('has-cmp');
     $('chatPanel')?.classList.add('has-cmp');
     bar.innerHTML = `
@@ -6603,11 +6631,13 @@ function renderApp() {
       activeCatalogPromo = 'ALL';
     }
     const allPubUnits = getPublicUnits('ALL');
-    const pubRefSet = new Set(allPubUnits.map(v => v.ref));
-    const prunedFavs = FAVS.filter(r => pubRefSet.has(r));
-    if (prunedFavs.length !== FAVS.length) {
-      FAVS = prunedFavs;
-      saveFavs();
+    if (PUBLIC_SYNC_DONE) {
+      const pubRefSet = new Set(allPubUnits.map(v => v.ref));
+      const prunedFavs = FAVS.filter(r => pubRefSet.has(r));
+      if (prunedFavs.length !== FAVS.length) {
+        FAVS = prunedFavs;
+        saveFavs();
+      }
     }
     if ($('favCountChip')) $('favCountChip').textContent = String(FAVS.length);
     if ($('fSort')) $('fSort').value = F.sort;
@@ -7030,23 +7060,24 @@ function renderMiSolicitud() {
     const gBtn = $('pageGoogleBtn');
     gBtn.disabled = true;
     signInWithGoogle(user => {
-      if (isVerifiedAdmin()) {
-        notify(`Sesión iniciada como ${user.name}. Abre el desplegable superior para gestionar.`);
-        $('userMenu').classList.add('open');
-      } else {
-        notify(`Bienvenido, ${user.name}`);
-      }
-      location.hash = 'inicio';
+      const isAdm = isVerifiedAdmin();
+      notify(isAdm
+        ? `Sesión iniciada como ${user.name}. Abriendo panel de gestión…`
+        : `Bienvenido, ${user.name}`);
+      if (isAdm) location.hash = 'admin/promociones';
+      else renderMiSolicitud();
     }).finally(() => { if (gBtn) gBtn.disabled = false; });
   };
 
   if ($('pForgotPassBtn')) {
     $('pForgotPassBtn').onclick = async () => {
-      $('pLoginErr').hidden = true;
-      const res = await requestPasswordReset($('pLoginEmail').value);
+      if ($('pLoginErr')) $('pLoginErr').hidden = true;
+      const res = await requestPasswordReset($('pLoginEmail')?.value || '');
       if (!res.ok) {
-        $('pLoginErr').textContent = res.msg;
-        $('pLoginErr').hidden = false;
+        if ($('pLoginErr')) {
+          $('pLoginErr').textContent = res.msg;
+          $('pLoginErr').hidden = false;
+        }
       } else {
         notify(res.msg);
       }
@@ -7055,38 +7086,38 @@ function renderMiSolicitud() {
 
   $('pageLoginForm').onsubmit = async e => {
     e.preventDefault();
-    $('pLoginErr').hidden = true;
+    if ($('pLoginErr')) $('pLoginErr').hidden = true;
     const btn = $('pLoginSubmit');
     btn.disabled = true;
     btn.textContent = 'Accediendo…';
-    const res = await loginUser($('pLoginEmail').value, $('pLoginPass').value);
+    const res = await loginUser($('pLoginEmail')?.value || '', $('pLoginPass')?.value || '');
     if (!res.ok) {
-      btn.disabled = false;
-      btn.textContent = 'Acceder';
-      $('pLoginErr').textContent = res.msg;
-      $('pLoginErr').hidden = false;
+      if (btn) { btn.disabled = false; btn.textContent = 'Acceder'; }
+      if ($('pLoginErr')) {
+        $('pLoginErr').textContent = res.msg;
+        $('pLoginErr').hidden = false;
+      }
       return;
     }
-    if (isVerifiedAdmin()) {
-      notify(`Sesión iniciada como ${res.user.name}. Abre el desplegable superior para gestionar.`);
-      $('userMenu').classList.add('open');
-    } else {
-      notify(`Bienvenido, ${res.user.name}`);
-    }
-    location.hash = 'inicio';
+    const isAdm = isVerifiedAdmin();
+    notify(isAdm
+      ? `Sesión iniciada como ${res.user.name}. Abriendo panel de gestión…`
+      : `Bienvenido, ${res.user.name}`);
+    if (isAdm) location.hash = 'admin/promociones';
+    else renderMiSolicitud();
   };
 
   $('quickLookupBtn').onclick = async () => {
-    const em = $('quickLookupEmail').value.trim().toLowerCase();
-    const code = $('quickLookupCode').value.trim().toUpperCase();
+    const em = $('quickLookupEmail')?.value.trim().toLowerCase() || '';
+    const code = $('quickLookupCode')?.value.trim().toUpperCase() || '';
     if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
       notify('Introduce un correo electrónico válido');
-      $('quickLookupEmail').focus();
+      $('quickLookupEmail')?.focus();
       return;
     }
     if (code.length < 4) {
       notify('Introduce tu referencia SOL-... o los últimos 4 caracteres de tu DNI/NIE');
-      $('quickLookupCode').focus();
+      $('quickLookupCode')?.focus();
       return;
     }
     try {
@@ -7097,7 +7128,7 @@ function renderMiSolicitud() {
         SOLS = [...remote, ...SOLS.filter(s => s && !s.deleted && s.email !== em)];
       }
     } catch (_) {}
-    $('ls').innerHTML = renderSolicitudCards(em, { verificationCode: code });
+    if ($('ls')) $('ls').innerHTML = renderSolicitudCards(em, { verificationCode: code });
   };
 }
 
@@ -8715,14 +8746,41 @@ function renderAdmin(subTab) {
     $('admInvPromoSel').onchange = () => { adminInvPromo = $('admInvPromoSel').value; drawRows(); };
     $('admInvVisSel').onchange = () => { adminInvVis = $('admInvVisSel').value; drawRows(); };
 
+    const refreshInvPromoOptions = () => {
+      const sel = $('admInvPromoSel');
+      if (!sel) return;
+      sel.innerHTML = `<option value="ALL" ${adminInvPromo === 'ALL' ? 'selected' : ''}>Todas las promociones (${V.length})</option>` +
+        PROMOS.map(p => `<option value="${esc(p.id)}" ${adminInvPromo === p.id ? 'selected' : ''}>${esc(p.name)} (${getAllPromoUnits(p.id).length})</option>`).join('');
+    };
+
+    const persistUnitsBatch = async (targets) => {
+      saveV();
+      const ops = [];
+      targets.forEach(u => {
+        if (isValidDocKey(u.ref)) {
+          const clean = stripUndefinedDeep(u);
+          delete clean.deleted;
+          ops.push({ type: 'set', ref: doc(fbDb, 'viviendas', String(u.ref)), data: clean });
+        }
+      });
+      if (!ops.length) return true;
+      LOCAL_WRITE_EPOCH++;
+      try {
+        await commitFirestoreOpsBatched(ops);
+        FB_DB_ONLINE = true;
+        return true;
+      } catch (err) {
+        reportCloudWriteError('la actualización masiva de viviendas', err);
+        return false;
+      }
+    };
+
     const applyBulkVisibility = (predicate, nextActive, label) => {
       const scope = adminInvPromo === 'ALL' ? V : V.filter(v => (v.promoId || 'cadmia') === adminInvPromo);
       const targets = scope.filter(v => predicate(v) && (v.active !== false) !== nextActive);
       if (!targets.length) { notify('No hay viviendas que necesiten cambios'); return; }
-      targets.forEach(v => {
-        v.active = nextActive;
-        trackBgOp(cloudSaveUnit(v));
-      });
+      targets.forEach(v => { v.active = nextActive; });
+      trackBgOp(persistUnitsBatch(targets));
       refreshAdminHeaderCounts();
       refreshAllPropertyViews();
       drawRows();
@@ -8732,7 +8790,8 @@ function renderAdmin(subTab) {
     $('bulkActivateBtn').onclick = () => {
       const targets = getFilteredInv().filter(v => v.active === false);
       if (!targets.length) { notify('Todas las viviendas filtradas ya están activas'); return; }
-      targets.forEach(v => { v.active = true; trackBgOp(cloudSaveUnit(v)); });
+      targets.forEach(v => { v.active = true; });
+      trackBgOp(persistUnitsBatch(targets));
       refreshAdminHeaderCounts();
       refreshAllPropertyViews();
       drawRows();
@@ -8788,6 +8847,7 @@ function renderAdmin(subTab) {
         const v = V.find(x => x.ref === editBtn.dataset.editUnit);
         if (v) {
           openUnitEditorModal(v, () => {
+            refreshInvPromoOptions();
             drawRows();
             refreshAdminHeaderCounts();
           });
@@ -8799,6 +8859,7 @@ function renderAdmin(subTab) {
         const v = V.find(x => x.ref === delBtn.dataset.delUnit);
         if (v) {
           openDeleteUnitModal(v, () => {
+            refreshInvPromoOptions();
             drawRows();
             refreshAdminHeaderCounts();
           });
@@ -8808,6 +8869,7 @@ function renderAdmin(subTab) {
 
     $('addUnitBtn').onclick = () => {
       openUnitEditorModal(null, () => {
+        refreshInvPromoOptions();
         drawRows();
         refreshAdminHeaderCounts();
       }, adminInvPromo !== 'ALL' ? adminInvPromo : null);
@@ -8909,13 +8971,13 @@ function renderAdmin(subTab) {
         items: list.filter(s => {
           if (promoF !== 'ALL') {
             const pNames = getSolSheetNames(s).map(n => n.toLowerCase());
-            if (!pNames.includes(promoF.toLowerCase())) return false;
+            if (!pNames.includes(sanitizeSheetName(promoF).toLowerCase())) return false;
           }
           if (statusF !== 'ALL' && getSolOverallStatus(s) !== statusF) return false;
           if (solvF === 'ok' && !candSolMatchesSolv(s)) return false;
           if (solvF === 'aval' && candSolMatchesSolv(s)) return false;
           if (q) {
-            const refsStr = (s.selecciones || []).map(x => x.ref).join(' ');
+            const refsStr = (Array.isArray(s.selecciones) ? s.selecciones : []).map(x => x.ref).join(' ');
             const hay = `${s.nombre || ''} ${s.email || ''} ${s.telefono || ''} ${s.dni || ''} ${s.id || ''} ${refsStr}`.toLowerCase();
             if (!hay.includes(q)) return false;
           }
@@ -8942,8 +9004,10 @@ function renderAdmin(subTab) {
         return;
       }
       host.innerHTML = items.map(s => {
-        const maxRent = Math.floor(s.ingresos / 3);
-        const matchingOther = avail.filter(v => v.r <= maxRent && !s.selecciones.some(x => x.ref === v.ref));
+        const safeIngresos = Number(s.ingresos) || 0;
+        const safeSels = Array.isArray(s.selecciones) ? s.selecciones : [];
+        const maxRent = Math.floor(safeIngresos / 3);
+        const matchingOther = avail.filter(v => v.r <= maxRent && !safeSels.some(x => x.ref === v.ref));
         const replyMsg = buildCandidateReplyMessage(s);
         const waNum = formatWaPhone(s.telefono);
         const mailSubj = `Deltacor Properties · Candidatura ${s.id} (${getSolOverallStatus(s)})`;
@@ -8956,7 +9020,7 @@ function renderAdmin(subTab) {
             </div>
             <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
               <div style="text-align:right">
-                <div style="font-weight:800;color:var(--b1);font-size:1.05rem">Ingresos: ${eur(s.ingresos)}/mes</div>
+                <div style="font-weight:800;color:var(--b1);font-size:1.05rem">Ingresos: ${eur(safeIngresos)}/mes</div>
                 <div class="m">Renta máx. 3x: <b>${eur(maxRent)}/mes</b> · ${esc(s.fecha)}</div>
               </div>
               <button type="button" class="btn bad sm" data-reject-sol="${esc(s.id)}">Rechazar candidatura</button>
@@ -8964,9 +9028,9 @@ function renderAdmin(subTab) {
           </div>
 
           <div style="display:grid;gap:8px">
-            ${s.selecciones.map((sel, selIdx) => {
+            ${safeSels.map((sel, selIdx) => {
               const prop = V.find(v => v.ref === sel.ref);
-              const cumple = prop && s.ingresos >= prop.r * 3;
+              const cumple = prop && safeIngresos >= prop.r * 3;
               const curSt = normSolStatus(sel.estado);
               const cls = statusCls(curSt);
               return `
@@ -9035,15 +9099,20 @@ function renderAdmin(subTab) {
         </div>`;
       dlg.showModal();
 
+      let soldConfirmed = false;
       const revert = () => {
         dlg.oncancel = null;
         selectEl.value = prevState;
         dlg.close();
       };
+      dlg.addEventListener('close', () => {
+        if (!soldConfirmed) selectEl.value = prevState;
+      }, { once: true });
       $('soldCancelBtn').onclick = revert;
       dlg.oncancel = e => { e.preventDefault(); revert(); };
 
       $('soldConfirmBtn').onclick = () => {
+        soldConfirmed = true;
         const markUnit = Boolean($('soldMarkUnit')?.checked && prop);
         const soldPromo = prop ? getPromoById(prop.promoId || 'cadmia') : null;
         sol.selecciones[selIdx].estado = 'Vendido';
@@ -9067,7 +9136,7 @@ function renderAdmin(subTab) {
         trackBgOp(cloudSaveSol(sol));
         enqueueSheetOp('archive', sol, {}, sheetRes => {
           if (sheetRes?.outdatedScript) {
-            notify('Movida a Archivo en la web, pero actualiza Apps Script a v4.2 («Nueva versión») para usar hojas por promoción, Estado antes del Teléfono y Promoción en Archivo.');
+            notify('Movida a Archivo en la web, pero actualiza Apps Script a v4.4 («Nueva versión») para usar hojas por promoción, Estado antes del Teléfono y Promoción en Archivo.');
           } else if (sheetRes && !sheetRes.ok) {
             notify(`Movida a Archivo en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
           }
@@ -9137,7 +9206,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudSaveSol(sol));
           enqueueSheetOp('archive', sol, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Guardada en Archivo en la web, pero actualiza Apps Script a v4.2 («Nueva versión») para moverla en Excel.');
+              notify('Guardada en Archivo en la web, pero actualiza Apps Script a v4.4 («Nueva versión») para moverla en Excel.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Guardada en Archivo en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -9146,7 +9215,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudDeleteSol(sol.id, sol));
           enqueueSheetOp('delete', sol.id, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Eliminada de la web, pero actualiza Apps Script a v4.2 («Nueva versión») para borrar filas por promoción.');
+              notify('Eliminada de la web, pero actualiza Apps Script a v4.4 («Nueva versión») para borrar filas por promoción.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Eliminada de la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -9172,7 +9241,7 @@ function renderAdmin(subTab) {
         e.target.dataset.prev = newSt;
         renderCandCards();
 
-        cloudSaveSol(sol);
+        trackBgOp(cloudSaveSol(sol));
         const viviendasEstados = (sol.selecciones || []).map(x => `${x.ref} (${normSolStatus(x.estado)})`).join(' | ');
         if (getCfg().appsScriptUrl) {
           queueSheetUpsert(sol, { 6: getSolOverallStatus(sol), 14: viviendasEstados });
@@ -9254,7 +9323,7 @@ function renderAdmin(subTab) {
         btn.textContent = 'Reconstruir hojas';
         updateSheetSyncBadge();
         notify(res.outdatedScript
-          ? 'Actualiza Google Apps Script a v4.2 («Nueva versión») para reconstruir las hojas por promoción con Estado antes del Teléfono.'
+          ? 'Actualiza Google Apps Script a v4.4 («Nueva versión») para reconstruir las hojas por promoción con Estado antes del Teléfono.'
           : res.ok
             ? `Hojas por promoción reconstruidas (${activeNow.length} candidaturas activas en ${res.sheetsCount || 1} hoja${res.sheetsCount === 1 ? '' : 's'})`
             : 'No se pudo reconstruir Google Sheets. Revisa la URL de conexión.');
@@ -9368,10 +9437,10 @@ function renderAdmin(subTab) {
           btn.disabled = false;
           btn.innerHTML = `${ICO('check')} Sincronizar hoja Archivo`;
           notify(res.outdatedScript
-            ? 'Actualiza Google Apps Script a v4.2 e implementa una «Nueva versión».'
+            ? 'Actualiza Google Apps Script a v4.4 e implementa una «Nueva versión».'
             : res.ok
               ? `Hoja «Archivo» sincronizada en Google Sheets (${archNow.length} registros con Estado en color y columna Promoción)`
-              : `No se pudo sincronizar la hoja Archivo: ${res.error || 'revisa la URL de Apps Script v4.2'}`);
+              : `No se pudo sincronizar la hoja Archivo: ${res.error || 'revisa la URL de Apps Script v4.4'}`);
         };
       }
       if (hasLiveSync) renderScriptVersionBanner('archScriptBanner');
@@ -9428,7 +9497,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudSaveSol(sol));
           enqueueSheetOp('restore', sol, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Restaurada en la web, pero actualiza Apps Script a v4.2 («Nueva versión») para moverla a su hoja de promoción.');
+              notify('Restaurada en la web, pero actualiza Apps Script a v4.4 («Nueva versión») para moverla a su hoja de promoción.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Restaurada en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -9470,7 +9539,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudDeleteSol(sol.id, sol));
           enqueueSheetOp('delete', sol.id, { sheetName: ARCHIVE_SHEET_NAME }, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Eliminada de la web, pero actualiza Apps Script a v4.2 («Nueva versión») para borrarla del Excel.');
+              notify('Eliminada de la web, pero actualiza Apps Script a v4.4 («Nueva versión») para borrarla del Excel.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Eliminada de la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -9585,13 +9654,13 @@ function renderAdmin(subTab) {
               </div>
             </label>
             <div id="bImgPreviewWrap" ${editingPost?.image && isSafeImageSrc(editingPost.image) ? '' : 'hidden'}>
-              <img id="bImgPreview" class="blog-cover" src="${editingPost?.image && isSafeImageSrc(editingPost.image) ? esc(editingPost.image) : ''}" alt="Portada" style="max-height:150px;margin:0 0 12px">
+              <img id="bImgPreview" class="blog-cover" ${editingPost?.image && isSafeImageSrc(editingPost.image) ? `src="${esc(editingPost.image)}"` : ''} alt="Portada" style="max-height:150px;margin:0 0 12px">
             </div>
             <label>Contenido *
               <textarea id="bBody" rows="6" required placeholder="Escribe aquí el consejo práctico...">${esc(editingPost?.body || '')}</textarea>
             </label>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn sm" type="submit">${editingPost ? 'Guardar cambios' : 'Publicar en la web'}</button>
+              <button class="btn sm" type="submit" id="blogSubmitBtn">${editingPost ? 'Guardar cambios' : 'Publicar en la web'}</button>
               ${editingPost ? '<button type="button" class="btn g sm" id="cancelBlogEditBtn2">Cancelar</button>' : ''}
             </div>
           </form>
@@ -9607,8 +9676,8 @@ function renderAdmin(subTab) {
                   <div class="m" style="font-size:.8rem;margin-top:6px;line-height:1.45">${esc(String(b.body || '').slice(0, 140))}${String(b.body || '').length > 140 ? '…' : ''}</div>
                 </div>
                 <div style="display:flex;gap:6px;flex-shrink:0">
-                  <button type="button" class="btn sm" data-edit-blog="${b.id}">${ICO('edit')} Editar</button>
-                  <button type="button" class="btn bad sm" data-del-blog="${b.id}">Eliminar</button>
+                  <button type="button" class="btn sm" data-edit-blog="${esc(b.id)}">${ICO('edit')} Editar</button>
+                  <button type="button" class="btn bad sm" data-del-blog="${esc(b.id)}">Eliminar</button>
                 </div>
               </div>
             </div>`).join('')}
@@ -9616,11 +9685,17 @@ function renderAdmin(subTab) {
       </div>`;
 
       const syncImgPreview = () => {
-        const val = $('bImg').value.trim();
+        const inp = $('bImg');
+        const wrap = $('bImgPreviewWrap');
+        const imgEl = $('bImgPreview');
+        const clr = $('bImgClear');
+        if (!inp || !wrap || !imgEl || !clr) return;
+        const val = inp.value.trim();
         const ok = isSafeImageSrc(val);
-        $('bImgPreviewWrap').hidden = !ok;
-        $('bImgClear').hidden = !val;
-        if (ok) $('bImgPreview').src = val;
+        wrap.hidden = !ok;
+        clr.hidden = !val;
+        if (ok) imgEl.src = val;
+        else imgEl.removeAttribute('src');
       };
 
       $('bImg').oninput = syncImgPreview;
@@ -9634,6 +9709,11 @@ function renderAdmin(subTab) {
         if (!f) return;
         try {
           const dataUrl = await compressImageFile(f, 1000, 0.76);
+          if (dataUrl.length > 650000) {
+            notify('La imagen supera el límite recomendado (~650 KB). Usa otra imagen o pega una URL.');
+            return;
+          }
+          if (!$('bImg')) return;
           $('bImg').value = dataUrl;
           syncImgPreview();
           notify('Imagen de portada cargada');
@@ -9649,32 +9729,44 @@ function renderAdmin(subTab) {
       if ($('cancelBlogEditBtn')) $('cancelBlogEditBtn').onclick = cancelEdit;
       if ($('cancelBlogEditBtn2')) $('cancelBlogEditBtn2').onclick = cancelEdit;
 
-      $('newBlogForm').onsubmit = e => {
+      $('newBlogForm').onsubmit = async e => {
         e.preventDefault();
         const title = $('bTitle').value.trim();
-        const cat = $('bCat').value.trim();
+        const cat = $('bCat').value.trim() || 'Guía Inquilinos';
         const date = $('bDate').value.trim() || defaultDate;
         const bodyTxt = $('bBody').value.trim();
         const imgRaw = $('bImg').value.trim();
+        if (title.length < 3) {
+          notify('Escribe un título válido para el artículo');
+          $('bTitle').focus();
+          return;
+        }
+        if (bodyTxt.length < 10) {
+          notify('Escribe el contenido del artículo (mínimo 10 caracteres)');
+          $('bBody').focus();
+          return;
+        }
         if (imgRaw && !isSafeImageSrc(imgRaw)) {
           notify('La URL de imagen no es válida (debe empezar por https:// o ser una foto subida)');
           $('bImg').focus();
           return;
         }
 
+        const subBtn = $('blogSubmitBtn');
+        if (subBtn?.disabled) return;
+        const prevTxt = subBtn ? subBtn.textContent : '';
+        if (subBtn) { subBtn.disabled = true; subBtn.textContent = 'Guardando…'; }
+
+        let targetPost;
         if (editingPost) {
           editingPost.title = title;
           editingPost.cat = cat;
           editingPost.date = date;
           editingPost.body = bodyTxt;
           editingPost.image = imgRaw;
-          trackBgOp(cloudSaveBlog(editingPost));
-          editingBlogId = null;
-          renderBlogList();
-          drawBlogAdmin();
-          notify('Publicación actualizada correctamente');
+          targetPost = editingPost;
         } else {
-          const post = {
+          targetPost = {
             id: Date.now(),
             title,
             cat,
@@ -9682,11 +9774,16 @@ function renderAdmin(subTab) {
             image: imgRaw,
             body: bodyTxt
           };
-          BLOG.unshift(post);
-          trackBgOp(cloudSaveBlog(post));
-          renderBlogList();
-          drawBlogAdmin();
-          notify('Artículo publicado en Consejos');
+          BLOG.unshift(targetPost);
+        }
+
+        const ok = await cloudSaveBlog(targetPost);
+        if (subBtn) { subBtn.disabled = false; subBtn.textContent = prevTxt; }
+        editingBlogId = null;
+        renderBlogList();
+        drawBlogAdmin();
+        if (ok) {
+          notify(editingPost ? 'Publicación actualizada y guardada en Firestore' : 'Artículo publicado y guardado en Firestore');
         }
       };
     };
@@ -9738,7 +9835,7 @@ function renderAdmin(subTab) {
                 <b>${esc(a.name || a.email)}</b> <span class="st D">Admin Cloud</span>
                 <div class="m" style="font-size:.8rem">${esc(a.email)}</div>
               </div>
-              ${a.email !== CURRENT_USER.email ? `<button class="btn bad sm" data-del-admin="${esc(a.email)}">Revocar</button>` : '<span class="m">Tu sesión</span>'}
+              ${String(a.email || '').toLowerCase() !== String(CURRENT_USER?.email || '').toLowerCase() ? `<button type="button" class="btn bad sm" data-del-admin="${esc(a.email)}">Revocar</button>` : '<span class="m">Tu sesión</span>'}
             </div>`).join('') : '<p class="m">Aún no hay documentos en la colección <code>admins</code> de Firestore o no se han cargado.</p>'}
         </div>
       </div>
@@ -9753,7 +9850,8 @@ function renderAdmin(subTab) {
     };
 
     body.onclick = async e => {
-      const em = e.target.dataset.delAdmin;
+      const delBtn = e.target.closest('[data-del-admin]');
+      const em = delBtn?.dataset.delAdmin;
       if (em && await cloudRemoveAdmin(em)) {
         renderAdmin('usuarios');
         notify('Permiso de administrador revocado');
@@ -9958,8 +10056,8 @@ function renderAdmin(subTab) {
         }
         promoDraft[idx].src = dataUrl;
         promoDraft[idx].file = f.name || promoDraft[idx].file;
-        $(`scPPUrl_${idx}`).value = '';
-        $(`scPPImg_${idx}`).src = dataUrl;
+        if ($(`scPPUrl_${idx}`)) $(`scPPUrl_${idx}`).value = '';
+        if ($(`scPPImg_${idx}`)) $(`scPPImg_${idx}`).src = dataUrl;
         notify(`Foto #${idx + 1} cargada (pulsa Guardar cambios para publicar)`);
       } catch (err) {
         showPpErr(err.message || 'No se pudo procesar la imagen');
@@ -9974,11 +10072,11 @@ function renderAdmin(subTab) {
       if (!val) {
         if (!String(promoDraft[idx].src || '').startsWith('data:')) {
           promoDraft[idx].src = '';
-          $(`scPPImg_${idx}`).src = (DEMO_PHOTOS[idx] || DEMO_PHOTOS[0]).src;
+          if ($(`scPPImg_${idx}`)) $(`scPPImg_${idx}`).src = (DEMO_PHOTOS[idx] || DEMO_PHOTOS[0]).src;
         }
       } else if (isSafeImageSrc(val)) {
         promoDraft[idx].src = val;
-        $(`scPPImg_${idx}`).src = val;
+        if ($(`scPPImg_${idx}`)) $(`scPPImg_${idx}`).src = val;
       }
     };
 
@@ -9987,8 +10085,8 @@ function renderAdmin(subTab) {
       if (!btn) return;
       const idx = Number(btn.dataset.scPpReset);
       promoDraft[idx].src = '';
-      $(`scPPUrl_${idx}`).value = '';
-      $(`scPPImg_${idx}`).src = (DEMO_PHOTOS[idx] || DEMO_PHOTOS[0]).src;
+      if ($(`scPPUrl_${idx}`)) $(`scPPUrl_${idx}`).value = '';
+      if ($(`scPPImg_${idx}`)) $(`scPPImg_${idx}`).src = (DEMO_PHOTOS[idx] || DEMO_PHOTOS[0]).src;
       notify(`Foto #${idx + 1} restaurada a imagen demo`);
     };
 
@@ -10005,18 +10103,18 @@ function renderAdmin(subTab) {
         </div>`;
       dlg.showModal();
       $('scResCancel').onclick = () => dlg.close();
-      $('scResConfirm').onclick = () => {
+      $('scResConfirm').onclick = async () => {
         dlg.close();
         SITE_CONTENT = mergeSiteContent(DEFAULT_SITE_CONTENT);
         saveSiteContent();
         refreshAllPropertyViews();
-        trackBgOp(cloudSaveSiteContent(SITE_CONTENT));
+        const ok = await cloudSaveSiteContent(SITE_CONTENT);
         renderAdmin('web');
-        notify('Contenido web restaurado a valores originales');
+        if (ok) notify('Contenido web restaurado y guardado en Firestore');
       };
     };
 
-    $('siteContentForm').onsubmit = e => {
+    $('siteContentForm').onsubmit = async e => {
       e.preventDefault();
       const mapUrl = $('scMapUrl').value.trim();
       if (mapUrl && !isSafeMapUrl(mapUrl)) {
@@ -10034,6 +10132,11 @@ function renderAdmin(subTab) {
         promoDraft[i].src = typedUrl ? typedUrl : (String(promoDraft[i].src || '').startsWith('data:') ? promoDraft[i].src : '');
         promoDraft[i].caption = $(`scPPCap_${i}`).value.trim() || DEFAULT_SITE_CONTENT.promoPhotos[i].caption;
       }
+
+      const submitBtns = Array.from($('siteContentForm').querySelectorAll('button[type="submit"]'));
+      if (submitBtns.some(b => b.disabled)) return;
+      const prevLabels = submitBtns.map(b => b.innerHTML);
+      submitBtns.forEach(b => { b.disabled = true; b.textContent = 'Guardando…'; });
 
       const nextContent = mergeSiteContent({
         heroTag: $('scHeroTag').value.trim() || DEFAULT_SITE_CONTENT.heroTag,
@@ -10074,8 +10177,9 @@ function renderAdmin(subTab) {
       SITE_CONTENT = nextContent;
       saveSiteContent();
       refreshAllPropertyViews();
-      trackBgOp(cloudSaveSiteContent(SITE_CONTENT));
-      notify('Contenido de la web guardado y publicado');
+      const ok = await cloudSaveSiteContent(SITE_CONTENT);
+      submitBtns.forEach((b, idx) => { b.disabled = false; b.innerHTML = prevLabels[idx]; });
+      if (ok) notify('Contenido de la web guardado y publicado en Firestore');
     };
   }
 
