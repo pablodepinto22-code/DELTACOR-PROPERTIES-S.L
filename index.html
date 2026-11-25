@@ -2697,10 +2697,11 @@ const checkRateLimit = (key, cooldownMs = 15000) => {
   const now = Date.now();
   const prev = RATE_LIMIT_MAP.get(key) || 0;
   if (now - prev < cooldownMs) {
-    return { allowed: false, waitSec: Math.ceil((cooldownMs - (now - prev)) / 1000) };
+    const waitSec = Math.max(1, Math.ceil((cooldownMs - (now - prev)) / 1000));
+    return { ok: false, allowed: false, waitSec };
   }
   RATE_LIMIT_MAP.set(key, now);
-  return { allowed: true, waitSec: 0 };
+  return { ok: true, allowed: true, waitSec: 0 };
 };
 
 const isValidPhone = raw => {
