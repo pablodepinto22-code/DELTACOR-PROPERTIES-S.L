@@ -4684,13 +4684,8 @@ function openWaitlistModal(unit) {
       errEl.hidden = false;
       return;
     }
-    const rl = checkRateLimit('waitlist', 15000);
-    if (!rl.ok) {
-      errEl.textContent = `Espera ${rl.waitSec} segundos antes de enviar otro aviso.`;
-      errEl.hidden = false;
-      return;
-    }
     const btn = $('wlSubmitBtn');
+    if (btn.disabled) return;
     btn.disabled = true;
     btn.textContent = 'Enviando…';
     try {
@@ -4893,7 +4888,7 @@ function renderUniqueForm(preselectedRef = null) {
 
     <div class="row">
       <label>8. Ingresos netos mensuales totales (€) *
-        <input id="in" type="number" inputmode="decimal" min="0" max="1000000" step="50" required placeholder="Ej. 3200">
+        <input id="in" type="number" inputmode="decimal" min="0" max="1000000" step="any" required placeholder="Ej. 3200">
       </label>
       <label>9. ¿Dispones de aval si no alcanzas solvencia? *
         <select id="av">
@@ -5055,11 +5050,8 @@ function bindUniqueForm(hostRoot = document) {
     }
     if (!fm.checkValidity()) { fm.reportValidity(); return; }
 
-    const rl = checkRateLimit('apply-form', 15000);
-    if (!rl.ok) {
-      notify(`Espera ${rl.waitSec} segundos antes de enviar otra candidatura`);
-      return;
-    }
+    const submitBtn = fm.querySelector('button[type="submit"]');
+    if (submitBtn?.disabled) return;
 
     const habs = [...fm.querySelectorAll('input[name="hab"]:checked')].map(c => Number(c.value));
     const payload = {
@@ -5082,7 +5074,6 @@ function bindUniqueForm(hostRoot = document) {
     };
     payload.promoName = getSolPromoLabel(payload);
 
-    const submitBtn = fm.querySelector('button[type="submit"]');
     const prevBtnTxt = submitBtn ? submitBtn.textContent : '';
     if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Enviando candidatura…'; }
 
@@ -6771,12 +6762,8 @@ function renderApp() {
       notify('Completa correctamente tu nombre, email y mensaje');
       return;
     }
-    const rl = checkRateLimit('quick-contact', 15000);
-    if (!rl.ok) {
-      notify(`Espera ${rl.waitSec} segundos antes de enviar otra consulta`);
-      return;
-    }
     const btn = $('qcSubmit');
+    if (btn.disabled) return;
     btn.disabled = true;
     btn.textContent = 'Enviando…';
     const res = await sendWeb3Forms({
@@ -7023,11 +7010,6 @@ function renderMiSolicitud() {
     if (code.length < 4) {
       notify('Introduce tu referencia SOL-... o los últimos 4 caracteres de tu DNI/NIE');
       $('quickLookupCode').focus();
-      return;
-    }
-    const rl = checkRateLimit('quick-lookup', 2500);
-    if (!rl.ok) {
-      notify(`Espera ${rl.waitSec} segundos antes de consultar de nuevo`);
       return;
     }
     try {
@@ -11181,12 +11163,6 @@ function initFloatingChat() {
     if (message.length < 5 || message.length > 1500) {
       setError('Escribe tu consulta (mínimo 5 caracteres).');
       msgIn.focus();
-      return;
-    }
-
-    const rl = checkRateLimit('chat-mail', 15000);
-    if (!rl.ok) {
-      setError(`Espera ${rl.waitSec} segundos antes de enviar otra consulta.`);
       return;
     }
 
