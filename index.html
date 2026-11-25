@@ -52,6 +52,10 @@
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/13.4.0/firebase-analytics.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -130,10 +134,15 @@ header{position:sticky;top:0;z-index:50;background:var(--hd);backdrop-filter:blu
 
 /* Main & Views */
 main{position:relative;z-index:1;max-width:1240px;width:100%;margin:auto;padding:0 24px 80px;flex:1;overflow-x:clip}
-.view{display:none}.view.on{display:block;animation:fadeUp .26s ease}
+.view{display:none}.view.on{display:block;animation:fadeUp .26s ease}.view.on.no-anim{animation:none}
+.app-boot{min-height:72vh;display:grid;place-items:center;padding:48px 16px}
+.app-boot-inner{display:inline-flex;align-items:center;gap:10px;color:var(--mut);font-weight:600;font-size:.9rem;opacity:0;animation:bootShow .22s ease .22s forwards}
+.app-boot-spin{width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--b1);border-radius:50%;animation:bootSpin .75s linear infinite}
 .split>*,.ficha-hero>*,.alz-layout>*,.hero>*,.row>*,.row3>*,.edit-grid>*,.edit-grid-2>*,.filter-inputs>*,.promos-grid>*,.grid>*{min-width:0}
 .panel,.alz-building,.alz-inspector,.gallery-stage,.filter-bar,.promo-box{min-width:0;max-width:100%}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}}
+@keyframes bootShow{to{opacity:1}}
+@keyframes bootSpin{to{transform:rotate(360deg)}}
 
 /* Hero */
 .hero{display:grid;grid-template-columns:1fr 1.06fr;gap:34px;align-items:center;padding:42px 0 28px}
@@ -1042,6 +1051,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
   .chat-fab,.chat-panel,.chat-backdrop,.mob-tab{transition:none}
 }
 </style>
+<script>try{var t=localStorage.getItem('inv-theme');if(t!=='dark'&&t!=='light')t=matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(_){}</script>
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -1055,7 +1065,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
         <img class="brand-logo-img" id="brandLogoImg" src="./logo-deltacor.png" alt="Deltacor Properties">
       </span>
     </a>
-    <nav class="links" id="nl" aria-label="Navegación principal"></nav>
+    <nav class="links" id="nl" aria-label="Navegación principal"><a href="#inicio" data-r="inicio">Inicio</a><a href="#promociones" data-r="promociones">Promociones</a><a href="#viviendas" data-r="viviendas">Viviendas</a><a href="#alzado" data-r="alzado">Alzado</a><a href="#condiciones" data-r="condiciones">Condiciones</a><a href="#quienes" data-r="quienes">Quiénes somos</a><a href="#consejos" data-r="consejos">Consejos</a><a href="#contacto" data-r="contacto">Solicitar</a><a href="#mi-solicitud" data-r="mi-solicitud">Mi solicitud</a></nav>
     <div class="nav-acts">
       <button type="button" class="user-pill" id="userBtn" aria-expanded="false" aria-haspopup="true">
         <span id="userBtnLabel"><span class="lbl-full">Iniciar sesión</span><span class="lbl-short">Acceder</span></span>
@@ -1067,7 +1077,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
   </div>
 </header>
 
-<main id="app"></main>
+<main id="app"><div class="app-boot" aria-busy="true" aria-label="Cargando Deltacor Properties"><div class="app-boot-inner"><span class="app-boot-spin" aria-hidden="true"></span><span>Cargando Deltacor Properties…</span></div></div></main>
 
 <div class="cookie-bar" id="cookieBar" role="region" aria-label="Preferencias de cookies" hidden>
   <div style="flex:1;min-width:240px;font-size:.85rem">
@@ -3023,20 +3033,41 @@ async function resolveUserRoleFast(email) {
       setSession({ ...CURRENT_USER, role: 'admin' });
       refreshAllPropertyViews();
       triggerBackgroundSync();
-      route();
+      route({ silent: true });
     }
   });
   return isConfiguredAdminEmail(em) ? 'admin' : 'candidate';
 }
 
 function triggerBackgroundSync() {
+  const prevOnline = FB_DB_ONLINE;
+  const prevProtectedSig = JSON.stringify({ s: SOLS, a: CLOUD_ADMINS });
   syncProtectedData().then(async () => {
     if (isVerifiedAdmin() && PUBLIC_SYNC_DONE && !AUTO_REPAIR_RAN) {
       AUTO_REPAIR_RAN = true;
       await ensureCadmiaUnitsAndPromos({ persistToCloud: true });
     }
+    const nextProtectedSig = JSON.stringify({ s: SOLS, a: CLOUD_ADMINS });
+    const protectedChanged = nextProtectedSig !== prevProtectedSig || FB_DB_ONLINE !== prevOnline;
     const h = (location.hash || '').replace(/^#/, '');
-    if (h.startsWith('admin') || h === 'mi-solicitud') route();
+    if (h === 'mi-solicitud') {
+      if (protectedChanged) route({ silent: true });
+      return;
+    }
+    if (h.startsWith('admin') && isVerifiedAdmin()) {
+      const activeSub = (h.split('/')[1] || adminTab || 'promociones').toLowerCase();
+      const needsFullAdminRedraw = ['candidatos', 'archivo', 'usuarios', 'config'].includes(activeSub) || !$('admTabs');
+      if (needsFullAdminRedraw) {
+        if (protectedChanged || !$('admTabs')) route({ silent: true });
+      } else if (protectedChanged) {
+        const activeSolsCount = getActiveSols().length;
+        const archivedSolsCount = getArchivedSols().length;
+        if ($('admStatActive')) $('admStatActive').textContent = String(activeSolsCount);
+        if ($('admStatArch')) $('admStatArch').textContent = String(archivedSolsCount);
+        if ($('admTabCand')) $('admTabCand').innerHTML = `${ICO('users')} Candidaturas (${activeSolsCount})`;
+        if ($('admTabArch')) $('admTabArch').innerHTML = `${ICO('file')} Archivo (${archivedSolsCount})`;
+      }
+    }
   });
 }
 
@@ -3413,7 +3444,7 @@ function refreshAllPropertyViews() {
   if (window.applySiteContent) window.applySiteContent();
   if (window.renderPromocionesPage) window.renderPromocionesPage();
   if (window.renderCatalog) window.renderCatalog();
-  if (window.refreshInicio) window.refreshInicio();
+  if (window.refreshInicio) window.refreshInicio({ includePromos: false });
   if (window.renderBuildingExplorer) window.renderBuildingExplorer();
   if (window.renderCompareBar) window.renderCompareBar();
 }
@@ -3941,7 +3972,7 @@ async function ensureCadmiaUnitsAndPromos({ persistToCloud = false, forceRepair4
         FB_DB_ONLINE = true;
         FB_VIVIENDAS_EMPTY = false;
         refreshAllPropertyViews();
-        if (location.hash.startsWith('#admin')) route();
+        if (location.hash.startsWith('#admin')) route({ silent: true });
         if (dirtyUnits.size || dirtyPromos.size) {
           notify(`«${cadmiaPromo.name}» sincronizada en Firestore (${getAllPromoUnits(cadmiaId).length} viviendas)`);
         }
@@ -4005,6 +4036,17 @@ async function cloudSeedAll() {
 
 async function syncPublicData() {
   const startEpoch = LOCAL_WRITE_EPOCH;
+  const prevOnline = FB_DB_ONLINE;
+  const buildPublicRenderSig = () => JSON.stringify({
+    p: PROMOS.map(({ createdAt, updatedAt, ...rest }) => rest),
+    v: V.map(({ updatedAt, ...rest }) => rest),
+    sc: SITE_CONTENT
+  });
+  const buildPromosRenderSig = () => JSON.stringify(PROMOS.map(({ createdAt, updatedAt, ...rest }) => rest));
+  const prevPublicSig = buildPublicRenderSig();
+  const prevBlogSig = JSON.stringify(BLOG);
+  const prevPromosSig = buildPromosRenderSig();
+  const prevUnitsMap = new Map(V.map(u => [u.ref, JSON.stringify(u)]));
   try {
     const [pSnap, vSnap, bSnap, cSnap, scSnap] = await Promise.all([
       getDocs(collection(fbDb, 'promociones')).catch(() => ({ empty: true, docs: [] })),
@@ -4053,7 +4095,7 @@ async function syncPublicData() {
         .filter(b => b && !b.deleted)
         .sort((a, b) => Number(b.id) - Number(a.id));
       saveBlog();
-      if (window.renderBlogList) renderBlogList();
+      if (window.renderBlogList && JSON.stringify(BLOG) !== prevBlogSig) renderBlogList();
     }
     if (cSnap && cSnap.exists()) {
       const remote = cSnap.data();
@@ -4072,9 +4114,20 @@ async function syncPublicData() {
     const canPersist = isVerifiedAdmin();
     if (canPersist) AUTO_REPAIR_RAN = true;
     await ensureCadmiaUnitsAndPromos({ persistToCloud: canPersist });
-    refreshAllPropertyViews();
-    if (AUTH_INITIALIZED || !location.hash.startsWith('#admin')) {
-      route();
+    const nextPublicSig = buildPublicRenderSig();
+    const publicChanged = nextPublicSig !== prevPublicSig;
+    if (publicChanged) {
+      refreshAllPropertyViews();
+    }
+    syncFavUi();
+    if (location.hash.startsWith('#admin') && AUTH_INITIALIZED && isVerifiedAdmin()) {
+      if (publicChanged || prevOnline !== FB_DB_ONLINE) route({ silent: true });
+    } else if (location.hash.startsWith('#ficha/')) {
+      const curRef = safeDecodeParam(location.hash.slice(7));
+      const nextUnit = V.find(u => u.ref === curRef) || null;
+      const unitChanged = (prevUnitsMap.get(curRef) || 'null') !== JSON.stringify(nextUnit);
+      const promosChanged = buildPromosRenderSig() !== prevPromosSig;
+      if (unitChanged || promosChanged) route({ silent: true });
     }
   } catch (_) {
     FB_DB_ONLINE = false;
@@ -4449,7 +4502,7 @@ function updateUserHeader() {
       setSession(null);
       notify('Sesión cerrada');
       if (location.hash.startsWith('#admin')) location.hash = 'inicio';
-      else route();
+      else route({ silent: true });
     };
   }
 }
@@ -4515,7 +4568,7 @@ function openAuthModal(defaultEmail = '') {
         notify(isAdm
           ? `Bienvenido, ${user.name}. Desplegable de administración activado.`
           : `Bienvenido, ${user.name}`);
-        if (location.hash === '#mi-solicitud' || location.hash.startsWith('#admin')) route();
+        if (location.hash === '#mi-solicitud' || location.hash.startsWith('#admin')) route({ silent: true });
         else refreshAllPropertyViews();
         if (isAdm) {
           requestAnimationFrame(() => {
@@ -4551,7 +4604,7 @@ function openAuthModal(defaultEmail = '') {
       notify(isAdm
         ? `Bienvenido, ${res.user.name}. Desplegable de administración activado.`
         : `Bienvenido, ${res.user.name}`);
-      if (location.hash === '#mi-solicitud' || location.hash.startsWith('#admin')) route();
+      if (location.hash === '#mi-solicitud' || location.hash.startsWith('#admin')) route({ silent: true });
       else refreshAllPropertyViews();
       if (isAdm) {
         requestAnimationFrame(() => {
@@ -4601,7 +4654,12 @@ const NAV_ITEMS = [
   ['contacto', 'Solicitar'],
   ['mi-solicitud', 'Mi solicitud']
 ];
-$('nl').innerHTML = NAV_ITEMS.map(r => `<a href="#${r[0]}" data-r="${r[0]}">${r[1]}</a>`).join('');
+if ($('nl').children.length !== NAV_ITEMS.length) {
+  $('nl').innerHTML = NAV_ITEMS.map(r => `<a href="#${r[0]}" data-r="${r[0]}">${r[1]}</a>`).join('');
+} else {
+  const navVivInit = $('nl').querySelector('a[data-r="viviendas"]');
+  if (navVivInit) navVivInit.textContent = `Viviendas (${getPublicUnits().length})`;
+}
 
 let SEL = [];
 let CMP = [];
@@ -4629,13 +4687,18 @@ function syncFavUi() {
   document.querySelectorAll('[data-fav]').forEach(btn => {
     const ref = btn.dataset.fav;
     const on = FAVS.includes(ref);
-    btn.classList.toggle('on', on);
-    btn.setAttribute('aria-pressed', String(on));
-    btn.title = on ? 'Quitar de favoritas' : 'Guardar en favoritas';
+    if (btn.classList.contains('on') !== on) btn.classList.toggle('on', on);
+    const pressedStr = String(on);
+    if (btn.getAttribute('aria-pressed') !== pressedStr) btn.setAttribute('aria-pressed', pressedStr);
+    const nextTitle = on ? 'Quitar de favoritas' : 'Guardar en favoritas';
+    if (btn.title !== nextTitle) btn.title = nextTitle;
     const lbl = btn.querySelector('.fav-lbl');
-    if (lbl) lbl.textContent = on ? ' Guardada' : ' Favorita';
+    const nextLbl = on ? ' Guardada' : ' Favorita';
+    if (lbl && lbl.textContent !== nextLbl) lbl.textContent = nextLbl;
   });
-  if ($('favCountChip')) $('favCountChip').textContent = String(FAVS.length);
+  if ($('favCountChip') && $('favCountChip').textContent !== String(FAVS.length)) {
+    $('favCountChip').textContent = String(FAVS.length);
+  }
 }
 
 function toggleFav(ref) {
@@ -6322,14 +6385,18 @@ function renderApp() {
 
     const promoPhotos = getPromoPhotos();
     if ($('promoGallery')) {
-      $('promoGallery').innerHTML = promoPhotos.map((ph, idx) => `
-        <div class="pg-item ${idx === 0 ? 'pg-main' : ''}" data-lightbox-idx="${idx}">
-          <img src="${esc(ph.src)}" alt="${esc(ph.caption)}" loading="lazy">
-          <div class="pg-cap">
-            <span>${esc(ph.caption)}</span>
-            <small>${esc(ph.file)}</small>
-          </div>
-        </div>`).join('');
+      const gallerySig = JSON.stringify(promoPhotos.map(ph => [ph.src, ph.caption, ph.file]));
+      if ($('promoGallery').dataset.sig !== gallerySig) {
+        $('promoGallery').dataset.sig = gallerySig;
+        $('promoGallery').innerHTML = promoPhotos.map((ph, idx) => `
+          <div class="pg-item ${idx === 0 ? 'pg-main' : ''}" data-lightbox-idx="${idx}">
+            <img src="${esc(ph.src)}" alt="${esc(ph.caption)}" loading="lazy">
+            <div class="pg-cap">
+              <span>${esc(ph.caption)}</span>
+              <small>${esc(ph.file)}</small>
+            </div>
+          </div>`).join('');
+      }
     }
     if ($('promoGrid')) {
       $('promoGrid').innerHTML = sc.calidades.map(item => `
@@ -6363,7 +6430,10 @@ function renderApp() {
     if ($('oficinaMapWrap')) {
       const candidateMap = String(sc.mapUrl || '').trim();
       const safeMap = isSafeMapUrl(candidateMap) ? candidateMap : DEFAULT_SITE_CONTENT.mapUrl;
-      $('oficinaMapWrap').innerHTML = `<iframe title="Mapa de ubicación" width="100%" height="210" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin" src="${esc(safeMap)}"></iframe>`;
+      const curMapIframe = $('oficinaMapWrap').querySelector('iframe');
+      if (!curMapIframe || curMapIframe.getAttribute('src') !== safeMap) {
+        $('oficinaMapWrap').innerHTML = `<iframe title="Mapa de ubicación" width="100%" height="210" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin" src="${esc(safeMap)}"></iframe>`;
+      }
     }
     if ($('legalBox')) {
       $('legalBox').innerHTML = `
@@ -6376,7 +6446,7 @@ function renderApp() {
     }
   };
 
-  window.refreshInicio = () => {
+  window.refreshInicio = (opts = {}) => {
     const sc = SITE_CONTENT;
     const isAdmin = isVerifiedAdmin();
     const promoPhotos = getPromoPhotos();
@@ -6404,7 +6474,7 @@ function renderApp() {
         <div><b>${dispNow.length}</b><span>Disponibles ahora</span></div>
         <div><b>${pubUnits.length ? `desde ${eur(minNow)}` : 'Próximamente'}</b><span>Renta mensual</span></div>`;
     }
-    renderPromocionesPage();
+    if (opts.includePromos !== false) renderPromocionesPage();
 
     if ($('homeFeatured')) {
       $('homeFeatured').innerHTML = dispNow.length
@@ -6414,19 +6484,23 @@ function renderApp() {
     if ($('homeQrShowcase')) {
       const qrUrl = getCfg().baseUrl + '?qr=1#viviendas';
       const qrSub = featuredPromo ? `${featuredPromo.name.toUpperCase()} · OBRA NUEVA` : 'DELTACOR PROPERTIES · OBRA NUEVA';
-      $('homeQrShowcase').innerHTML = `
-        <div class="qr-box-frame">${makeQrSvg(qrUrl, 'DELTACOR PROPERTIES', `CATÁLOGO ${pubUnits.length} VIVIENDAS`)}</div>
-        <div>
-          <span class="tag" style="margin-bottom:8px">CÓDIGO QR ESCANEABLE · CARTELERÍA Y FOLLETOS</span>
-          <h3 style="font-size:1.4rem;margin-bottom:6px">Acceso móvil directo a Deltacor Properties</h3>
-          <p class="m" style="margin-bottom:12px">Este código QR cumple el estándar <b>ISO/IEC 18004</b> y es 100 % escaneable desde cualquier teléfono. Dirige directamente al catálogo actualizado de promociones y viviendas activas.</p>
-          <div class="cta">
-            <button type="button" class="btn sm" id="homeDlQrPng">${ICO('download')} Descargar PNG Alta Res.</button>
-            <button type="button" class="btn g sm" id="homeDlQrSvg">${ICO('file')} Descargar SVG Vectorial</button>
-          </div>
-        </div>`;
-      $('homeDlQrPng').onclick = () => downloadQrPng(qrUrl, 'QR_General_Deltacor_Properties', 'DELTACOR PROPERTIES', qrSub);
-      $('homeDlQrSvg').onclick = () => downloadQrSvg(qrUrl, 'QR_General_Deltacor_Properties', 'DELTACOR PROPERTIES', qrSub);
+      const qrSig = `${qrUrl}|${pubUnits.length}|${qrSub}`;
+      if ($('homeQrShowcase').dataset.sig !== qrSig) {
+        $('homeQrShowcase').dataset.sig = qrSig;
+        $('homeQrShowcase').innerHTML = `
+          <div class="qr-box-frame">${makeQrSvg(qrUrl, 'DELTACOR PROPERTIES', `CATÁLOGO ${pubUnits.length} VIVIENDAS`)}</div>
+          <div>
+            <span class="tag" style="margin-bottom:8px">CÓDIGO QR ESCANEABLE · CARTELERÍA Y FOLLETOS</span>
+            <h3 style="font-size:1.4rem;margin-bottom:6px">Acceso móvil directo a Deltacor Properties</h3>
+            <p class="m" style="margin-bottom:12px">Este código QR cumple el estándar <b>ISO/IEC 18004</b> y es 100 % escaneable desde cualquier teléfono. Dirige directamente al catálogo actualizado de promociones y viviendas activas.</p>
+            <div class="cta">
+              <button type="button" class="btn sm" id="homeDlQrPng">${ICO('download')} Descargar PNG Alta Res.</button>
+              <button type="button" class="btn g sm" id="homeDlQrSvg">${ICO('file')} Descargar SVG Vectorial</button>
+            </div>
+          </div>`;
+        $('homeDlQrPng').onclick = () => downloadQrPng(qrUrl, 'QR_General_Deltacor_Properties', 'DELTACOR PROPERTIES', qrSub);
+        $('homeDlQrSvg').onclick = () => downloadQrSvg(qrUrl, 'QR_General_Deltacor_Properties', 'DELTACOR PROPERTIES', qrSub);
+      }
     }
     if ($('promoGallery')) {
       $('promoGallery').onclick = e => {
@@ -6436,13 +6510,17 @@ function renderApp() {
     }
     if ($('homeHeroVisual')) {
       if (!featuredPromo) {
-        $('homeHeroVisual').innerHTML = `
-          <div class="panel" style="padding:28px;text-align:center;min-height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
-            <span class="st OFF">SIN PROMOCIONES ACTIVAS</span>
-            <h3 style="margin:0">Próximos lanzamientos de Deltacor Properties</h3>
-            <p class="m" style="margin:0;max-width:360px">Actualmente no hay promociones visibles en la web pública.</p>
-            ${isAdmin ? `<a class="btn sm" href="#admin/promociones" style="margin-top:4px">${ICO('sliders')} Gestionar promociones</a>` : ''}
-          </div>`;
+        const emptyHeroSig = `empty|${isAdmin}`;
+        if ($('homeHeroVisual').dataset.sig !== emptyHeroSig) {
+          $('homeHeroVisual').dataset.sig = emptyHeroSig;
+          $('homeHeroVisual').innerHTML = `
+            <div class="panel" style="padding:28px;text-align:center;min-height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+              <span class="st OFF">SIN PROMOCIONES ACTIVAS</span>
+              <h3 style="margin:0">Próximos lanzamientos de Deltacor Properties</h3>
+              <p class="m" style="margin:0;max-width:360px">Actualmente no hay promociones visibles en la web pública.</p>
+              ${isAdmin ? `<a class="btn sm" href="#admin/promociones" style="margin-top:4px">${ICO('sliders')} Gestionar promociones</a>` : ''}
+            </div>`;
+        }
       } else {
         const facadeSrc = getPromoCover(featuredPromo) || promoPhotos[0].src;
         const fMeta = getPromoStatusMeta(featuredPromo);
@@ -6450,38 +6528,67 @@ function renderApp() {
         const featPortalsTxt = portals.length
           ? (portals.length <= 3 ? portals.join(', ') : `${portals.length} Portales`)
           : (featuredPromo.portalsLabel || 'Obra nueva');
-        $('homeHeroVisual').innerHTML = `
-          <div class="hero-visual-media" id="heroFacadeClick">
-            <img src="${esc(facadeSrc)}" alt="${esc(featuredPromo.name)}">
-            <div class="hero-visual-top">
-              <span class="st ${fMeta.cls}">${featuredPromo.isNew ? 'NUEVA · OBRA NUEVA' : esc(fMeta.label)}</span>
-              <span class="ref-badge">${featDisp.length} libres · ${esc(featuredPromo.location)}</span>
-            </div>
-            <div class="hero-visual-cap">
-              <b>${esc(featuredPromo.name)}</b>
-              <small>${esc(featuredPromo.delivery || sc.heroCardCaption)} · ${featUnits.length} viviendas activas${featRoomsTxt}</small>
-            </div>
-          </div>
-          <div class="hero-visual-foot">
-            <div class="hero-visual-meta">
-              <span>${ICO('building')} ${esc(featPortalsTxt)}</span>
-              <span>${ICO('sun')} Terrazas y Áticos</span>
-              <span>${ICO('car')} Garaje + Trastero</span>
-            </div>
-            <button type="button" class="btn sm" id="heroOpenAlzadoBtn">Abrir alzado →</button>
-          </div>`;
-        $('heroFacadeClick').onclick = () => {
-          if (featuredPromo.id === 'cadmia') {
-            openPhotoLightbox(getPromoPhotos(), 0);
+        const heroSig = JSON.stringify([
+          featuredPromo.id, featuredPromo.name, featuredPromo.location, featuredPromo.status,
+          Boolean(featuredPromo.isNew), featuredPromo.delivery || sc.heroCardCaption,
+          facadeSrc, featDisp.length, featUnits.length, featRoomsTxt, featPortalsTxt
+        ]);
+        if ($('homeHeroVisual').dataset.sig !== heroSig) {
+          $('homeHeroVisual').dataset.sig = heroSig;
+          const existingMedia = $('heroFacadeClick');
+          const existingImg = existingMedia?.querySelector('img');
+          const statusCls = `st ${fMeta.cls}`;
+          const statusTxt = featuredPromo.isNew ? 'NUEVA · OBRA NUEVA' : fMeta.label;
+          const badgeTxt = `${featDisp.length} libres · ${featuredPromo.location}`;
+          const capSmall = `${featuredPromo.delivery || sc.heroCardCaption} · ${featUnits.length} viviendas activas${featRoomsTxt}`;
+          if (existingMedia && existingImg && $('heroOpenAlzadoBtn')) {
+            if (existingImg.getAttribute('src') !== facadeSrc) existingImg.setAttribute('src', facadeSrc);
+            existingImg.setAttribute('alt', featuredPromo.name);
+            const topSt = existingMedia.querySelector('.hero-visual-top .st');
+            const topBadge = existingMedia.querySelector('.hero-visual-top .ref-badge');
+            const capB = existingMedia.querySelector('.hero-visual-cap b');
+            const capSm = existingMedia.querySelector('.hero-visual-cap small');
+            const metaPortal = $('homeHeroVisual').querySelector('.hero-visual-meta span');
+            if (topSt) { topSt.className = statusCls; topSt.textContent = statusTxt; }
+            if (topBadge) topBadge.textContent = badgeTxt;
+            if (capB) capB.textContent = featuredPromo.name;
+            if (capSm) capSm.textContent = capSmall;
+            if (metaPortal) metaPortal.innerHTML = `${ICO('building')} ${esc(featPortalsTxt)}`;
           } else {
-            openPhotoLightbox([{ src: facadeSrc, caption: featuredPromo.name, file: featuredPromo.location }], 0);
+            $('homeHeroVisual').innerHTML = `
+              <div class="hero-visual-media" id="heroFacadeClick">
+                <img src="${esc(facadeSrc)}" alt="${esc(featuredPromo.name)}">
+                <div class="hero-visual-top">
+                  <span class="${statusCls}">${esc(statusTxt)}</span>
+                  <span class="ref-badge">${esc(badgeTxt)}</span>
+                </div>
+                <div class="hero-visual-cap">
+                  <b>${esc(featuredPromo.name)}</b>
+                  <small>${esc(capSmall)}</small>
+                </div>
+              </div>
+              <div class="hero-visual-foot">
+                <div class="hero-visual-meta">
+                  <span>${ICO('building')} ${esc(featPortalsTxt)}</span>
+                  <span>${ICO('sun')} Terrazas y Áticos</span>
+                  <span>${ICO('car')} Garaje + Trastero</span>
+                </div>
+                <button type="button" class="btn sm" id="heroOpenAlzadoBtn">Abrir alzado →</button>
+              </div>`;
           }
-        };
-        $('heroOpenAlzadoBtn').onclick = () => {
-          activeAlzadoPromo = featuredPromo.id;
-          activePortal = 'ALL';
-          location.hash = 'alzado';
-        };
+          $('heroFacadeClick').onclick = () => {
+            if (featuredPromo.id === 'cadmia') {
+              openPhotoLightbox(getPromoPhotos(), 0);
+            } else {
+              openPhotoLightbox([{ src: facadeSrc, caption: featuredPromo.name, file: featuredPromo.location }], 0);
+            }
+          };
+          $('heroOpenAlzadoBtn').onclick = () => {
+            activeAlzadoPromo = featuredPromo.id;
+            activePortal = 'ALL';
+            location.hash = 'alzado';
+          };
+        }
       }
     }
   };
@@ -10303,60 +10410,76 @@ const ROUTE_TITLES = {
   privacidad: 'Política de Privacidad y Protección de Datos | Deltacor Properties'
 };
 
-function route() {
+let LAST_ROUTE_NAME = '';
+let LAST_ROUTE_KEY = '';
+
+function route(opts = {}) {
+  const silent = Boolean(opts && typeof opts === 'object' && opts.silent);
   const raw = location.hash.slice(1) || 'inicio';
   const [rawName, rawParam] = raw.split('/');
   const routeName = ALLOWED_ROUTES.has(rawName) ? rawName : 'inicio';
   const param = safeDecodeParam(rawParam || '');
+  const routeKey = `${routeName}/${param}`;
 
   if (routeName !== 'ficha') {
     document.title = ROUTE_TITLES[routeName] || ROUTE_TITLES.inicio;
   }
 
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  const targetEl = $('v-' + routeName) || $('v-inicio');
+  const sameView = Boolean(targetEl && targetEl.classList.contains('on'));
+  const sameRouteKey = LAST_ROUTE_KEY === routeKey;
+  const isInitialBoot = !LAST_ROUTE_NAME;
+
+  document.querySelectorAll('.view').forEach(v => {
+    if (v !== targetEl) v.classList.remove('on', 'no-anim');
+  });
+  if (targetEl && !sameView) {
+    targetEl.classList.toggle('no-anim', Boolean(silent || isInitialBoot));
+    targetEl.classList.add('on');
+  }
+
   document.querySelectorAll('.links a').forEach(a => a.classList.toggle('on', a.dataset.r === routeName));
   const mobTabActive = routeName === 'ficha' ? 'viviendas' : routeName;
   document.querySelectorAll('#mobTabbar .mob-tab').forEach(a => a.classList.toggle('on', a.dataset.r === mobTabActive));
-  $('nl')?.classList.remove('open');
-  $('bur')?.setAttribute('aria-expanded', 'false');
-  $('userMenu')?.classList.remove('open');
-  $('userBtn')?.setAttribute('aria-expanded', 'false');
+
+  if (!silent) {
+    $('nl')?.classList.remove('open');
+    $('bur')?.setAttribute('aria-expanded', 'false');
+    $('userMenu')?.classList.remove('open');
+    $('userBtn')?.setAttribute('aria-expanded', 'false');
+  }
 
   // Evita duplicación del formulario #fm entre #v-ficha y #v-contacto
   if (routeName !== 'ficha' && $('v-ficha')) $('v-ficha').innerHTML = '';
   if (routeName !== 'contacto' && $('mainFormContainer')) $('mainFormContainer').innerHTML = '';
 
-  scrollTo({ top: 0 });
+  if (!silent && !isInitialBoot && (!sameRouteKey || !sameView)) {
+    scrollTo({ top: 0 });
+  }
 
   if (routeName === 'ficha') {
-    $('v-ficha').classList.add('on');
     renderFicha(param || 'REF-01');
   } else if (routeName === 'promociones') {
-    $('v-promociones').classList.add('on');
     renderPromocionesPage();
   } else if (routeName === 'admin') {
-    $('v-admin').classList.add('on');
     renderAdmin(param || 'promociones');
   } else if (routeName === 'contacto') {
-    $('v-contacto').classList.add('on');
     const host = $('mainFormContainer');
-    host.innerHTML = renderUniqueForm();
-    bindUniqueForm(host);
+    if (host && (!silent || !host.querySelector('#fm'))) {
+      host.innerHTML = renderUniqueForm();
+      bindUniqueForm(host);
+    }
   } else if (routeName === 'viviendas') {
-    $('v-viviendas').classList.add('on');
     renderCatalog();
   } else if (routeName === 'alzado') {
-    $('v-alzado').classList.add('on');
     renderAlzadoPage();
   } else if (routeName === 'mi-solicitud') {
-    $('v-mi-solicitud').classList.add('on');
     renderMiSolicitud();
   } else if (routeName === 'inicio' || !$('v-' + routeName)) {
-    $('v-inicio').classList.add('on');
     refreshInicio();
-  } else {
-    $('v-' + routeName).classList.add('on');
   }
+  LAST_ROUTE_NAME = routeName;
+  LAST_ROUTE_KEY = routeKey;
   syncFavUi();
   renderCompareBar();
 }
@@ -10404,7 +10527,7 @@ $('bur').onclick = e => {
   const open = $('nl').classList.toggle('open');
   $('bur').setAttribute('aria-expanded', String(open));
 };
-addEventListener('hashchange', route);
+addEventListener('hashchange', () => route());
 
 /* ==========================================================================
    ASISTENTE FLOTANTE: CHATBOT CALCULADORA + CONSULTAS RÁPIDAS (WEB3FORMS)
@@ -11455,7 +11578,7 @@ const AUTH_INIT_TIMER = setTimeout(() => {
   if (!AUTH_INITIALIZED) {
     AUTH_INITIALIZED = true;
     updateUserHeader();
-    if (location.hash.startsWith('#admin') || location.hash === '#mi-solicitud') route();
+    if (location.hash.startsWith('#admin') || location.hash === '#mi-solicitud') route({ silent: true });
   }
 }, 4500);
 
@@ -11469,13 +11592,15 @@ onAuthStateChanged(fbAuth, async fbUser => {
   }
   if (!fbUser) {
     const hadUser = Boolean(CURRENT_USER);
+    const wasAdmin = CURRENT_USER?.role === 'admin';
     setSession(null);
+    if (wasAdmin) refreshAllPropertyViews();
     if (hadUser || firstInit) {
       if (location.hash.startsWith('#admin')) {
         notify('Inicia sesión con una cuenta de administrador para acceder');
         location.hash = 'mi-solicitud';
       } else if (hadUser || location.hash === '#mi-solicitud') {
-        route();
+        route({ silent: true });
       }
     }
     return;
@@ -11486,15 +11611,15 @@ onAuthStateChanged(fbAuth, async fbUser => {
   if (CURRENT_USER && CURRENT_USER.uid === fbUser.uid) {
     updateUserHeader();
     triggerBackgroundSync();
-    if (firstInit && needsRouteRefresh) route();
+    if (firstInit && needsRouteRefresh) route({ silent: true });
     return;
   }
   const role = await resolveUserRoleFast(em);
   setSession({ uid: fbUser.uid, email: em, name: fbUser.displayName || em.split('@')[0], role, isFirebase: true });
   if (window.__syncFloatingChatUser) window.__syncFloatingChatUser();
-  refreshAllPropertyViews();
+  if (role === 'admin') refreshAllPropertyViews();
   triggerBackgroundSync();
-  if (needsRouteRefresh) route();
+  if (needsRouteRefresh) route({ silent: true });
 });
 </script>
 </body>
