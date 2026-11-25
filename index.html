@@ -1305,9 +1305,11 @@ function getSolOverallStatus(s) {
     if (s.archiveReason === 'Rechazada' || s.archiveReason === 'Rechazado') return 'Rechazada';
   }
   const states = (s.selecciones || []).map(x => normSolStatus(x?.estado));
+  if (!states.length) return 'En revisión';
   if (states.includes('Vendido')) return 'Vendido';
-  if (states.includes('Aprobado')) return 'Aprobado';
-  if (states.length && states.every(st => st === 'Rechazada')) return 'Rechazada';
+  if (states.includes('En revisión')) return 'En revisión';
+  if (states.every(st => st === 'Aprobado')) return 'Aprobado';
+  if (states.every(st => st === 'Rechazada')) return 'Rechazada';
   return 'En revisión';
 }
 
