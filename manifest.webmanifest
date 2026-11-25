@@ -1,0 +1,19 @@
+{
+  "name": "Deltacor Properties · Alquiler Obra Nueva",
+  "short_name": "Deltacor",
+  "description": "Promociones residenciales de obra nueva en alquiler directo sin intermediarios.",
+  "lang": "es-ES",
+  "start_url": "./#inicio",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f9f5",
+  "theme_color": "#6da625",
+  "icons": [
+    {
+      "src": "./logo-deltacor-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -21,6 +21,8 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 // Using an allowlist prevents URL-encoding or path-normalization bypasses against
 // server.js, package.json, bun.lock, firestore.rules, .env, .git, etc.
 const PUBLIC_ROOT_FILES = new Set([
+  'manifest.webmanifest',
+  'robots.txt',
   'logo-deltacor.png',
   'logo-deltacor-icon.png',
   'og-deltacor.jpg',

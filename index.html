@@ -6,8 +6,12 @@
 <title>Deltacor Properties · Promociones de Obra Nueva · Residencial Cadmia</title>
 <meta name="description" content="Deltacor Properties S.L.: promociones de obra nueva en alquiler directo. Descubre nuestra nueva promoción Residencial Cadmia en Móstoles (Madrid).">
 <meta name="theme-color" content="#6da625">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Deltacor">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.google-analytics.com https://region1.google-analytics.com https://api.web3forms.com https://script.google.com https://script.googleusercontent.com; frame-src 'self' https://invencor-a1477.firebaseapp.com https://accounts.google.com https://www.openstreetmap.org https://www.google.com https://maps.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<link rel="manifest" href="./manifest.webmanifest">
 <link rel="canonical" href="https://pablodepinto22-code.github.io/DELTACOR-PROPERTIES-S.L/">
 <link rel="icon" type="image/png" sizes="512x512" href="https://pablodepinto22-code.github.io/DELTACOR-PROPERTIES-S.L/logo-deltacor-icon.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2210%22%20fill%3D%22%23ffffff%22%2F%3E%3Cpath%20d%3D%22M8%2044h11l9-12%209%2012h11l-20-25L8%2044z%22%20fill%3D%22%233f4f5c%22%2F%3E%3Cpath%20d%3D%22M26%2030l12-16%2018%2024v6H46L38%2033l-7%209z%22%20fill%3D%22%2384bd38%22%2F%3E%3C%2Fsvg%3E">
@@ -671,8 +675,51 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .mob-filter-toggle.has-active{border-color:var(--b1);background:var(--b1-soft);color:var(--b1)}
 .mob-filter-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--b1);color:#fff;font-size:.7rem;font-weight:800}
 .mob-back-alz{display:none}
-.card-actions{display:flex;gap:6px;align-items:center}
+.card-actions{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:center}
+.card-actions .btn-apply-full{grid-column:1/-1;width:100%}
 .card-cmp-lbl{display:none}
+
+/* Favoritos, Ordenación, Desglose de entrada, Checklist Rentger y Filtros Admin */
+.btn-fav{min-width:34px;padding:6px 8px;color:var(--mut)}
+.btn-fav.on{border-color:#e11d48;background:rgba(225,29,72,.1);color:#e11d48}
+.btn-fav.on svg{fill:#e11d48;stroke:#e11d48}
+.fav-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  background:var(--card);border:1px solid var(--line);border-left:3px solid #e11d48;
+  border-radius:6px;padding:10px 14px;margin-bottom:14px;box-shadow:var(--sh);font-size:.84rem;
+}
+.cat-sort-wrap{display:inline-flex;align-items:center;gap:7px;flex-shrink:0}
+.cat-sort-wrap label{margin:0;font-size:.76rem;color:var(--mut);font-weight:700;white-space:nowrap}
+.cat-sort-wrap select{width:auto;min-width:170px;margin:0;padding:5px 10px;font-size:.79rem;min-height:34px;border-radius:5px}
+
+.ficha-prep-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:18px}
+.prep-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:.84rem}
+.prep-row b{white-space:nowrap;flex-shrink:0}
+.prep-row:last-of-type{border-bottom:0}
+.prep-row.total{border-top:1px solid var(--line);border-bottom:0;margin-top:4px;padding-top:10px;font-weight:800;color:var(--tx);font-size:.92rem}
+.prep-row.total b{color:var(--b1);font-size:1.05rem}
+.doc-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 10px}
+.doc-tabs button{
+  padding:5px 11px;border-radius:5px;border:1px solid var(--line);background:var(--card2);
+  color:var(--mut);font:700 .76rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;transition:.14s;
+}
+.doc-tabs button.on{background:var(--b2);color:#fff;border-color:var(--b2)}
+.doc-checklist{display:grid;gap:6px}
+.doc-chk-item{
+  display:flex;align-items:flex-start;gap:9px;margin:0;padding:7px 9px;border-radius:5px;
+  border:1px solid var(--line);background:var(--card2);font-size:.81rem;font-weight:500;cursor:pointer;transition:.14s;
+}
+.doc-chk-item input{width:16px;height:16px;margin:2px 0 0;flex-shrink:0;accent-color:var(--b1)}
+.doc-chk-item.done{border-color:rgba(109,166,37,.4);background:var(--ok-bg)}
+.doc-chk-item.done span{text-decoration:line-through;opacity:.76}
+.doc-progress{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:.72rem;font-weight:700;background:var(--b1-soft);color:var(--b1)}
+
+.cand-filters{
+  display:grid;grid-template-columns:minmax(180px,1.5fr) repeat(3,minmax(130px,1fr));gap:8px;
+  background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px;margin-bottom:14px;
+}
+.cand-filters input,.cand-filters select{margin:0;padding:7px 10px;font-size:.82rem}
+.cand-quick-acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
 
 /* Comprehensive Mobile Adaptation (<= 768px ONLY — desktop untouched) */
 @media(max-width:768px){
@@ -683,7 +730,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
   .lbl-short{display:inline}
 
   /* Strict minmax(0,1fr) single-column grids to prevent horizontal blowout */
-  .hero,.split,.row,.row3,.ficha-hero,.alz-layout,.promos-grid,.grid,.filter-inputs,.qr-showcase,.promo-grid{
+  .hero,.split,.row,.row3,.ficha-hero,.ficha-prep-grid,.alz-layout,.promos-grid,.grid,.filter-inputs,.qr-showcase,.promo-grid,.cand-filters{
     grid-template-columns:minmax(0,1fr);
   }
   .row.row-compact-2{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -814,7 +861,11 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
   .price-range{height:7px;margin:8px 0}
   .price-range::-webkit-slider-thumb{width:24px;height:24px}
   .price-range::-moz-range-thumb{width:24px;height:24px}
-  .filter-foot{font-size:.76rem;gap:4px 10px;margin-top:10px;padding-top:8px}
+  .filter-foot{font-size:.76rem;gap:8px 10px;margin-top:10px;padding-top:8px}
+  .cat-sort-wrap{width:100%}
+  .cat-sort-wrap select{flex:1;min-width:0;min-height:38px;font-size:15px;padding:6px 10px}
+  .fav-banner{padding:11px 12px;border-radius:8px;gap:8px}
+  .fav-banner > div:last-child{width:100%;display:grid;grid-template-columns:1fr auto;gap:7px}
 
   /* Listing Cards */
   .grid{gap:14px}
@@ -822,9 +873,10 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
   .card-body{padding:14px}
   .card-title{font-size:1rem}
   .price{font-size:1.34rem}
-  .card-actions{display:grid;grid-template-columns:1fr auto;gap:7px}
+  .card-actions{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px}
+  .card-actions .btn-fav,.card-actions .btn-cmp{min-width:40px;padding:7px 10px}
   .card-actions .btn-apply-full{grid-column:1/-1;width:100%;min-height:42px}
-  .card-cmp-lbl{display:inline}
+  .card-cmp-lbl{display:none}
 
   /* Prevent iOS Safari auto-zoom on form fields */
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),select,textarea{
@@ -2598,7 +2650,10 @@ const ICONS = {
   chevron: '<polyline points="6 9 12 15 18 9"/>',
   note: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
   key: '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>',
-  columns: '<rect x="3" y="3" width="18" height="18" rx="1"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>'
+  columns: '<rect x="3" y="3" width="18" height="18" rx="1"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>',
+  heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>'
 };
 const ICO = (name, cls = 'ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ''}</svg>`;
 
@@ -3949,6 +4004,218 @@ $('nl').innerHTML = NAV_ITEMS.map(r => `<a href="#${r[0]}" data-r="${r[0]}">${r[
 
 let SEL = [];
 let CMP = [];
+
+const FAV_STORAGE_KEY = 'dc-favs-v1';
+function loadFavs() {
+  const parsed = safeGetJson(localStorage, FAV_STORAGE_KEY, []);
+  if (!Array.isArray(parsed)) return [];
+  return [...new Set(parsed.filter(r => typeof r === 'string' && r.trim()).map(r => r.trim().toUpperCase()))].slice(0, 40);
+}
+function saveFavs() {
+  safeSetItem(localStorage, FAV_STORAGE_KEY, JSON.stringify(FAVS));
+}
+let FAVS = loadFavs();
+
+function syncFavUi() {
+  const pubRefs = new Set(getPublicUnits('ALL').map(v => v.ref));
+  const cleaned = FAVS.filter(r => pubRefs.has(r));
+  if (cleaned.length !== FAVS.length) {
+    FAVS = cleaned;
+    saveFavs();
+  }
+  document.querySelectorAll('[data-fav]').forEach(btn => {
+    const ref = btn.dataset.fav;
+    const on = FAVS.includes(ref);
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', String(on));
+    btn.title = on ? 'Quitar de favoritas' : 'Guardar en favoritas';
+    const lbl = btn.querySelector('.fav-lbl');
+    if (lbl) lbl.textContent = on ? ' Guardada' : ' Favorita';
+  });
+  if ($('favCountChip')) $('favCountChip').textContent = String(FAVS.length);
+}
+
+function toggleFav(ref) {
+  const clean = String(ref || '').trim().toUpperCase();
+  if (!clean || !V.some(v => v.ref === clean)) return;
+  const had = FAVS.includes(clean);
+  if (had) {
+    FAVS = FAVS.filter(r => r !== clean);
+  } else {
+    if (FAVS.length >= 20) {
+      notify('Puedes guardar hasta 20 viviendas favoritas');
+      return;
+    }
+    FAVS = [...FAVS, clean];
+  }
+  saveFavs();
+  syncFavUi();
+  if (location.hash === '#viviendas' && typeof renderCatalog === 'function') renderCatalog();
+  notify(had ? `${clean} eliminada de tus favoritas` : `${clean} guardada en tus favoritas`);
+}
+
+const DOC_CHK_KEY = 'dc-doc-chk-v1';
+const DOC_PROFILES = {
+  asalariado: {
+    label: 'Asalariado',
+    items: [
+      { id: 'dni', text: 'DNI o NIE en vigor de todos los titulares mayores de edad' },
+      { id: 'contrato', text: 'Contrato de trabajo indefinido (o antigüedad demostrable)' },
+      { id: 'nominas', text: '3 últimas nóminas (ratio orientativo: ingresos ≥ 3× la renta)' },
+      { id: 'vida', text: 'Informe de Vida Laboral actualizado (Tesorería SS)' },
+      { id: 'irpf', text: 'Última declaración de la Renta (IRPF) o certificado de retenciones' }
+    ]
+  },
+  autonomo: {
+    label: 'Autónomo',
+    items: [
+      { id: 'dni', text: 'DNI o NIE en vigor de todos los titulares' },
+      { id: 'alta', text: 'Alta en RETA / Modelo 036-037 y últimos recibos de cuota' },
+      { id: 'irpf', text: 'Última declaración anual de la Renta (Modelo 100)' },
+      { id: 'trim', text: 'Modelos trimestrales del año en curso (130/131 y 303 de IVA)' },
+      { id: 'banco', text: 'Extracto bancario reciente que refleje estabilidad de ingresos' }
+    ]
+  },
+  avalista: {
+    label: 'Con avalista',
+    items: [
+      { id: 'dni', text: 'DNI o NIE en vigor de titulares y del avalista solidario' },
+      { id: 'ing_tit', text: 'Justificante de ingresos, beca o contrato de los titulares' },
+      { id: 'ing_av', text: '3 últimas nóminas o IRPF del avalista (ratio 3× cubierto)' },
+      { id: 'vida_av', text: 'Contrato laboral o Vida Laboral actualizada del avalista' },
+      { id: 'aval_alt', text: 'Opcional: pre-aprobación de aval bancario o seguro de caución' }
+    ]
+  }
+};
+function loadDocChecks() {
+  const parsed = safeGetJson(localStorage, DOC_CHK_KEY, {});
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+}
+function saveDocChecks(map) {
+  safeSetItem(localStorage, DOC_CHK_KEY, JSON.stringify(map || {}));
+}
+
+function formatWaPhone(rawPhone) {
+  let digits = String(rawPhone || '').replace(/\D+/g, '');
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  if (digits.length === 9 && /^[6789]/.test(digits)) digits = '34' + digits;
+  if (digits.length < 9 || digits.length > 15) return '';
+  return digits;
+}
+
+function buildCandidateReplyMessage(sol) {
+  const firstName = String(sol?.nombre || '').trim().split(/\s+/)[0] || 'hola';
+  const refs = (sol?.selecciones || []).map(x => x.ref).filter(Boolean).join(', ') || 'tu solicitud';
+  const st = getSolOverallStatus(sol);
+  const promo = getSolPromoLabel(sol);
+  const base = getCfg().baseUrl;
+  if (st === 'Aprobado') {
+    return `Hola ${firstName}, somos el equipo de Deltacor Properties (${promo}). Tu candidatura ${sol.id} (${refs}) ha sido PRE-APROBADA. Ya tienes activo el acceso para subir tu documentación en Rentger desde «Mi solicitud» (${base}#mi-solicitud). ¿Tienes alguna duda?`;
+  }
+  return `Hola ${firstName}, somos el equipo de Deltacor Properties (${promo}). Hemos recibido tu candidatura ${sol.id} para ${refs} y estamos revisando tu solicitud. Te avisaremos en cuanto tengamos novedad. Puedes consultar el estado en ${base}#mi-solicitud.`;
+}
+
+function openWaitlistModal(unit) {
+  if (!unit) return;
+  const dlg = $('dlg');
+  if (!dlg) return;
+  dlg.oncancel = null;
+  dlg.classList.remove('wide');
+  const promo = getPromoById(unit.promoId);
+  const savedChat = safeGetJson(sessionStorage, 'inv-chat-user-v1', {});
+  const preName = (CURRENT_USER?.name || savedChat?.name || '').trim();
+  const preEmail = (CURRENT_USER?.email || savedChat?.email || '').trim();
+  const prePhone = (savedChat?.phone || '').trim();
+  const safeRef = esc(unit.ref);
+  const safeSt = ['D', 'R', 'A', 'C'].includes(unit.st) ? unit.st : 'R';
+
+  dlg.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
+      <div>
+        <h3>Lista de espera · ${safeRef}</h3>
+        <p class="m" style="margin-top:2px">${esc(promo.name)} · ${esc(unit.nombre || (unit.h + ' habitaciones'))} (${eur(unit.r)}/mes · ${stLabel(safeSt)})</p>
+      </div>
+      <button type="button" class="icon-btn" data-close-dlg aria-label="Cerrar">✕</button>
+    </div>
+    <p class="m" style="margin-bottom:12px">Si esta vivienda vuelve a quedar disponible —o se libera una unidad similar en ${esc(promo.name)}— te avisaremos por correo de forma prioritaria.</p>
+    <form id="waitlistForm" novalidate>
+      <input type="text" name="wl_hp" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="row">
+        <label>Nombre y apellidos *<input id="wlName" required maxlength="120" value="${esc(preName)}" placeholder="Tu nombre completo"></label>
+        <label>Email de aviso *<input id="wlEmail" type="email" required maxlength="160" value="${esc(preEmail)}" placeholder="tu@email.com"></label>
+      </div>
+      <label>Teléfono (opcional, para aviso rápido)<input id="wlPhone" type="tel" maxlength="24" value="${esc(prePhone)}" placeholder="600 000 000"></label>
+      <label class="ck" style="margin-top:8px"><input type="checkbox" id="wlSimilar" checked><span>Avísame también si queda libre otra vivienda similar (${Number(unit.h)} hab. en ${esc(promo.name)})</span></label>
+      <label class="ck" style="margin-top:6px"><input type="checkbox" id="wlRgpd" required><span>Acepto recibir este aviso puntual de disponibilidad conforme a la <a href="#privacidad" data-close-dlg style="color:var(--b1)">Política de Privacidad</a>.</span></label>
+      <div id="wlErr" class="m" style="color:var(--bad-tx);margin-top:6px" hidden></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button type="button" class="btn g sm" data-close-dlg>Cancelar</button>
+        <button type="submit" class="btn sm" id="wlSubmitBtn">${ICO('bell')} Apuntarme al aviso</button>
+      </div>
+    </form>`;
+  dlg.showModal();
+
+  $('waitlistForm').onsubmit = async e => {
+    e.preventDefault();
+    const fm = e.target;
+    if (fm.wl_hp && fm.wl_hp.value) return;
+    const errEl = $('wlErr');
+    errEl.hidden = true;
+    const name = $('wlName').value.trim().slice(0, 120);
+    const email = $('wlEmail').value.trim().toLowerCase().slice(0, 160);
+    const phone = $('wlPhone').value.trim().slice(0, 24);
+    const similar = $('wlSimilar').checked;
+    if (name.length < 2) {
+      errEl.textContent = 'Introduce tu nombre para poder avisarte.';
+      errEl.hidden = false;
+      $('wlName').focus();
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      errEl.textContent = 'Introduce un correo electrónico válido.';
+      errEl.hidden = false;
+      $('wlEmail').focus();
+      return;
+    }
+    if (!$('wlRgpd').checked) {
+      errEl.textContent = 'Debes aceptar el aviso de privacidad para continuar.';
+      errEl.hidden = false;
+      return;
+    }
+    const rl = checkRateLimit('waitlist', 15000);
+    if (!rl.ok) {
+      errEl.textContent = `Espera ${rl.waitSec} segundos antes de enviar otro aviso.`;
+      errEl.hidden = false;
+      return;
+    }
+    const btn = $('wlSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Enviando…';
+    try {
+      safeSetItem(sessionStorage, 'inv-chat-user-v1', JSON.stringify({ name, email, phone }));
+    } catch {}
+    const res = await sendWeb3Forms({
+      subject: `Lista de espera [${unit.ref}] · ${promo.name} - ${name}`,
+      name,
+      email,
+      replyto: email,
+      telefono: phone || 'No indicado',
+      vivienda_solicitada: `${unit.ref} · ${promo.name} · ${unit.portal}, ${floorFullLabel(unit.pl)} · ${unit.h} hab. · ${eur(unit.r)}/mes (Estado actual: ${stLabel(safeSt)})`,
+      avisar_similares: similar ? 'Sí, avisar también de viviendas similares disponibles' : 'Solo esta referencia exacta',
+      origen: 'Lista de espera · Deltacor Properties'
+    });
+    btn.disabled = false;
+    btn.innerHTML = `${ICO('bell')} Apuntarme al aviso`;
+    if (res.ok) {
+      dlg.close();
+      notify(`Aviso registrado para ${unit.ref}. Te escribiremos a ${email} si queda libre.`);
+    } else {
+      errEl.textContent = 'No se pudo registrar ahora mismo. Comprueba tu conexión e inténtalo de nuevo.';
+      errEl.hidden = false;
+    }
+  };
+}
+
 let activePortal = 'ALL';
 let activeCatalogPromo = 'ALL';
 let activeAlzadoPromo = 'cadmia';
@@ -4007,6 +4274,7 @@ const propertyCard = v => {
   const cover = photos[0];
   const pr = getPromoById(v.promoId);
   const canBook = isUnitBookable(v);
+  const isFav = FAVS.includes(v.ref);
   const safeRef = esc(v.ref);
   const safeRefUri = encodeURIComponent(v.ref);
   const safeSt = ['D', 'R', 'A', 'C'].includes(v.st) ? v.st : 'D';
@@ -4043,8 +4311,11 @@ const propertyCard = v => {
     </div>
     <div class="card-actions">
       <a class="btn g sm" style="flex:1" href="#ficha/${safeRefUri}">Ver ficha y fotos</a>
+      <button type="button" class="btn g sm btn-fav ${isFav ? 'on' : ''}" data-fav="${safeRef}" aria-pressed="${isFav}" title="${isFav ? 'Quitar de favoritas' : 'Guardar en favoritas'}">${ICO('heart')}</button>
       <button type="button" class="btn g sm btn-cmp ${CMP.includes(v.ref) ? 'on' : ''}" data-cmp="${safeRef}" title="Comparar hasta 3 viviendas">${ICO('columns')}<span class="card-cmp-lbl"> Comparar</span></button>
-      ${canBook ? `<button type="button" class="btn sm btn-apply-full" data-quick-apply="${safeRef}">Solicitar</button>` : ''}
+      ${canBook
+        ? `<button type="button" class="btn sm btn-apply-full" data-quick-apply="${safeRef}">Solicitar</button>`
+        : `<button type="button" class="btn g sm btn-apply-full" data-waitlist="${safeRef}" title="Apuntarme a la lista de espera si queda libre">${ICO('bell')} Avísame si queda libre</button>`}
     </div>
   </div>
 </article>`;
@@ -4480,6 +4751,7 @@ function renderApp() {
         <button type="button" class="chip" data-x="g">${ICO('car')} Con garaje</button>
         <button type="button" class="chip" data-x="tr">${ICO('box')} Con trastero</button>
         <button type="button" class="chip" data-x="onlyD">${ICO('check')} Solo disponibles</button>
+        <button type="button" class="chip" data-x="onlyFav" id="favFilterChip">${ICO('heart')} Favoritas (<span id="favCountChip">0</span>)</button>
       </div>
       <div class="mob-filter-bar">
         <button type="button" class="btn g sm" id="catAdvToggleBtn" aria-expanded="false" aria-controls="catAdvFilters" style="width:100%;justify-content:space-between">
@@ -4509,10 +4781,24 @@ function renderApp() {
         </div>
       </div>
       <div class="filter-foot">
-        <span id="catCountHint">Mostrando viviendas disponibles</span>
-        <span id="catSolvHint"></span>
+        <div style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center">
+          <span id="catCountHint">Mostrando viviendas disponibles</span>
+          <span id="catSolvHint"></span>
+        </div>
+        <div class="cat-sort-wrap">
+          <label for="fSort">Ordenar:</label>
+          <select id="fSort" aria-label="Ordenar viviendas">
+            <option value="avail">Disponibles primero</option>
+            <option value="price-asc">Precio: menor a mayor</option>
+            <option value="price-desc">Precio: mayor a menor</option>
+            <option value="m2-desc">Mayor superficie (m²)</option>
+            <option value="pl-desc">Plantas más altas</option>
+            <option value="ref">Referencia (A–Z)</option>
+          </select>
+        </div>
       </div>
     </div>
+    <div class="fav-banner" id="favBanner" hidden></div>
     <div class="grid" id="gr"></div>
   </section>
 
@@ -5266,15 +5552,18 @@ function renderApp() {
             </div>
             ${renderInspectorBody()}
             <div class="alz-insp-actions">
-              <a class="btn g sm" href="#ficha/${curRefUri}">Ver ficha completa</a>
+              <a class="btn g sm full" href="#ficha/${curRefUri}">Ver ficha completa</a>
               <button type="button" class="btn g sm btn-cmp ${inCmp ? 'on' : ''}" data-cmp="${esc(cur.ref)}">${ICO('columns')} ${inCmp ? 'En comparador' : 'Comparar'}</button>
+              <button type="button" class="btn g sm btn-fav ${FAVS.includes(cur.ref) ? 'on' : ''}" data-fav="${esc(cur.ref)}" aria-pressed="${FAVS.includes(cur.ref)}" title="${FAVS.includes(cur.ref) ? 'Quitar de favoritas' : 'Guardar en favoritas'}">${ICO('heart')}<span class="fav-lbl">${FAVS.includes(cur.ref) ? ' Guardada' : ' Favorita'}</span></button>
               ${isAdmin ? `
                 <button type="button" class="btn g sm" id="alzEditUnitBtn">${ICO('edit')} Editar ${esc(cur.ref)}</button>
                 <button type="button" class="vis-toggle ${cur.active !== false ? 'is-on' : 'is-off'}" id="alzToggleUnitActBtn" style="justify-content:center">${cur.active !== false ? 'Activa en web' : 'Oculta en web'}</button>
               ` : ''}
               ${curBookable
                 ? `<button type="button" class="btn sm full" data-quick-apply="${esc(cur.ref)}">Solicitar ${esc(cur.ref)} ahora →</button>`
-                : `<button type="button" class="btn g sm full" disabled style="opacity:.6;cursor:not-allowed">${cur.active === false ? 'Vivienda oculta en web' : `Vivienda ${stLabel(curSafeSt).toLowerCase()}`}</button>`}
+                : cur.active === false
+                  ? `<button type="button" class="btn g sm full" disabled style="opacity:.6;cursor:not-allowed">Vivienda oculta en web</button>`
+                  : `<button type="button" class="btn g sm full" data-waitlist="${esc(cur.ref)}">${ICO('bell')} Avísame si queda libre (${esc(cur.ref)})</button>`}
             </div>
           </div>
         </aside>
@@ -5737,15 +6026,25 @@ function renderApp() {
     }
   };
 
-  const F = { h: 0, t: false, g: false, tr: false, onlyD: false, maxPrice: null };
+  const F = { h: 0, t: false, g: false, tr: false, onlyD: false, onlyFav: false, maxPrice: null, sort: 'avail' };
   window.renderCatalog = () => {
     const pubPromos = getPublicPromos();
     if (activeCatalogPromo !== 'ALL' && !pubPromos.some(p => p.id === activeCatalogPromo)) {
       activeCatalogPromo = 'ALL';
     }
+    const allPubUnits = getPublicUnits('ALL');
+    const pubRefSet = new Set(allPubUnits.map(v => v.ref));
+    const prunedFavs = FAVS.filter(r => pubRefSet.has(r));
+    if (prunedFavs.length !== FAVS.length) {
+      FAVS = prunedFavs;
+      saveFavs();
+    }
+    if ($('favCountChip')) $('favCountChip').textContent = String(FAVS.length);
+    if ($('fSort')) $('fSort').value = F.sort;
+
     const sw = $('catPromoSwitcher');
     if (sw) {
-      const allCount = getPublicUnits('ALL').length;
+      const allCount = allPubUnits.length;
       sw.innerHTML = `
         <button type="button" class="chip ${activeCatalogPromo === 'ALL' ? 'on' : ''}" data-cat-promo="ALL">Todas las promociones (${allCount})</button>
         ${pubPromos.map(p => {
@@ -5811,10 +6110,67 @@ function renderApp() {
       (!F.g || v.g) &&
       (!F.tr || v.tr) &&
       (!F.onlyD || isUnitBookable(v)) &&
+      (!F.onlyFav || FAVS.includes(v.ref)) &&
       (plFilter === null || Number(v.pl) === plFilter) &&
       Number(v.r) <= mx &&
       (String(v.ref || '').toUpperCase().includes(q) || String(v.portal || '').toUpperCase().includes(q) || String(v.nombre || '').toUpperCase().includes(q) || getPromoById(v.promoId).name.toUpperCase().includes(q))
     );
+
+    const cmpRef = (a, b) => String(a.ref || '').localeCompare(String(b.ref || ''), 'es', { numeric: true });
+    res.sort((a, b) => {
+      if (F.sort === 'price-asc') return (Number(a.r) - Number(b.r)) || cmpRef(a, b);
+      if (F.sort === 'price-desc') return (Number(b.r) - Number(a.r)) || cmpRef(a, b);
+      if (F.sort === 'm2-desc') return (Number(b.m2) - Number(a.m2)) || (Number(a.r) - Number(b.r)) || cmpRef(a, b);
+      if (F.sort === 'pl-desc') return (Number(b.pl) - Number(a.pl)) || (Number(a.r) - Number(b.r)) || cmpRef(a, b);
+      if (F.sort === 'ref') return cmpRef(a, b);
+      const bookDiff = (isUnitBookable(b) ? 1 : 0) - (isUnitBookable(a) ? 1 : 0);
+      return bookDiff || (Number(a.r) - Number(b.r)) || cmpRef(a, b);
+    });
+
+    const favBanner = $('favBanner');
+    if (favBanner) {
+      const favUnits = FAVS.map(r => allPubUnits.find(v => v.ref === r)).filter(Boolean);
+      if (favUnits.length) {
+        const bookableFavs = favUnits.filter(isUnitBookable).map(v => v.ref);
+        const refsPreview = favUnits.slice(0, 5).map(v => esc(v.ref)).join(', ') + (favUnits.length > 5 ? ` y ${favUnits.length - 5} más` : '');
+        favBanner.hidden = false;
+        favBanner.innerHTML = `
+          <div>
+            <b>${ICO('heart')} ${favUnits.length} vivienda${favUnits.length === 1 ? '' : 's'} favorita${favUnits.length === 1 ? '' : 's'}:</b>
+            <span class="m">${refsPreview}</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            ${bookableFavs.length
+              ? `<button type="button" class="btn sm" id="applyFavsBtn">${bookableFavs.length === 1 ? 'Solicitar favorita disponible →' : `Solicitar ${bookableFavs.length} favoritas disponibles juntas →`}</button>`
+              : `<span class="m" style="font-size:.78rem">Ninguna libre ahora (usa «Avísame»)</span>`}
+            <button type="button" class="btn g sm" id="clearFavsBtn">Limpiar</button>
+          </div>`;
+        if ($('applyFavsBtn')) {
+          $('applyFavsBtn').onclick = () => {
+            bookableFavs.forEach(r => { if (!SEL.includes(r)) SEL.push(r); });
+            location.hash = 'contacto';
+            notify(`${bookableFavs.length} favorita(s) disponible(s) añadidas a tu candidatura única`);
+          };
+        }
+        if ($('clearFavsBtn')) {
+          $('clearFavsBtn').onclick = () => {
+            FAVS = [];
+            saveFavs();
+            if (F.onlyFav) {
+              F.onlyFav = false;
+              $('favFilterChip')?.classList.remove('on');
+            }
+            syncFavUi();
+            renderCatalog();
+            notify('Lista de favoritas limpiada');
+          };
+        }
+      } else {
+        favBanner.hidden = true;
+        favBanner.innerHTML = '';
+      }
+    }
+
     if ($('catCountHint')) {
       $('catCountHint').innerHTML = `Mostrando <b>${res.length}</b> de ${baseUnits.length} vivienda${baseUnits.length === 1 ? '' : 's'} activa${baseUnits.length === 1 ? '' : 's'}`;
     }
@@ -5823,7 +6179,9 @@ function renderApp() {
         ? `Presupuesto ≤ <b>${eur(mx)}/mes</b> · Solvencia orientativa (3×): <b>${eur(mx * 3)}/mes</b>`
         : `Rango actual: <b>${eur(rawMin)} – ${eur(rawMax)}/mes</b>`;
     }
-    $('gr').innerHTML = res.length ? res.map(propertyCard).join('') : '<div class="panel"><p class="m">No hay viviendas activas que coincidan con esos filtros. Prueba a subir el presupuesto máximo o limpiar algún filtro.</p></div>';
+    $('gr').innerHTML = res.length
+      ? res.map(propertyCard).join('')
+      : `<div class="panel"><p class="m">${F.onlyFav ? 'No tienes viviendas favoritas que coincidan con los filtros activos. Pulsa el corazón en cualquier vivienda para guardarla aquí.' : 'No hay viviendas activas que coincidan con esos filtros. Prueba a subir el presupuesto máximo o limpiar algún filtro.'}</p></div>`;
   };
 
   if ($('catAdvToggleBtn') && $('catAdvFilters')) {
@@ -5846,6 +6204,12 @@ function renderApp() {
     renderCatalog();
   };
   $('q').oninput = $('fPl').onchange = renderCatalog;
+  if ($('fSort')) {
+    $('fSort').onchange = () => {
+      F.sort = $('fSort').value || 'avail';
+      renderCatalog();
+    };
+  }
   $('mx').oninput = () => {
     const val = Number($('mx').value);
     const maxB = Number($('mx').max);
@@ -6183,6 +6547,7 @@ function renderFicha(ref) {
   const safeSt = ['D', 'R', 'A', 'C'].includes(v.st) ? v.st : 'D';
 
   if (!unitPublic && !isAdmin) {
+    document.title = 'Vivienda no disponible | Deltacor Properties';
     $('v-ficha').innerHTML = `
       <div class="ficha-bar">
         <a class="btn g sm" href="#viviendas">← Volver al listado</a>
@@ -6199,6 +6564,8 @@ function renderFicha(ref) {
     return;
   }
 
+  document.title = `${v.ref} · ${v.nombre || (v.h + ' hab.')} · ${promo.name} | Deltacor Properties`;
+
   STATS.views[v.ref] = (STATS.views[v.ref] || 0) + 1;
   saveStats();
 
@@ -6207,6 +6574,8 @@ function renderFicha(ref) {
   const waText = encodeURIComponent(`Deltacor Properties · ${promo.name} (${v.ref} · ${v.nombre || v.h + ' hab'}): ${v.m2} m², ${eur(v.r)}/mes -> ${shareUrl}`);
 
   const planSvg = buildPlanSvg(v);
+  const isFav = FAVS.includes(v.ref);
+  const rentVal = Number(v.r) || 0;
 
   $('v-ficha').innerHTML = `
   <div class="ficha-bar">
@@ -6270,7 +6639,7 @@ function renderFicha(ref) {
           <h2 style="font-size:1.72rem">${safeRef} · ${esc(v.nombre || (v.h + ' Habitaciones'))}</h2>
         </div>
         <div class="ficha-price-col">
-          <div class="price" style="font-size:1.7rem">${eur(v.r)}<small class="m">/mes</small></div>
+          <div class="price" style="font-size:1.7rem">${eur(rentVal)}<small class="m">/mes</small></div>
           <span class="cee-badge">CEE: ${esc(v.cee || 'A')}</span>
         </div>
       </div>
@@ -6285,14 +6654,17 @@ function renderFicha(ref) {
         <div class="spec-box"><small>Orientación</small><b>${esc(v.ori)}</b></div>
         <div class="spec-box"><small>Terraza</small><b>${v.t ? 'Sí, incluida' : 'No'}</b></div>
         <div class="spec-box"><small>Garaje y Trastero</small><b>${v.g ? 'Garaje sí' : 'Sin garaje'} · ${v.tr ? 'Trastero sí' : 'Sin trastero'}</b></div>
-        <div class="spec-box"><small>Ingresos mínimos</small><b>${eur(v.r * 3)}/mes</b></div>
+        <div class="spec-box"><small>Ingresos mínimos</small><b>${eur(rentVal * 3)}/mes</b></div>
       </div>
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
+        <button type="button" class="btn g sm btn-fav ${isFav ? 'on' : ''}" data-fav="${safeRef}" aria-pressed="${isFav}" title="${isFav ? 'Quitar de favoritas' : 'Guardar en favoritas'}">${ICO('heart')}<span class="fav-lbl">${isFav ? ' Guardada' : ' Favorita'}</span></button>
         <button type="button" class="btn g sm" id="dlCeeBtn">${ICO('file')} Certificado Energético (${esc(v.cee || 'A')})</button>
         ${bookable
           ? `<button type="button" class="btn sm" id="scrollToFormBtn">Solicitar vivienda ↓</button>`
-          : `<span class="st ${safeSt}">${v.active === false ? 'Vivienda oculta en web' : `Esta vivienda está ${stLabel(safeSt).toLowerCase()}`}</span>`}
+          : unitPublic
+            ? `<button type="button" class="btn sm" data-waitlist="${safeRef}">${ICO('bell')} Avísame si queda libre</button><span class="st ${safeSt}">${stLabel(safeSt)}</span>`
+            : `<span class="st ${safeSt}">Vivienda oculta en web</span>`}
       </div>
 
       <div class="unit-qr-box">
@@ -6309,16 +6681,91 @@ function renderFicha(ref) {
     </div>
   </div>
 
+  <div class="ficha-prep-grid" aria-label="Desglose de entrada y documentación">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <h3 style="margin:0;font-size:1rem">Desglose orientativo para entrar</h3>
+        <span class="st D">0 € comisión agencia</span>
+      </div>
+      <div class="prep-row"><span>1.ª mensualidad de renta</span><b>${eur(rentVal)}</b></div>
+      <div class="prep-row"><span>Fianza legal (1 mes · AVS Madrid)</span><b>${eur(rentVal)}</b></div>
+      <div class="prep-row"><span>Garantía adicional (1 mes · recuperable)</span><b>${eur(rentVal)}</b></div>
+      <div class="prep-row total"><span>Total estimado a la firma</span><b>${eur(rentVal * 3)}</b></div>
+      <div class="prep-row" style="margin-top:4px"><span>Ingresos mínimos recomendados (3×)</span><b>${eur(rentVal * 3)}/mes</b></div>
+      <p class="m" style="font-size:.77rem;margin-top:8px">Arrendamiento directo con la propiedad (Deltacor Properties S.L.). La fianza y la garantía se devuelven al finalizar el contrato conforme a la LAU.</p>
+    </div>
+
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <h3 style="margin:0;font-size:1rem">Checklist de documentación (Rentger)</h3>
+        <span class="doc-progress" id="docProgressBadge">0 / 5 preparados</span>
+      </div>
+      <p class="m" style="font-size:.78rem;margin-top:4px">Marca lo que ya tienes listo según tu perfil antes de la fase de validación:</p>
+      <div class="doc-tabs" id="fichaDocTabs" role="tablist">
+        ${Object.entries(DOC_PROFILES).map(([key, prof], idx) => `
+          <button type="button" role="tab" class="${idx === 0 ? 'on' : ''}" data-doc-tab="${key}" aria-selected="${idx === 0}">${esc(prof.label)}</button>`).join('')}
+      </div>
+      <div class="doc-checklist" id="fichaDocChecklist"></div>
+      <p class="m" style="font-size:.74rem;margin-top:8px">Se guarda solo en tu navegador como recordatorio. Los archivos se suben en Rentger tras la pre-aprobación.</p>
+    </div>
+  </div>
+
   <div class="panel" style="margin-top:24px" id="ficha-form-anchor">
     <div style="margin-bottom:14px">
       <h3>Solicitar ${bookable ? `la vivienda ${safeRef}` : 'otras viviendas disponibles'}</h3>
-      <p class="m">${bookable ? `Hemos pre-marcado automáticamente <b>${safeRef}</b> en tu candidatura. Puedes añadir todas las demás referencias que te interesen.` : `La vivienda ${safeRef} no admite nuevas solicitudes actualmente, pero puedes elegir cualquier otra unidad disponible en el selector.`}</p>
+      <p class="m">${bookable ? `Hemos pre-marcado automáticamente <b>${safeRef}</b> en tu candidatura. Puedes añadir todas las demás referencias que te interesen.` : `La vivienda ${safeRef} no admite nuevas solicitudes actualmente, pero puedes elegir cualquier otra unidad disponible en el selector o apuntarte a la lista de espera arriba.`}</p>
     </div>
     ${renderUniqueForm(bookable ? v.ref : null)}
   </div>
   `;
 
   bindUniqueForm($('v-ficha'));
+
+  let activeDocProfile = 'asalariado';
+  const renderDocChecklist = () => {
+    const prof = DOC_PROFILES[activeDocProfile] || DOC_PROFILES.asalariado;
+    const saved = loadDocChecks();
+    const listEl = $('fichaDocChecklist');
+    if (!listEl) return;
+    let doneCount = 0;
+    listEl.innerHTML = prof.items.map(it => {
+      const k = `${activeDocProfile}:${it.id}`;
+      const checked = Boolean(saved[k]);
+      if (checked) doneCount++;
+      return `
+        <label class="doc-chk-item ${checked ? 'done' : ''}">
+          <input type="checkbox" data-doc-key="${esc(k)}" ${checked ? 'checked' : ''}>
+          <span>${esc(it.text)}</span>
+        </label>`;
+    }).join('');
+    if ($('docProgressBadge')) {
+      $('docProgressBadge').textContent = `${doneCount} / ${prof.items.length} preparados`;
+    }
+  };
+  if ($('fichaDocTabs')) {
+    $('fichaDocTabs').onclick = e => {
+      const tab = e.target.closest('[data-doc-tab]');
+      if (!tab) return;
+      activeDocProfile = tab.dataset.docTab;
+      $('fichaDocTabs').querySelectorAll('[data-doc-tab]').forEach(b => {
+        const on = b === tab;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-selected', String(on));
+      });
+      renderDocChecklist();
+    };
+  }
+  if ($('fichaDocChecklist')) {
+    $('fichaDocChecklist').onchange = e => {
+      const cb = e.target.closest('input[data-doc-key]');
+      if (!cb) return;
+      const saved = loadDocChecks();
+      saved[cb.dataset.docKey] = cb.checked;
+      saveDocChecks(saved);
+      renderDocChecklist();
+    };
+  }
+  renderDocChecklist();
 
   const slideOrder = [...photos.map((_, idx) => idx), 'plan'];
   let currentSlide = 0;
@@ -7665,21 +8112,95 @@ function renderAdmin(subTab) {
       </div>
     </div>
 
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px">
       <p class="m" style="margin:0">Cruce automático de solvencia (ratio 3x). Estados: <b style="color:var(--warn-tx)">En revisión</b> · <b style="color:var(--ok-tx)">Aprobado</b> · <b style="color:var(--b1)">Vendido (mueve a Archivo)</b>.</p>
+      <span class="m" id="candFilterCount" style="font-weight:700"></span>
     </div>
 
-    <div id="candCardsList">
-    ${!activeSols.length ? '<div class="panel"><p class="m">No hay candidaturas activas en este momento.</p></div>' :
-      activeSols.map(s => {
+    <div class="cand-filters" aria-label="Filtros de candidaturas">
+      <input id="candFilterQ" type="search" maxlength="80" placeholder="Buscar nombre, email, teléfono, DNI o REF…">
+      <select id="candFilterPromo" aria-label="Filtrar por promoción">
+        <option value="ALL">Todas las promociones</option>
+        ${PROMOS.map(p => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('')}
+      </select>
+      <select id="candFilterStatus" aria-label="Filtrar por estado">
+        <option value="ALL">Todos los estados</option>
+        <option value="En revisión">En revisión</option>
+        <option value="Aprobado">Aprobado (Rentger)</option>
+      </select>
+      <select id="candFilterSolv" aria-label="Filtrar por solvencia">
+        <option value="ALL">Toda solvencia</option>
+        <option value="ok">Solvencia OK (3×)</option>
+        <option value="aval">Requiere aval</option>
+      </select>
+    </div>
+
+    <div id="candCardsList"></div>`;
+
+    const candSolMatchesSolv = s => {
+      const sels = Array.isArray(s.selecciones) ? s.selecciones : [];
+      if (!sels.length) return false;
+      return sels.every(sel => {
+        const prop = V.find(v => v.ref === sel.ref);
+        return prop && Number(s.ingresos || 0) >= Number(prop.r || 0) * 3;
+      });
+    };
+
+    const getFilteredActiveSols = () => {
+      const list = getActiveSols();
+      const q = ($('candFilterQ')?.value || '').trim().toLowerCase();
+      const promoF = $('candFilterPromo')?.value || 'ALL';
+      const statusF = $('candFilterStatus')?.value || 'ALL';
+      const solvF = $('candFilterSolv')?.value || 'ALL';
+      return {
+        total: list.length,
+        items: list.filter(s => {
+          if (promoF !== 'ALL') {
+            const pNames = getSolSheetNames(s).map(n => n.toLowerCase());
+            if (!pNames.includes(promoF.toLowerCase())) return false;
+          }
+          if (statusF !== 'ALL' && getSolOverallStatus(s) !== statusF) return false;
+          if (solvF === 'ok' && !candSolMatchesSolv(s)) return false;
+          if (solvF === 'aval' && candSolMatchesSolv(s)) return false;
+          if (q) {
+            const refsStr = (s.selecciones || []).map(x => x.ref).join(' ');
+            const hay = `${s.nombre || ''} ${s.email || ''} ${s.telefono || ''} ${s.dni || ''} ${s.id || ''} ${refsStr}`.toLowerCase();
+            if (!hay.includes(q)) return false;
+          }
+          return true;
+        })
+      };
+    };
+
+    const renderCandCards = () => {
+      const host = $('candCardsList');
+      if (!host) return;
+      const { total, items } = getFilteredActiveSols();
+      if ($('candFilterCount')) {
+        $('candFilterCount').textContent = total
+          ? `Mostrando ${items.length} de ${total} candidatura${total === 1 ? '' : 's'}`
+          : '0 candidaturas activas';
+      }
+      if (!total) {
+        host.innerHTML = '<div class="panel"><p class="m">No hay candidaturas activas en este momento.</p></div>';
+        return;
+      }
+      if (!items.length) {
+        host.innerHTML = '<div class="panel"><p class="m">Ninguna candidatura coincide con los filtros actuales.</p></div>';
+        return;
+      }
+      host.innerHTML = items.map(s => {
         const maxRent = Math.floor(s.ingresos / 3);
         const matchingOther = avail.filter(v => v.r <= maxRent && !s.selecciones.some(x => x.ref === v.ref));
+        const replyMsg = buildCandidateReplyMessage(s);
+        const waNum = formatWaPhone(s.telefono);
+        const mailSubj = `Deltacor Properties · Candidatura ${s.id} (${getSolOverallStatus(s)})`;
         return `
         <div class="panel" style="margin-bottom:14px" data-sol-card="${esc(s.id)}">
           <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px">
             <div>
               <b>${esc(s.nombre)}</b> (${esc(s.tipoDoc)}: ${esc(s.dni)}) · <a href="mailto:${esc(s.email)}" style="color:var(--b1)">${esc(s.email)}</a> · Tel: ${esc(s.telefono)}
-              <div class="m" style="margin-top:2px">Unidad familiar: ${Number(s.adultos) || 1} adultos, ${Number(s.ninos) || 0} niños · Mascotas: ${esc(s.mascotas)} · Aval: <b>${esc(s.aval)}</b> · Ref: ${esc(s.id)}</div>
+              <div class="m" style="margin-top:2px">Unidad familiar: ${Number(s.adultos) || 1} adultos, ${Number(s.ninos) || 0} niños · Mascotas: ${esc(s.mascotas)} · Aval: <b>${esc(s.aval)}</b> · Ref: ${esc(s.id)} · <span style="font-weight:700">${esc(getSolPromoLabel(s))}</span></div>
             </div>
             <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
               <div style="text-align:right">
@@ -7718,9 +8239,22 @@ function renderAdmin(subTab) {
             ${matchingOther.length ? matchingOther.slice(0, 12).map(v => `${esc(v.ref)} (${eur(v.r)})`).join(', ') + (matchingOther.length > 12 ? '…' : '') : 'Ninguna disponible dentro del ratio 3x sin aval.'}
           </div>
           ${s.comentario ? `<div class="m" style="margin-top:6px">${ICO('note')} <i>"${esc(s.comentario)}"</i></div>` : ''}
+
+          <div class="cand-quick-acts">
+            <span class="m" style="font-size:.76rem;font-weight:700;margin-right:2px">Contacto rápido:</span>
+            ${waNum ? `<a class="btn ok sm" target="_blank" rel="noopener noreferrer" href="https://wa.me/${waNum}?text=${encodeURIComponent(replyMsg)}">WhatsApp rápido</a>` : ''}
+            ${s.email ? `<a class="btn g sm" href="mailto:${esc(s.email)}?subject=${encodeURIComponent(mailSubj)}&body=${encodeURIComponent(replyMsg)}">${ICO('mail')} Email rápido</a>` : ''}
+            <button type="button" class="btn g sm" data-copy-reply="${esc(s.id)}">Copiar mensaje</button>
+          </div>
         </div>`;
-      }).join('')}
-    </div>`;
+      }).join('');
+    };
+
+    renderCandCards();
+    if ($('candFilterQ')) $('candFilterQ').oninput = renderCandCards;
+    if ($('candFilterPromo')) $('candFilterPromo').onchange = renderCandCards;
+    if ($('candFilterStatus')) $('candFilterStatus').onchange = renderCandCards;
+    if ($('candFilterSolv')) $('candFilterSolv').onchange = renderCandCards;
 
     const findSolCard = id => Array.from(body.querySelectorAll('[data-sol-card]')).find(el => el.dataset.solCard === id);
 
@@ -7772,6 +8306,8 @@ function renderAdmin(subTab) {
         dlg.oncancel = null;
         dlg.close();
         removeCardSmoothly(findSolCard(sol.id), 'candCardsList', '<div class="panel"><p class="m">No hay candidaturas activas en este momento.</p></div>');
+        const { total, items } = getFilteredActiveSols();
+        if ($('candFilterCount')) $('candFilterCount').textContent = total ? `Mostrando ${items.length} de ${total} candidatura${total === 1 ? '' : 's'}` : '0 candidaturas activas';
         refreshAdminHeaderCounts();
         notify(`${sol.nombre} (${sel.ref}) marcada como Vendido y movida a Archivo`);
 
@@ -7838,6 +8374,8 @@ function renderAdmin(subTab) {
 
         dlg.close();
         removeCardSmoothly(findSolCard(sol.id), 'candCardsList', '<div class="panel"><p class="m">No hay candidaturas activas en este momento.</p></div>');
+        const { total, items } = getFilteredActiveSols();
+        if ($('candFilterCount')) $('candFilterCount').textContent = total ? `Mostrando ${items.length} de ${total} candidatura${total === 1 ? '' : 's'}` : '0 candidaturas activas';
         refreshAdminHeaderCounts();
         notify(keepInArchive
           ? `Candidatura de ${sol.nombre} rechazada y guardada en Archivo`
@@ -7880,10 +8418,7 @@ function renderAdmin(subTab) {
 
         sol.selecciones[selIdx].estado = newSt;
         e.target.dataset.prev = newSt;
-        const cls = statusCls(newSt);
-        e.target.className = `sol-select ${cls}`;
-        const rowWrap = e.target.closest('.sol-sel-row');
-        if (rowWrap) rowWrap.className = `sol-sel-row ${cls}`;
+        renderCandCards();
 
         cloudSaveSol(sol);
         const viviendasEstados = (sol.selecciones || []).map(x => `${x.ref} (${normSolStatus(x.estado)})`).join(' | ');
@@ -7897,6 +8432,17 @@ function renderAdmin(subTab) {
     };
 
     body.onclick = e => {
+      const copyBtn = e.target.closest('[data-copy-reply]');
+      if (copyBtn) {
+        const sol = SOLS.find(x => x.id === copyBtn.dataset.copyReply);
+        if (sol) {
+          const msg = buildCandidateReplyMessage(sol);
+          navigator.clipboard?.writeText(msg)
+            .then(() => notify(`Mensaje para ${sol.nombre} copiado al portapapeles`))
+            .catch(() => notify('No se pudo copiar automáticamente al portapapeles'));
+        }
+        return;
+      }
       const rejBtn = e.target.closest('[data-reject-sol]');
       if (rejBtn) {
         const sol = SOLS.find(x => x.id === rejBtn.dataset.rejectSol);
@@ -8885,11 +9431,29 @@ const ALLOWED_ROUTES = new Set([
   'mi-solicitud', 'admin', 'privacidad'
 ]);
 
+const ROUTE_TITLES = {
+  inicio: 'Deltacor Properties · Alquiler directo de obra nueva en Móstoles',
+  promociones: 'Promociones de obra nueva | Deltacor Properties',
+  viviendas: 'Catálogo de viviendas en alquiler | Deltacor Properties',
+  alzado: 'Alzado interactivo del edificio | Deltacor Properties',
+  condiciones: 'Condiciones de arrendamiento y solvencia | Deltacor Properties',
+  quienes: 'Quiénes somos | Deltacor Properties S.L.',
+  consejos: 'Consejos y guías de alquiler | Deltacor Properties',
+  contacto: 'Solicitar vivienda · Candidatura única | Deltacor Properties',
+  'mi-solicitud': 'Mi solicitud · Estado de candidatura | Deltacor Properties',
+  admin: 'Panel de administración | Deltacor Properties',
+  privacidad: 'Política de Privacidad y Protección de Datos | Deltacor Properties'
+};
+
 function route() {
   const raw = location.hash.slice(1) || 'inicio';
   const [rawName, rawParam] = raw.split('/');
   const routeName = ALLOWED_ROUTES.has(rawName) ? rawName : 'inicio';
   const param = safeDecodeParam(rawParam || '');
+
+  if (routeName !== 'ficha') {
+    document.title = ROUTE_TITLES[routeName] || ROUTE_TITLES.inicio;
+  }
 
   document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
   document.querySelectorAll('.links a').forEach(a => a.classList.toggle('on', a.dataset.r === routeName));
@@ -8935,6 +9499,7 @@ function route() {
   } else {
     $('v-' + routeName).classList.add('on');
   }
+  syncFavUi();
   renderCompareBar();
 }
 
@@ -8944,6 +9509,20 @@ document.addEventListener('click', e => {
     const ref = applyBtn.dataset.quickApply;
     if (!SEL.includes(ref)) SEL.push(ref);
     location.hash = 'contacto';
+    return;
+  }
+  const favBtn = e.target.closest('[data-fav]');
+  if (favBtn) {
+    e.preventDefault();
+    toggleFav(favBtn.dataset.fav);
+    return;
+  }
+  const wlBtn = e.target.closest('[data-waitlist]');
+  if (wlBtn) {
+    e.preventDefault();
+    const ref = wlBtn.dataset.waitlist;
+    const unit = V.find(v => v.ref === ref);
+    if (unit) openWaitlistModal(unit);
     return;
   }
   const cmpBtn = e.target.closest('[data-cmp]');
