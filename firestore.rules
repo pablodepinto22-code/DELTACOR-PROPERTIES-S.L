@@ -1,0 +1,107 @@
+rules_version = '2';
+
+// Reglas de seguridad recomendadas para Cloud Firestore (Deltacor Properties S.L.)
+// Desplegar desde Firebase Console -> Firestore Database -> Reglas
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+
+    function userEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    function isBootstrapAdmin() {
+      return isSignedIn() && userEmail() in [
+        'admin@invercor.es',
+        'deltacor.properties@gmail.com',
+        'estrella.deltacorproperties@gmail.com'
+      ];
+    }
+
+    function isAdmin() {
+      return isBootstrapAdmin() || (
+        isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(userEmail())) &&
+        get(/databases/$(database)/documents/admins/$(userEmail())).data.role == 'admin'
+      );
+    }
+
+    // Catálogo público de promociones, viviendas y blog/consejos
+    match /promociones/{promoId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /viviendas/{unitRef} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /consejos/{postId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Configuración pública de textos web vs configuración sensible de integraciones
+    match /config/siteContent {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /config/{docId} {
+      allow read: if docId == 'siteContent' || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Lista de administradores: un usuario solo puede comprobar su propio documento
+    match /admins/{adminEmail} {
+      allow get: if isAdmin() || (isSignedIn() && userEmail() == adminEmail.lower());
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Solicitudes (contienen datos personales RGPD: DNI/NIE, teléfono, ingresos)
+    // - Lectura: únicamente administradores o el propio candidato autenticado por correo
+    // - Creación: permitida con validación básica de esquema (sin estado pre-aprobado)
+    // - Modificación y borrado: exclusivamente administradores
+    match /solicitudes/{solId} {
+      allow read: if isAdmin() || (
+        isSignedIn() &&
+        resource.data.email is string &&
+        resource.data.email.lower() == userEmail()
+      );
+
+      allow create: if request.resource.data.keys().hasAll([
+          'id', 'fecha', 'nombre', 'tipoDoc', 'dni', 'email',
+          'telefono', 'adultos', 'ingresos', 'selecciones'
+        ])
+        && request.resource.data.id == solId
+        && request.resource.data.nombre is string
+        && request.resource.data.nombre.size() >= 2
+        && request.resource.data.nombre.size() <= 140
+        && request.resource.data.email is string
+        && request.resource.data.email.size() >= 5
+        && request.resource.data.email.size() <= 180
+        && request.resource.data.dni is string
+        && request.resource.data.dni.size() == 9
+        && request.resource.data.ingresos is number
+        && request.resource.data.ingresos >= 0
+        && request.resource.data.ingresos <= 1000000
+        && request.resource.data.selecciones is list
+        && request.resource.data.selecciones.size() >= 1
+        && request.resource.data.selecciones.size() <= 20
+        && (!('archived' in request.resource.data) || request.resource.data.archived == false)
+        && (!('deleted' in request.resource.data) || request.resource.data.deleted == false);
+
+      allow update, delete: if isAdmin();
+    }
+
+    // Bloquear cualquier otra colección por defecto
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
