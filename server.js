@@ -11,7 +11,7 @@ app.set('trust proxy', 1);
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = '0.0.0.0';
 
-const DEFAULT_PUBLIC_ORIGIN = 'https://pablodepinto22-code.github.io/IVENCOR/';
+const DEFAULT_PUBLIC_ORIGIN = 'https://pablodepinto22-code.github.io/DELTACOR-PROPERTIES-S.L/';
 const BLOCKED_PATHS = new Set([
   '/server.js',
   '/package.json',
