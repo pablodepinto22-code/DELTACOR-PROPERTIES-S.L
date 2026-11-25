@@ -1520,17 +1520,17 @@ async function renderScriptVersionBanner(hostId) {
       <div class="panel" style="margin-bottom:14px;padding:14px 16px;background:var(--warn-bg);border-color:rgba(245,158,11,.5)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:260px">
-            <b style="color:var(--warn-tx);font-size:.92rem">Actualización disponible de Google Apps Script (versión activa en tu enlace: v${esc(info.version)} → nueva v4.3)</b>
+            <b style="color:var(--warn-tx);font-size:.92rem">Actualización disponible de Google Apps Script (versión activa en tu enlace: v${esc(info.version)} → nueva v4.4)</b>
             <div style="font-size:.82rem;color:var(--tx);margin-top:5px;line-height:1.5">
-              Para usar <b>creación automática de hoja por promoción (con filtros y estilo clonado)</b>, columna <b>«Promoción»</b> en Archivo y <b>celda «Estado» con colores automáticos</b>, actualiza el script a <b>v4.3</b>:
+              Para usar <b>creación, renombrado y borrado automático de hojas por promoción (con filtros y estilo clonado)</b>, columna <b>«Promoción»</b> en Archivo y <b>celda «Estado» con colores automáticos</b>, actualiza el script a <b>v4.4</b>:
               <ol style="margin:6px 0 0 18px;padding:0">
-                <li>Pulsa <b>Copiar Apps Script v4.3</b> y pégalo entero en <b>Extensiones → Apps Script</b> (sustituyendo el código anterior).</li>
+                <li>Pulsa <b>Copiar Apps Script v4.4</b> y pégalo entero en <b>Extensiones → Apps Script</b> (sustituyendo el código anterior).</li>
                 <li>Pulsa <b>Implementar → Administrar implementaciones → Editar (lápiz) → Versión: Nueva versión → Implementar</b>.</li>
                 <li>Si creaste una <i>Nueva implementación</i> con otra URL <code>/exec</code>, pégala aquí abajo y pulsa <b>Guardar URL</b>.</li>
               </ol>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
-              <button type="button" class="btn sm" id="${esc(hostId)}CopyBtn">${ICO('file')} Copiar Apps Script v4.3</button>
+              <button type="button" class="btn sm" id="${esc(hostId)}CopyBtn">${ICO('file')} Copiar Apps Script v4.4</button>
               <button type="button" class="btn g sm" id="${esc(hostId)}RecheckBtn">Comprobar ahora</button>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
@@ -1548,7 +1548,7 @@ async function renderScriptVersionBanner(hostId) {
       copyBtn.onclick = async () => {
         try {
           await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-          notify('Apps Script v4.3 copiado: pégalo en Apps Script y publica «Nueva versión»');
+          notify('Apps Script v4.4 copiado: pégalo en Apps Script y publica «Nueva versión»');
         } catch {
           notify('No se pudo copiar automáticamente');
         }
@@ -1591,22 +1591,22 @@ async function renderScriptVersionBanner(hostId) {
           saveUrlBtn.textContent = 'Guardar URL';
           notify(next.invalidResponse
             ? 'URL guardada, pero Apps Script devolvió error/login. Configura Acceso: «Cualquier usuario».'
-            : `URL guardada, pero responde v${next.version || 1}. Publica una «Nueva versión» con el código v4.3.`);
+            : `URL guardada, pero responde v${next.version || 1}. Publica una «Nueva versión» con el código v4.4.`);
         }
       };
     }
-  } else if (info.version >= 4.3 && hostId === 'cfgScriptBanner') {
+  } else if (info.version >= 4.4 && hostId === 'cfgScriptBanner') {
     const pList = (info.promoSheets || []).length ? info.promoSheets.join(', ') : (info.mainSheet || 'Por promoción');
     currentHost.innerHTML = `
       <div class="panel" style="margin-bottom:14px;padding:11px 14px;background:var(--ok-bg);border-color:rgba(16,185,129,.35);color:var(--ok-tx);font-size:.84rem">
-        <b>Apps Script v${esc(info.version)} conectado correctamente</b> · Hojas: <b>${esc(pList)}</b> · Archivo: <b>${esc(info.archiveSheet || 'Archivo')}</b> (auto-creación de promociones con filtros/estilo + renombrado + colores de Estado)
+        <b>Apps Script v${esc(info.version)} conectado correctamente</b> · Hojas: <b>${esc(pList)}</b> · Archivo: <b>${esc(info.archiveSheet || 'Archivo')}</b> (creación, renombrado y borrado automático de hojas + filtros/estilo + colores de Estado)
       </div>`;
   } else if (info.version >= 4.2 && hostId === 'cfgScriptBanner') {
     const pList = (info.promoSheets || []).length ? info.promoSheets.join(', ') : (info.mainSheet || 'Por promoción');
     currentHost.innerHTML = `
       <div class="panel" style="margin-bottom:14px;padding:11px 14px;background:var(--ok-bg);border-color:rgba(16,185,129,.35);color:var(--ok-tx);font-size:.84rem">
         <b>Apps Script v${esc(info.version)} conectado correctamente</b> · Hojas: <b>${esc(pList)}</b> · Archivo: <b>${esc(info.archiveSheet || 'Archivo')}</b>
-        <div class="m" style="margin-top:4px;color:var(--tx)">Mejora opcional disponible (<b>v4.3</b>): copia abajo el código actualizado si quieres que cada nueva promoción clone también el autofiltro/estilo de tu hoja, se inserte siempre antes de «Archivo» y se renombre sola al editar el nombre.</div>
+        <div class="m" style="margin-top:4px;color:var(--tx)">Actualización disponible (<b>v4.4</b>): copia abajo el código actualizado y publica «Nueva versión» para que al <b>borrar una promoción</b> también se borre automáticamente su hoja del Excel (además de crearla con autofiltros y renombrarla).</div>
       </div>`;
   } else if (info.invalidResponse) {
     currentHost.innerHTML = `
@@ -1840,6 +1840,29 @@ async function syncToGoogleSheets(mode, payloadOrAll, options = {}) {
     }
     const res = await postToAppsScript(url, body);
     if (isOutdatedV4(res)) return { ok: false, outdatedScript: true, version: Number(res.data?.version || LAST_APPS_SCRIPT_CHECK.version || 1) };
+    if (res.ok) LAST_APPS_SCRIPT_CHECK.checkedAt = 0;
+    return { ...res, sheetName: promoName };
+  }
+
+  if (mode === 'delete_promo_sheet') {
+    const promoName = sanitizeSheetName(typeof payloadOrAll === 'string' ? payloadOrAll : payloadOrAll?.name);
+    if (!promoName || promoName.toLowerCase() === ARCHIVE_SHEET_NAME.toLowerCase()) {
+      return { ok: false, skipped: true };
+    }
+    const verInfo = await checkAppsScriptVersion(true);
+    if (verInfo.version !== null && verInfo.version < 4.4) {
+      return { ok: false, outdatedScript: true, version: verInfo.version, sheetName: promoName };
+    }
+    const res = await postToAppsScript(url, {
+      action: 'delete_promo_sheet',
+      archiveSheet: ARCHIVE_SHEET_NAME,
+      sheetName: promoName
+    });
+    const respVer = Number(res.data?.version || verInfo.version || 0);
+    if (isOutdatedV4(res) || (res.ok && res.data && res.data.action !== 'delete_promo_sheet') || (respVer > 0 && respVer < 4.4)) {
+      return { ok: false, outdatedScript: true, version: respVer || 1, sheetName: promoName };
+    }
+    if (res.ok) LAST_APPS_SCRIPT_CHECK.checkedAt = 0;
     return { ...res, sheetName: promoName };
   }
 
@@ -1903,8 +1926,8 @@ async function flushSheetQueue() {
   }
 }
 
-const APPS_SCRIPT_TEMPLATE = `// DELTACOR PROPERTIES · Google Sheets Sync v4.3
-// Una hoja por promoción (creación automática con estilo/autofiltro clonado antes de «Archivo» + renombrado)
+const APPS_SCRIPT_TEMPLATE = `// DELTACOR PROPERTIES · Google Sheets Sync v4.4
+// Una hoja por promoción (creación automática con estilo/autofiltro clonado antes de «Archivo» + renombrado + borrado)
 // + hoja «Archivo» con columna «Promoción» + columna «Estado» (col F) con colores automáticos
 function jsonOut_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
@@ -2366,22 +2389,22 @@ function doGet() {
     var archSheet = findSheetByNameInsensitive_(ss, 'Archivo');
     return jsonOut_({
       ok: true,
-      version: 4.3,
-      revision: '4.3',
+      version: 4.4,
+      revision: '4.4',
       mainSheet: promoSheets[0] || '',
       promoSheets: promoSheets,
       archiveSheet: archSheet ? archSheet.getName() : '',
-      status: 'DELTACOR Sheets sync v4.3 activo (auto-hoja por promoción con estilo/filtros antes de Archivo + renombrado + colores de Estado)'
+      status: 'DELTACOR Sheets sync v4.4 activo (creación, renombrado y borrado de hojas por promoción + filtros/estilo + colores de Estado)'
     });
   } catch (err) {
-    return jsonOut_({ ok: false, version: 4.3, error: String(err && err.message || err) });
+    return jsonOut_({ ok: false, version: 4.4, error: String(err && err.message || err) });
   }
 }
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(15000)) {
-    return jsonOut_({ ok: false, version: 4.3, error: 'busy' });
+    return jsonOut_({ ok: false, version: 4.4, error: 'busy' });
   }
   try {
     var raw = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
@@ -2419,11 +2442,62 @@ function doPost(e) {
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 4.3,
+        version: 4.4,
         action: 'ensure_promo_sheet',
         sheetName: shPromo.getName(),
         created: created,
         renamed: renamed,
+        promoSheets: getPromoSheets_(ss, archiveName).map(function(x) { return x.getName(); })
+      });
+    }
+
+    // 0b. Eliminar hoja de promoción del Excel cuando se borra una promoción desde la web
+    if (data.action === 'delete_promo_sheet') {
+      var delPromoName = data.sheetName ? sanitizeSheetName_(data.sheetName) : '';
+      var archLowerDel = String(archiveName || 'Archivo').trim().toLowerCase();
+      if (!delPromoName || delPromoName.toLowerCase() === archLowerDel) {
+        return jsonOut_({
+          ok: true,
+          version: 4.4,
+          action: 'delete_promo_sheet',
+          sheetName: delPromoName,
+          deleted: false,
+          reason: 'protected_or_empty',
+          promoSheets: getPromoSheets_(ss, archiveName).map(function(x) { return x.getName(); })
+        });
+      }
+      var shToDelete = findSheetByNameInsensitive_(ss, delPromoName);
+      if (!shToDelete) {
+        return jsonOut_({
+          ok: true,
+          version: 4.4,
+          action: 'delete_promo_sheet',
+          sheetName: delPromoName,
+          deleted: false,
+          notFound: true,
+          promoSheets: getPromoSheets_(ss, archiveName).map(function(x) { return x.getName(); })
+        });
+      }
+      if (ss.getSheets().length <= 1) {
+        return jsonOut_({
+          ok: true,
+          version: 4.4,
+          action: 'delete_promo_sheet',
+          sheetName: shToDelete.getName(),
+          deleted: false,
+          reason: 'last_sheet',
+          promoSheets: getPromoSheets_(ss, archiveName).map(function(x) { return x.getName(); })
+        });
+      }
+      var removedSheetName = shToDelete.getName();
+      ss.deleteSheet(shToDelete);
+      SpreadsheetApp.flush();
+      return jsonOut_({
+        ok: true,
+        version: 4.4,
+        action: 'delete_promo_sheet',
+        sheetName: removedSheetName,
+        deleted: true,
         promoSheets: getPromoSheets_(ss, archiveName).map(function(x) { return x.getName(); })
       });
     }
@@ -2444,7 +2518,7 @@ function doPost(e) {
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 4.3,
+        version: 4.4,
         action: 'delete',
         sheets: sheetList,
         deleted: deleted
@@ -2465,7 +2539,7 @@ function doPost(e) {
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 4.3,
+        version: 4.4,
         action: 'archive',
         removedFrom: delRes.sheets,
         removed: delRes.total,
@@ -2491,7 +2565,7 @@ function doPost(e) {
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 4.3,
+        version: 4.4,
         action: 'restore',
         sheets: restTargets,
         removedFromArchive: removedArch,
@@ -2521,7 +2595,7 @@ function doPost(e) {
       }
       applyStatusConditionalRules_(archSheet3, archStatusCol);
       SpreadsheetApp.flush();
-      return jsonOut_({ ok: true, version: 4.3, action: 'sync_archive', archiveSheet: archSheet3.getName(), rows: archRows.length });
+      return jsonOut_({ ok: true, version: 4.4, action: 'sync_archive', archiveSheet: archSheet3.getName(), rows: archRows.length });
     }
 
     // 5. Reconstrucción completa de todas las hojas por promoción (Estado en col F con colores)
@@ -2556,7 +2630,7 @@ function doPost(e) {
         totalRows += grpRows.length;
       }
       SpreadsheetApp.flush();
-      return jsonOut_({ ok: true, version: 4.3, action: 'sync_all', promoSheets: syncedNames, rows: totalRows });
+      return jsonOut_({ ok: true, version: 4.4, action: 'sync_all', promoSheets: syncedNames, rows: totalRows });
     }
 
     // 6. Sincronización incremental por lote agrupada por hoja de promoción
@@ -2612,10 +2686,13 @@ function doPost(e) {
         ensureHeaderFilter_(sheet, headers.length);
       }
       SpreadsheetApp.flush();
-      return jsonOut_({ ok: true, version: 4.3, action: 'upsert_batch', sheets: groupKeys, updated: updatedCount, inserted: insertedCount });
+      return jsonOut_({ ok: true, version: 4.4, action: 'upsert_batch', sheets: groupKeys, updated: updatedCount, inserted: insertedCount });
     }
 
     // 7. Actualización quirúrgica de una sola candidatura en su(s) hoja(s) de promoción
+    if (data.action && data.action !== 'upsert') {
+      return jsonOut_({ ok: false, version: 4.4, error: 'unknown_action:' + data.action });
+    }
     var row = data.row || [];
     var id = data.id || row[0];
     var targets = resolveTargetSheetNames_(ss, data, archiveName);
@@ -2628,9 +2705,9 @@ function doPost(e) {
       ins += resUpsert.inserted;
     }
     SpreadsheetApp.flush();
-    return jsonOut_({ ok: true, version: 4.3, action: 'upsert', sheets: targets, updated: upd, inserted: ins });
+    return jsonOut_({ ok: true, version: 4.4, action: 'upsert', sheets: targets, updated: upd, inserted: ins });
   } catch (err) {
-    return jsonOut_({ ok: false, version: 4.3, error: String(err && err.message || err) });
+    return jsonOut_({ ok: false, version: 4.4, error: String(err && err.message || err) });
   } finally {
     lock.releaseLock();
   }
@@ -7636,12 +7713,12 @@ function openPromoEditorModal(existingPromo = null, onSaved = null) {
         enqueueSheetOp('ensure_promo_sheet', cleanNew, renamed ? { oldName: cleanPrev } : {}, sheetRes => {
           if (!sheetRes || sheetRes.skipped) return;
           if (sheetRes.outdatedScript) {
-            notify('Promoción guardada, pero actualiza Google Apps Script a v4.3 («Nueva versión») para crear/renombrar hojas por promoción automáticamente.');
+            notify('Promoción guardada, pero actualiza Google Apps Script a v4.4 («Nueva versión») para crear/renombrar/borrar hojas por promoción automáticamente.');
           } else if (sheetRes.ok) {
             if (sheetRes.data?.renamed) {
               notify(`Pestaña de Excel renombrada automáticamente a «${cleanNew}»`);
             } else if (renamed && sheetRes.data && Number(sheetRes.data.version || 0) < 4.3) {
-              notify(`Hoja «${cleanNew}» creada en Excel (actualiza Apps Script a v4.3 para renombrado automático y autofiltros)`);
+              notify(`Hoja «${cleanNew}» creada en Excel (actualiza Apps Script a v4.4 para renombrado, borrado y autofiltros)`);
             } else if (isNew || sheetRes.data?.created) {
               notify(`Hoja «${cleanNew}» creada automáticamente en Google Sheets`);
             }
@@ -7660,12 +7737,14 @@ function openDeletePromoModal(promo, onDeleted = null) {
   }
   const linkedUnits = getAllPromoUnits(promo.id);
   const otherPromos = PROMOS.filter(p => p.id !== promo.id);
+  const cleanSheetToDelete = sanitizeSheetName(promo.name);
+  const hasSheetsSync = Boolean(getCfg().appsScriptUrl);
   const dlg = $('dlg');
   dlg.oncancel = null;
   dlg.classList.remove('wide');
   dlg.innerHTML = `
     <h3>Eliminar promoción · ${esc(promo.name)}</h3>
-    <p class="m" style="margin-top:6px">Se eliminará la promoción <b>${esc(promo.name)}</b> (${esc(promo.location)}).</p>
+    <p class="m" style="margin-top:6px">Se eliminará la promoción <b>${esc(promo.name)}</b> (${esc(promo.location)})${hasSheetsSync ? ` y su pestaña <b>«${esc(cleanSheetToDelete)}»</b> en Google Sheets` : ''}.</p>
     ${linkedUnits.length ? `
       <div style="margin:12px 0;padding:10px 12px;border-radius:4px;background:var(--warn-bg);color:var(--warn-tx);font-size:.82rem">
         Esta promoción tiene <b>${linkedUnits.length} vivienda${linkedUnits.length === 1 ? '' : 's'}</b> asociada${linkedUnits.length === 1 ? '' : 's'}. Selecciona a qué promoción deseas reasignarlas para no perder sus datos:
@@ -7675,7 +7754,7 @@ function openDeletePromoModal(promo, onDeleted = null) {
       </div>` : ''}
     <label class="confirm-check" style="background:var(--bad-bg);color:var(--bad-tx);padding:9px 10px;border-radius:4px;border:1px solid rgba(239,68,68,.3)">
       <input type="checkbox" id="delPromoVerifyChk">
-      <span>Confirmo que deseo eliminar esta promoción.</span>
+      <span>Confirmo que deseo eliminar esta promoción${hasSheetsSync ? ' y su hoja del Excel' : ''}.</span>
     </label>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
       <button type="button" class="btn g sm" id="delPromoCancelBtn">Cancelar</button>
@@ -7690,10 +7769,12 @@ function openDeletePromoModal(promo, onDeleted = null) {
     btn.disabled = true;
     btn.textContent = 'Eliminando…';
     const targetId = $('delPromoTarget')?.value || otherPromos[0].id;
+    const reassignedRefs = new Set();
     const ops = [];
     if (linkedUnits.length) {
       linkedUnits.forEach(u => {
         u.promoId = targetId;
+        reassignedRefs.add(String(u.ref || '').toUpperCase());
         if (isValidDocKey(u.ref)) {
           const clean = stripUndefinedDeep(u);
           delete clean.deleted;
@@ -7739,6 +7820,29 @@ function openDeletePromoModal(promo, onDeleted = null) {
     refreshAllPropertyViews();
     if (typeof onDeleted === 'function') onDeleted(promo);
     notify(`Promoción «${promo.name}» eliminada`);
+
+    if (getCfg().appsScriptUrl && cleanSheetToDelete) {
+      enqueueSheetOp('delete_promo_sheet', cleanSheetToDelete, {}, sheetRes => {
+        if (!sheetRes || sheetRes.skipped) return;
+        if (sheetRes.outdatedScript) {
+          notify('Promoción borrada en la web. Actualiza Google Apps Script a v4.4 («Nueva versión») para borrar automáticamente su pestaña del Excel.');
+        } else if (sheetRes.ok) {
+          if (sheetRes.data?.deleted) {
+            notify(`Pestaña «${cleanSheetToDelete}» eliminada automáticamente de Google Sheets`);
+          } else if (sheetRes.data?.reason === 'last_sheet') {
+            notify(`No se pudo eliminar «${cleanSheetToDelete}» en Excel porque es la única hoja del documento.`);
+          }
+        }
+      });
+      if (reassignedRefs.size) {
+        const affectedSols = getActiveSols().filter(s =>
+          Array.isArray(s.selecciones) && s.selecciones.some(x => reassignedRefs.has(String(x.ref || '').toUpperCase()))
+        );
+        if (affectedSols.length) {
+          enqueueSheetOp('upsert_batch', affectedSols);
+        }
+      }
+    }
   };
 }
 
@@ -9991,13 +10095,13 @@ function renderAdmin(subTab) {
           <input id="cfgUrl" type="url" value="${esc(c.baseUrl)}" required>
         </label>
         <details open style="margin:12px 0 16px;padding:10px 14px;box-shadow:none;background:var(--card2)">
-          <summary style="font-size:.82rem;color:var(--mut)">Sincronización con Google Apps Script v4.3 (auto-hoja por promoción + filtros/estilo + renombrado + Archivo)</summary>
+          <summary style="font-size:.82rem;color:var(--mut)">Sincronización con Google Apps Script v4.4 (auto-hoja por promoción + renombrado + borrado + filtros/estilo + Archivo)</summary>
           <div style="margin-top:12px">
             <label>URL de Apps Script (debe acabar en /exec)
               <input id="cfgSheets" type="url" value="${esc(c.appsScriptUrl)}" placeholder="https://script.google.com/macros/s/XXXXX/exec">
             </label>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v4.3 (Auto-promociones + Filtros + Colores)</button>
+              <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v4.4 (Crear / Renombrar / Borrar hojas)</button>
               <button type="button" class="btn g sm" id="testAppsScriptBtn">Comprobar versión</button>
             </div>
           </div>
@@ -10014,7 +10118,7 @@ function renderAdmin(subTab) {
     $('copyAppsScriptBtn').onclick = async () => {
       try {
         await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-        notify('Apps Script v4.3 copiado: pégalo en Apps Script y publica una «Nueva versión»');
+        notify('Apps Script v4.4 copiado: pégalo en Apps Script y publica una «Nueva versión»');
       } catch (_) {
         notify('No se pudo copiar automáticamente');
       }
@@ -10028,10 +10132,10 @@ function renderAdmin(subTab) {
       btn.disabled = false;
       btn.textContent = 'Comprobar versión';
       renderScriptVersionBanner('cfgScriptBanner');
-      if (info.version >= 4.3) {
+      if (info.version >= 4.4) {
         notify(`Conectado a Apps Script v${info.version} (${(info.promoSheets || []).join(', ') || 'Promociones'} + ${info.archiveSheet || 'Archivo'})`);
       } else if (info.version >= 4.2) {
-        notify(`Conectado a Apps Script v${info.version} (funcional; v4.3 opcional disponible para autofiltros, orden antes de Archivo y renombrado)`);
+        notify(`Conectado a Apps Script v${info.version} (actualiza a v4.4 si quieres borrado automático de hojas al eliminar promociones)`);
       } else if (info.version) {
         notify(`Tu enlace sigue en v${info.version}. En Apps Script pulsa Implementar → Administrar implementaciones → Editar → Nueva versión.`);
       } else {
