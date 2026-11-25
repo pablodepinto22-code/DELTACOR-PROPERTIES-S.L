@@ -1234,7 +1234,8 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-analytics.js";
 import {
-  getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword,
+  getAuth, setPersistence, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence,
+  GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, updateProfile, signOut, onAuthStateChanged,
   sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
@@ -1258,6 +1259,11 @@ const fbApp = initializeApp(firebaseConfig);
 let fbAnalytics = null;
 try { fbAnalytics = getAnalytics(fbApp); } catch (_) {}
 const fbAuth = getAuth(fbApp);
+async function ensurePersistentAuth() {
+  try { await setPersistence(fbAuth, indexedDBLocalPersistence); return; } catch (_) {}
+  try { await setPersistence(fbAuth, browserLocalPersistence); return; } catch (_) {}
+  try { await setPersistence(fbAuth, browserSessionPersistence); } catch (_) {}
+}
 let fbDb;
 try {
   fbDb = initializeFirestore(fbApp, {
@@ -1271,6 +1277,13 @@ let FB_DB_ONLINE = false;
 let FB_VIVIENDAS_EMPTY = false;
 let CLOUD_ADMINS = [];
 let AUTH_BUSY = false;
+let AUTH_INITIALIZED = false;
+let PUBLIC_SYNC_DONE = false;
+let LOCAL_WRITE_EPOCH = 0;
+let AUTO_REPAIR_RAN = false;
+const FIRESTORE_PROMO_IDS = new Set();
+const PENDING_REPAIR_PROMO_IDS = new Set();
+const PENDING_REPAIR_UNIT_REFS = new Set();
 
 // Lista inmutable de administradores iniciales (no modificable desde localStorage)
 const BOOTSTRAP_ADMIN_EMAILS = Object.freeze([
@@ -2764,9 +2777,14 @@ const notify = m => { const t = $('toast'); if (!t) return; t.textContent = m; t
   }
   const dlgEl = $('dlg');
   if (dlgEl) {
+    let dlgMouseDownOnBackdrop = false;
+    dlgEl.addEventListener('mousedown', e => { dlgMouseDownOnBackdrop = (e.target === dlgEl); });
     dlgEl.addEventListener('click', e => {
       if (e.target.closest('[data-close-dlg]')) dlgEl.close();
-      else if (e.target === dlgEl) dlgEl.close();
+      else if (e.target === dlgEl && dlgMouseDownOnBackdrop && !dlgEl.querySelector('#promoEditorForm, #unitEditorForm')) {
+        dlgEl.close();
+      }
+      dlgMouseDownOnBackdrop = false;
     });
   }
 })();
@@ -2889,10 +2907,12 @@ function isConfiguredAdminEmail(email) {
 async function fetchRoleFromFirestore(email) {
   const em = String(email || '').trim().toLowerCase();
   if (!em) return 'candidate';
+  if (isConfiguredAdminEmail(em)) return 'admin';
   try {
     const snap = await getDoc(doc(fbDb, 'admins', em));
     FB_DB_ONLINE = true;
-    return (snap.exists() && snap.data()?.role === 'admin') ? 'admin' : (isConfiguredAdminEmail(em) ? 'admin' : 'candidate');
+    const isAdminDoc = snap.exists() && String(snap.data()?.role || 'admin').trim().toLowerCase() === 'admin';
+    return isAdminDoc ? 'admin' : 'candidate';
   } catch (_) {
     return isConfiguredAdminEmail(em) ? 'admin' : 'candidate';
   }
@@ -2900,12 +2920,32 @@ async function fetchRoleFromFirestore(email) {
 
 async function resolveUserRoleFast(email) {
   const em = String(email || '').trim().toLowerCase();
-  const fallback = new Promise(r => setTimeout(() => r(isConfiguredAdminEmail(em) ? 'admin' : 'candidate'), 2500));
-  return Promise.race([fetchRoleFromFirestore(em), fallback]);
+  if (!em) return 'candidate';
+  if (isConfiguredAdminEmail(em)) return 'admin';
+  const remotePromise = fetchRoleFromFirestore(em);
+  const resolved = await Promise.race([
+    remotePromise,
+    new Promise(r => setTimeout(() => r(null), 5000))
+  ]);
+  if (resolved !== null) return resolved;
+  // Si Firestore tarda más de 5s en arrancar, actualizamos el rol en cuanto responda
+  remotePromise.then(freshRole => {
+    if (freshRole === 'admin' && CURRENT_USER && CURRENT_USER.email === em && CURRENT_USER.role !== 'admin') {
+      setSession({ ...CURRENT_USER, role: 'admin' });
+      refreshAllPropertyViews();
+      triggerBackgroundSync();
+      route();
+    }
+  });
+  return isConfiguredAdminEmail(em) ? 'admin' : 'candidate';
 }
 
 function triggerBackgroundSync() {
-  syncProtectedData().then(() => {
+  syncProtectedData().then(async () => {
+    if (isVerifiedAdmin() && PUBLIC_SYNC_DONE && !AUTO_REPAIR_RAN) {
+      AUTO_REPAIR_RAN = true;
+      await ensureCadmiaUnitsAndPromos({ persistToCloud: true });
+    }
     const h = (location.hash || '').replace(/^#/, '');
     if (h.startsWith('admin') || h === 'mi-solicitud') route();
   });
@@ -2915,10 +2955,12 @@ async function loginUser(email, pass) {
   const em = String(email || '').trim().toLowerCase();
   AUTH_BUSY = true;
   try {
+    await ensurePersistentAuth();
     const cred = await signInWithEmailAndPassword(fbAuth, em, pass);
     const userEmail = cred.user.email.toLowerCase();
     const role = await resolveUserRoleFast(userEmail);
     const u = { uid: cred.user.uid, email: userEmail, name: cred.user.displayName || userEmail.split('@')[0], role, isFirebase: true };
+    AUTH_INITIALIZED = true;
     setSession(u);
     triggerBackgroundSync();
     return { ok: true, user: u };
@@ -2945,11 +2987,13 @@ async function registerWithEmail(name, email, pass) {
   }
   AUTH_BUSY = true;
   try {
+    await ensurePersistentAuth();
     const cred = await createUserWithEmailAndPassword(fbAuth, em, pass);
     const cleanName = String(name || '').trim().slice(0, 120);
     if (cleanName) updateProfile(cred.user, { displayName: cleanName }).catch(() => {});
     const role = await resolveUserRoleFast(em);
     const u = { uid: cred.user.uid, email: em, name: cleanName || em.split('@')[0], role, isFirebase: true };
+    AUTH_INITIALIZED = true;
     setSession(u);
     triggerBackgroundSync();
     return { ok: true, user: u };
@@ -2987,11 +3031,13 @@ async function requestPasswordReset(email) {
 async function signInWithGoogle(onSuccess) {
   AUTH_BUSY = true;
   try {
+    await ensurePersistentAuth();
     const provider = new GoogleAuthProvider();
     const res = await signInWithPopup(fbAuth, provider);
     const em = (res.user.email || '').toLowerCase();
     const role = await resolveUserRoleFast(em);
     const user = { uid: res.user.uid, email: em, name: res.user.displayName || em.split('@')[0], role, isFirebase: true };
+    AUTH_INITIALIZED = true;
     setSession(user);
     triggerBackgroundSync();
     if (onSuccess) onSuccess(user);
@@ -3166,28 +3212,40 @@ function normalizePromo(p) {
   const id = String(p.id || '').trim() || ('promo-' + Date.now());
   const st = ['nueva', 'activa', 'construccion', 'oculta'].includes(p.status) ? p.status : (p.isNew ? 'nueva' : 'activa');
   const feat = p.isFeatured !== undefined ? Boolean(p.isFeatured) : (p.featured !== undefined ? Boolean(p.featured) : (id === 'cadmia'));
+  const isNewVal = p.isNew !== undefined ? Boolean(p.isNew) : (st === 'nueva');
+  const ordRaw = Number(p.order);
+  const order = Number.isFinite(ordRaw) && ordRaw > 0 ? ordRaw : (id === 'cadmia' ? 1 : 99);
   return {
     id,
     name: String(p.name || 'Promoción Residencial').trim(),
     location: String(p.location || 'Madrid').trim(),
     status: st,
-    isNew: Boolean(p.isNew || st === 'nueva'),
+    isNew: isNewVal,
     isFeatured: feat,
     visible: p.visible !== false && st !== 'oculta',
-    badge: String(p.badge || (st === 'nueva' || p.isNew ? 'NUEVA · OBRA NUEVA' : st === 'construccion' ? 'EN CONSTRUCCIÓN' : 'EN COMERCIALIZACIÓN')).trim(),
+    badge: String(p.badge || (st === 'nueva' || isNewVal ? 'NUEVA · OBRA NUEVA' : st === 'construccion' ? 'EN CONSTRUCCIÓN' : 'EN COMERCIALIZACIÓN')).trim(),
     delivery: String(p.delivery || (st === 'construccion' ? 'Próximamente · En construcción' : 'Obra nueva · Alquiler directo')).trim(),
     portalsLabel: String(p.portalsLabel || 'Obra nueva · CEE A').trim(),
     summary: String(p.summary || '').trim(),
     description: String(p.description || '').trim(),
     coverUrl: p.coverUrl && isSafeImageSrc(p.coverUrl) ? String(p.coverUrl).trim() : '',
+    order,
     createdAt: p.createdAt || new Date().toISOString()
   };
+}
+
+function sortPromos(list) {
+  return (list || []).sort((a, b) =>
+    (Number(a?.order || 99) - Number(b?.order || 99)) ||
+    String(a?.createdAt || '').localeCompare(String(b?.createdAt || '')) ||
+    String(a?.name || '').localeCompare(String(b?.name || ''), 'es')
+  );
 }
 
 function loadPromosInitial() {
   const saved = safeGetJson(localStorage, 'dc-promos-v1', null);
   if (Array.isArray(saved) && saved.length) {
-    const clean = saved.map(normalizePromo).filter(Boolean);
+    const clean = sortPromos(saved.map(normalizePromo).filter(Boolean));
     if (clean.length) return clean;
   }
   return DEFAULT_PROMOS.map(normalizePromo);
@@ -3444,50 +3502,140 @@ const saveBlog = () => safeSetItem(localStorage, 'inv-blog', JSON.stringify(BLOG
 const saveSols = () => {};
 const saveStats = () => safeSetItem(localStorage, 'inv-stats', JSON.stringify(STATS));
 
-const isValidDocKey = key => /^[A-Za-z0-9._@-]{1,120}$/.test(String(key || '')) && !String(key || '').includes('..');
+const isValidDocKey = key => {
+  const s = String(key || '').trim();
+  return s.length >= 1 && s.length <= 150 && !s.includes('/') && !s.includes('..') && s !== '.' && !/[\x00-\x1f]/.test(s);
+};
 
-/* Operaciones Cloud Firestore (con validación de rol administrador) */
+function stripUndefinedDeep(val) {
+  if (val === undefined) return null;
+  if (val === null || typeof val !== 'object') return val;
+  if (Array.isArray(val)) return val.filter(v => v !== undefined).map(stripUndefinedDeep);
+  const out = {};
+  for (const [k, v] of Object.entries(val)) {
+    if (v !== undefined) out[k] = stripUndefinedDeep(v);
+  }
+  return out;
+}
+
+function reportCloudWriteError(label, err) {
+  console.error(`Firestore write error (${label}):`, err);
+  const code = String(err?.code || '');
+  if (code === 'permission-denied') {
+    notify(`Sin permisos en Firestore para guardar ${label}. Cierra y vuelve a iniciar sesión o revisa las reglas de Firestore.`);
+  } else if (code === 'invalid-argument' || /exceeds the maximum allowed size/i.test(String(err?.message || ''))) {
+    notify(`No se pudo guardar ${label}: datos demasiado grandes o inválidos (prueba una imagen más ligera).`);
+  } else {
+    notify(`Error al guardar ${label} en Firestore (${code || 'sin conexión'}). Se conservó solo en local.`);
+  }
+}
+
+async function commitFirestoreOpsBatched(ops) {
+  const CHUNK = 350;
+  for (let i = 0; i < ops.length; i += CHUNK) {
+    const batch = writeBatch(fbDb);
+    ops.slice(i, i + CHUNK).forEach(op => {
+      if (op.type === 'delete') batch.delete(op.ref);
+      else if (op.merge) batch.set(op.ref, stripUndefinedDeep(op.data), { merge: true });
+      else batch.set(op.ref, stripUndefinedDeep(op.data));
+    });
+    await batch.commit();
+  }
+}
+
+/* Operaciones Cloud Firestore (con validación de rol administrador y aviso real si falla) */
 async function cloudSavePromo(promo) {
-  if (!isVerifiedAdmin() || !promo || !isValidDocKey(promo.id)) return false;
+  if (!isVerifiedAdmin()) {
+    notify('Sesión de administrador no verificada. Recarga o vuelve a iniciar sesión para guardar.');
+    return false;
+  }
+  if (!promo || !isValidDocKey(promo.id)) {
+    notify('Identificador de promoción no válido.');
+    return false;
+  }
+  LOCAL_WRITE_EPOCH++;
+  const clean = stripUndefinedDeep(promo);
+  delete clean.deleted;
   savePromos();
-  try { await setDoc(doc(fbDb, 'promociones', String(promo.id)), promo); FB_DB_ONLINE = true; return true; } catch (_) { return false; }
+  try {
+    await setDoc(doc(fbDb, 'promociones', String(promo.id)), clean);
+    FIRESTORE_PROMO_IDS.add(String(promo.id));
+    FB_DB_ONLINE = true;
+    return true;
+  } catch (err) {
+    reportCloudWriteError(`la promoción «${promo.name || promo.id}»`, err);
+    return false;
+  }
 }
 async function cloudDeletePromo(id, promoObj = null) {
   if (!isVerifiedAdmin() || !isValidDocKey(id)) return false;
+  LOCAL_WRITE_EPOCH++;
   savePromos();
   try {
     await deleteDoc(doc(fbDb, 'promociones', String(id)));
+    FIRESTORE_PROMO_IDS.delete(String(id));
     FB_DB_ONLINE = true;
     return true;
-  } catch (_) {
+  } catch (err) {
     try {
-      await setDoc(doc(fbDb, 'promociones', String(id)), { ...(promoObj || { id: String(id) }), deleted: true }, { merge: true });
+      await setDoc(doc(fbDb, 'promociones', String(id)), stripUndefinedDeep({ ...(promoObj || { id: String(id) }), deleted: true }), { merge: true });
+      FIRESTORE_PROMO_IDS.delete(String(id));
+      FB_DB_ONLINE = true;
       return true;
-    } catch (_) { return false; }
+    } catch (err2) {
+      reportCloudWriteError('la eliminación de la promoción', err2 || err);
+      return false;
+    }
   }
 }
 async function cloudSaveUnit(v) {
-  if (!isVerifiedAdmin() || !v || !isValidDocKey(v.ref)) return false;
+  if (!isVerifiedAdmin()) {
+    notify('Sesión de administrador no verificada. Vuelve a iniciar sesión para guardar.');
+    return false;
+  }
+  if (!v || !isValidDocKey(v.ref)) return false;
+  LOCAL_WRITE_EPOCH++;
+  const clean = stripUndefinedDeep(v);
+  delete clean.deleted;
   saveV();
-  try { await setDoc(doc(fbDb, 'viviendas', String(v.ref)), v); FB_DB_ONLINE = true; return true; } catch (_) { return false; }
+  try {
+    await setDoc(doc(fbDb, 'viviendas', String(v.ref)), clean);
+    FB_DB_ONLINE = true;
+    return true;
+  } catch (err) {
+    reportCloudWriteError(`la vivienda ${v.ref}`, err);
+    return false;
+  }
 }
 async function cloudDeleteUnit(ref, unitObj = null) {
   if (!isVerifiedAdmin() || !isValidDocKey(ref)) return false;
+  LOCAL_WRITE_EPOCH++;
   saveV();
   try {
     await deleteDoc(doc(fbDb, 'viviendas', String(ref)));
     FB_DB_ONLINE = true;
     return true;
-  } catch (_) {
+  } catch (err) {
     try {
-      await setDoc(doc(fbDb, 'viviendas', String(ref)), { ...(unitObj || { ref: String(ref) }), deleted: true }, { merge: true });
+      await setDoc(doc(fbDb, 'viviendas', String(ref)), stripUndefinedDeep({ ...(unitObj || { ref: String(ref) }), deleted: true }), { merge: true });
+      FB_DB_ONLINE = true;
       return true;
-    } catch (_) { return false; }
+    } catch (err2) {
+      reportCloudWriteError(`la eliminación de ${ref}`, err2 || err);
+      return false;
+    }
   }
 }
 async function cloudSaveSol(sol) {
   if (!sol || !isValidDocKey(sol.id)) return false;
-  try { await setDoc(doc(fbDb, 'solicitudes', String(sol.id)), sol); FB_DB_ONLINE = true; return true; } catch (_) { return false; }
+  try {
+    await setDoc(doc(fbDb, 'solicitudes', String(sol.id)), stripUndefinedDeep(sol));
+    FB_DB_ONLINE = true;
+    return true;
+  } catch (err) {
+    console.warn('Firestore save solicitud error:', err);
+    return false;
+  }
 }
 async function cloudDeleteSol(id, solObj = null) {
   if (!isVerifiedAdmin() || !isValidDocKey(id)) return { ok: false, error: 'Permisos insuficientes' };
@@ -3497,7 +3645,7 @@ async function cloudDeleteSol(id, solObj = null) {
     return { ok: true, mode: 'delete' };
   } catch (err) {
     try {
-      await setDoc(doc(fbDb, 'solicitudes', String(id)), { ...(solObj || { id: String(id) }), deleted: true, archived: false }, { merge: true });
+      await setDoc(doc(fbDb, 'solicitudes', String(id)), stripUndefinedDeep({ ...(solObj || { id: String(id) }), deleted: true, archived: false }), { merge: true });
       FB_DB_ONLINE = true;
       return { ok: true, mode: 'soft-delete' };
     } catch (err2) {
@@ -3508,24 +3656,55 @@ async function cloudDeleteSol(id, solObj = null) {
 }
 async function cloudSaveBlog(b) {
   if (!isVerifiedAdmin() || !b || !isValidDocKey(b.id)) return false;
+  LOCAL_WRITE_EPOCH++;
   saveBlog();
-  try { await setDoc(doc(fbDb, 'consejos', String(b.id)), b); FB_DB_ONLINE = true; return true; } catch (_) { return false; }
+  try {
+    await setDoc(doc(fbDb, 'consejos', String(b.id)), stripUndefinedDeep(b));
+    FB_DB_ONLINE = true;
+    return true;
+  } catch (err) {
+    reportCloudWriteError('el artículo del blog', err);
+    return false;
+  }
 }
 async function cloudDeleteBlog(id) {
   if (!isVerifiedAdmin() || !isValidDocKey(id)) return false;
+  LOCAL_WRITE_EPOCH++;
   saveBlog();
-  try { await deleteDoc(doc(fbDb, 'consejos', String(id))); return true; } catch (_) { return false; }
+  try {
+    await deleteDoc(doc(fbDb, 'consejos', String(id)));
+    return true;
+  } catch (err) {
+    reportCloudWriteError('la eliminación del artículo', err);
+    return false;
+  }
 }
 async function cloudSaveConfig(cfg) {
   if (!isVerifiedAdmin()) return false;
+  LOCAL_WRITE_EPOCH++;
   saveCfg(cfg);
-  try { await setDoc(doc(fbDb, 'config', 'general'), getCfg(), { merge: true }); FB_DB_ONLINE = true; return true; } catch (_) { return false; }
+  try {
+    await setDoc(doc(fbDb, 'config', 'general'), stripUndefinedDeep(getCfg()), { merge: true });
+    FB_DB_ONLINE = true;
+    return true;
+  } catch (err) {
+    reportCloudWriteError('la configuración', err);
+    return false;
+  }
 }
 async function cloudSaveSiteContent(content) {
   if (!isVerifiedAdmin()) return false;
+  LOCAL_WRITE_EPOCH++;
   SITE_CONTENT = mergeSiteContent(content);
   saveSiteContent();
-  try { await setDoc(doc(fbDb, 'config', 'siteContent'), SITE_CONTENT); FB_DB_ONLINE = true; return true; } catch (_) { return false; }
+  try {
+    await setDoc(doc(fbDb, 'config', 'siteContent'), stripUndefinedDeep(SITE_CONTENT));
+    FB_DB_ONLINE = true;
+    return true;
+  } catch (err) {
+    reportCloudWriteError('el contenido de la web', err);
+    return false;
+  }
 }
 async function cloudAddAdmin(email, name) {
   if (!isVerifiedAdmin()) { notify('Permisos insuficientes'); return false; }
@@ -3559,34 +3738,184 @@ async function cloudRemoveAdmin(email) {
     return false;
   }
 }
+
+/* Garantiza que Residencial Cadmia exista y tenga vinculadas sus 45 viviendas (auto-reparación segura) */
+async function ensureCadmiaUnitsAndPromos({ persistToCloud = false, forceRepair45 = false } = {}) {
+  const dirtyPromos = new Map();
+  const dirtyUnits = new Map();
+
+  // 1. Localizar o restaurar la promoción Residencial Cadmia
+  let cadmiaPromo = PROMOS.find(p => p.id === 'cadmia') || PROMOS.find(p => /cadmia/i.test(p.name || ''));
+  if (!cadmiaPromo) {
+    cadmiaPromo = normalizePromo({ ...DEFAULT_PROMOS[0], order: 1 });
+    PROMOS.unshift(cadmiaPromo);
+    dirtyPromos.set(cadmiaPromo.id, cadmiaPromo);
+  }
+  if (!PROMOS.some(p => p.isFeatured) && cadmiaPromo) {
+    cadmiaPromo.isFeatured = true;
+    dirtyPromos.set(cadmiaPromo.id, cadmiaPromo);
+  }
+  sortPromos(PROMOS);
+
+  const cadmiaId = cadmiaPromo.id;
+  const promoIdSet = new Set(PROMOS.map(p => p.id));
+
+  // 2. Re-vincular viviendas huérfanas o con promoId='cadmia' a la promoción Cadmia real
+  V.forEach(u => {
+    if (!u || u.deleted) return;
+    const pid = String(u.promoId || 'cadmia').trim() || 'cadmia';
+    if (!promoIdSet.has(pid) || (pid === 'cadmia' && cadmiaId !== 'cadmia')) {
+      u.promoId = cadmiaId;
+      dirtyUnits.set(u.ref, u);
+    }
+  });
+
+  // 3. Si Cadmia tiene < 45 viviendas, recuperar las REF-01..REF-45 de Cadmia que hubieran acabado en otra promoción
+  const isCadmiaSeedUnit = u => {
+    const m = String(u?.ref || '').match(/^REF-(\d{2})$/);
+    if (!m) return false;
+    const num = Number(m[1]);
+    if (num < 1 || num > 45) return false;
+    return /cadmia|alamos|álamos/i.test(String(u.rentgerUrl || '')) || /cadmia|alamos|álamos/i.test(String(u.desc || '')) || /cadmia|alamos|álamos/i.test(String(u.nombre || ''));
+  };
+  if (getAllPromoUnits(cadmiaId).length < 45 || forceRepair45) {
+    V.forEach(u => {
+      if (!u || u.deleted) return;
+      if (u.promoId !== cadmiaId && isCadmiaSeedUnit(u)) {
+        u.promoId = cadmiaId;
+        dirtyUnits.set(u.ref, u);
+      }
+    });
+  }
+
+  // 4. Si aún faltan viviendas entre las 45 de Residencial Cadmia, añadir las faltantes sin sobreescribir las ya editadas
+  if (getAllPromoUnits(cadmiaId).length < 45 || forceRepair45) {
+    const existingRefs = new Set(V.map(u => String(u.ref || '').toUpperCase()));
+    const seeds = seedViviendas();
+    for (const seed of seeds) {
+      if (getAllPromoUnits(cadmiaId).length >= 45) break;
+      if (!existingRefs.has(seed.ref.toUpperCase())) {
+        const added = migrateLegacyUnit({ ...seed, promoId: cadmiaId });
+        V.push(added);
+        existingRefs.add(added.ref.toUpperCase());
+        dirtyUnits.set(added.ref, added);
+      }
+    }
+  }
+
+  V.sort((a, b) => String(a.ref || '').localeCompare(String(b.ref || ''), 'es', { numeric: true }));
+  dirtyPromos.forEach((_, pid) => PENDING_REPAIR_PROMO_IDS.add(String(pid)));
+  dirtyUnits.forEach((_, ref) => PENDING_REPAIR_UNIT_REFS.add(String(ref)));
+  if (dirtyPromos.size) savePromos();
+  if (dirtyUnits.size) saveV();
+
+  // 5. Persistir en Cloud Firestore si somos administrador verificado
+  if (persistToCloud && isVerifiedAdmin()) {
+    PENDING_REPAIR_PROMO_IDS.forEach(pid => {
+      const p = PROMOS.find(x => String(x.id) === String(pid));
+      if (p) dirtyPromos.set(p.id, p);
+    });
+    PENDING_REPAIR_UNIT_REFS.forEach(ref => {
+      const u = V.find(x => !x.deleted && String(x.ref) === String(ref));
+      if (u) dirtyUnits.set(u.ref, u);
+    });
+    PROMOS.forEach(p => {
+      if (!FIRESTORE_PROMO_IDS.has(p.id)) dirtyPromos.set(p.id, p);
+    });
+    if (FB_VIVIENDAS_EMPTY) {
+      V.forEach(u => { if (u && !u.deleted) dirtyUnits.set(u.ref, u); });
+    }
+    const ops = [];
+    dirtyPromos.forEach(p => {
+      if (isValidDocKey(p.id)) {
+        const clean = stripUndefinedDeep(p);
+        delete clean.deleted;
+        ops.push({ type: 'set', ref: doc(fbDb, 'promociones', String(p.id)), data: clean });
+      }
+    });
+    dirtyUnits.forEach(u => {
+      if (isValidDocKey(u.ref)) {
+        const clean = stripUndefinedDeep(u);
+        delete clean.deleted;
+        ops.push({ type: 'set', ref: doc(fbDb, 'viviendas', String(u.ref)), data: clean });
+      }
+    });
+    if (ops.length) {
+      LOCAL_WRITE_EPOCH++;
+      try {
+        await commitFirestoreOpsBatched(ops);
+        dirtyPromos.forEach((_, pid) => {
+          FIRESTORE_PROMO_IDS.add(String(pid));
+          PENDING_REPAIR_PROMO_IDS.delete(String(pid));
+        });
+        dirtyUnits.forEach((_, ref) => PENDING_REPAIR_UNIT_REFS.delete(String(ref)));
+        FB_DB_ONLINE = true;
+        FB_VIVIENDAS_EMPTY = false;
+        refreshAllPropertyViews();
+        if (location.hash.startsWith('#admin')) route();
+        if (dirtyUnits.size || dirtyPromos.size) {
+          notify(`«${cadmiaPromo.name}» sincronizada en Firestore (${getAllPromoUnits(cadmiaId).length} viviendas)`);
+        }
+      } catch (err) {
+        reportCloudWriteError('la sincronización de promociones y viviendas', err);
+      }
+    }
+  }
+  return { cadmiaPromo, repairedPromos: dirtyPromos.size, repairedUnits: dirtyUnits.size };
+}
+
 async function cloudSeedAll() {
   if (!isVerifiedAdmin()) { notify('Solo un administrador autenticado puede inicializar Firestore'); return false; }
+  await ensureCadmiaUnitsAndPromos({ persistToCloud: false, forceRepair45: true });
   try {
-    const batch = writeBatch(fbDb);
-    PROMOS.forEach(p => batch.set(doc(fbDb, 'promociones', String(p.id)), p));
-    V.forEach(v => batch.set(doc(fbDb, 'viviendas', v.ref), v));
-    BLOG.forEach(b => batch.set(doc(fbDb, 'consejos', String(b.id)), b));
-    batch.set(doc(fbDb, 'config', 'general'), getCfg(), { merge: true });
+    const ops = [];
+    PROMOS.forEach(p => {
+      if (isValidDocKey(p.id)) {
+        const clean = stripUndefinedDeep(p);
+        delete clean.deleted;
+        ops.push({ type: 'set', ref: doc(fbDb, 'promociones', String(p.id)), data: clean });
+      }
+    });
+    V.forEach(v => {
+      if (isValidDocKey(v.ref)) {
+        const clean = stripUndefinedDeep(v);
+        delete clean.deleted;
+        ops.push({ type: 'set', ref: doc(fbDb, 'viviendas', String(v.ref)), data: clean });
+      }
+    });
+    BLOG.forEach(b => {
+      if (isValidDocKey(b.id)) ops.push({ type: 'set', ref: doc(fbDb, 'consejos', String(b.id)), data: stripUndefinedDeep(b) });
+    });
+    ops.push({ type: 'set', ref: doc(fbDb, 'config', 'general'), data: stripUndefinedDeep(getCfg()), merge: true });
     if (CURRENT_USER?.email) {
-      batch.set(doc(fbDb, 'admins', CURRENT_USER.email.toLowerCase()), {
-        email: CURRENT_USER.email.toLowerCase(),
-        name: CURRENT_USER.name || 'Administrador',
-        role: 'admin',
-        createdAt: new Date().toISOString()
-      }, { merge: true });
+      ops.push({
+        type: 'set',
+        ref: doc(fbDb, 'admins', CURRENT_USER.email.toLowerCase()),
+        data: {
+          email: CURRENT_USER.email.toLowerCase(),
+          name: CURRENT_USER.name || 'Administrador',
+          role: 'admin',
+          createdAt: new Date().toISOString()
+        },
+        merge: true
+      });
     }
-    await batch.commit();
+    LOCAL_WRITE_EPOCH++;
+    await commitFirestoreOpsBatched(ops);
+    PROMOS.forEach(p => FIRESTORE_PROMO_IDS.add(String(p.id)));
     FB_DB_ONLINE = true;
     FB_VIVIENDAS_EMPTY = false;
-    notify(`${PROMOS.length} promociones, ${V.length} viviendas y configuración subidas a Cloud Firestore`);
+    refreshAllPropertyViews();
+    notify(`${PROMOS.length} promociones, ${V.length} viviendas y configuración guardadas en Cloud Firestore`);
     return true;
   } catch (err) {
-    notify('No se pudo inicializar Firestore: ' + (err.code || err.message));
+    reportCloudWriteError('la sincronización completa', err);
     return false;
   }
 }
 
 async function syncPublicData() {
+  const startEpoch = LOCAL_WRITE_EPOCH;
   try {
     const [pSnap, vSnap, bSnap, cSnap, scSnap] = await Promise.all([
       getDocs(collection(fbDb, 'promociones')).catch(() => ({ empty: true, docs: [] })),
@@ -3596,12 +3925,24 @@ async function syncPublicData() {
       getDoc(doc(fbDb, 'config', 'siteContent')).catch(() => ({ exists: () => false }))
     ]);
     FB_DB_ONLINE = true;
+    PUBLIC_SYNC_DONE = true;
+    // Si el administrador guardó cambios locales mientras descargábamos, no pisamos sus cambios
+    if (LOCAL_WRITE_EPOCH !== startEpoch) {
+      refreshAllPropertyViews();
+      return;
+    }
+    FIRESTORE_PROMO_IDS.clear();
+    PENDING_REPAIR_PROMO_IDS.clear();
+    PENDING_REPAIR_UNIT_REFS.clear();
     if (pSnap && !pSnap.empty) {
-      const loadedPromos = pSnap.docs
-        .map(d => d.data())
-        .filter(x => x && !x.deleted)
-        .map(normalizePromo)
-        .filter(Boolean);
+      const loadedPromos = sortPromos(
+        pSnap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(x => x && !x.deleted)
+          .map(normalizePromo)
+          .filter(Boolean)
+      );
+      loadedPromos.forEach(p => FIRESTORE_PROMO_IDS.add(String(p.id)));
       if (loadedPromos.length) {
         PROMOS = loadedPromos;
         savePromos();
@@ -3609,7 +3950,7 @@ async function syncPublicData() {
     }
     if (!vSnap.empty) {
       V = vSnap.docs
-        .map(d => migrateLegacyUnit(d.data()))
+        .map(d => migrateLegacyUnit({ ref: d.id, ...d.data() }))
         .filter(x => x && !x.deleted)
         .sort((a, b) => String(a.ref || '').localeCompare(String(b.ref || ''), 'es', { numeric: true }));
       FB_VIVIENDAS_EMPTY = false;
@@ -3639,10 +3980,17 @@ async function syncPublicData() {
       SITE_CONTENT = mergeSiteContent(scSnap.data());
       saveSiteContent();
     }
+    const canPersist = isVerifiedAdmin();
+    if (canPersist) AUTO_REPAIR_RAN = true;
+    await ensureCadmiaUnitsAndPromos({ persistToCloud: canPersist });
     refreshAllPropertyViews();
-    route();
+    if (AUTH_INITIALIZED || !location.hash.startsWith('#admin')) {
+      route();
+    }
   } catch (_) {
     FB_DB_ONLINE = false;
+    PUBLIC_SYNC_DONE = true;
+    await ensureCadmiaUnitsAndPromos({ persistToCloud: false });
   }
 }
 
@@ -3959,7 +4307,9 @@ function updateUserHeader() {
 
   if (!CURRENT_USER) {
     btn.classList.remove('is-admin');
-    lbl.innerHTML = `${ICO('user')} <span class="lbl-full">Iniciar sesión</span><span class="lbl-short">Acceder</span>`;
+    lbl.innerHTML = !AUTH_INITIALIZED
+      ? `${ICO('user')} <span class="lbl-full">Verificando…</span><span class="lbl-short">…</span>`
+      : `${ICO('user')} <span class="lbl-full">Iniciar sesión</span><span class="lbl-short">Acceder</span>`;
     menu.classList.remove('open');
     menu.innerHTML = '';
     btn.setAttribute('aria-expanded', 'false');
@@ -6557,6 +6907,15 @@ function renderMiSolicitud() {
     return;
   }
 
+  if (!AUTH_INITIALIZED) {
+    sec.innerHTML = `
+    <div class="panel" style="max-width:480px;margin:32px auto;text-align:center;padding:28px 20px">
+      <h3 style="margin-bottom:6px">Verificando tu sesión…</h3>
+      <p class="m">Comprobando tus credenciales de acceso de forma segura.</p>
+    </div>`;
+    return;
+  }
+
   sec.innerHTML = `
   <div class="head">
     <div>
@@ -7075,8 +7434,8 @@ function openPromoEditorModal(existingPromo = null, onSaved = null) {
         <label><input type="checkbox" id="peVisible" ${curVisible ? 'checked' : ''}> Visible en la web pública y alzado</label>
       </div>
 
-      <label>Resumen corto (aparece en la tarjeta de promoción) *
-        <textarea id="peSummary" rows="2" required placeholder="Breve presentación comercial de esta promoción...">${esc(existingPromo?.summary || '')}</textarea>
+      <label>Resumen corto (aparece en la tarjeta de promoción, opcional)
+        <textarea id="peSummary" rows="2" placeholder="Breve presentación comercial de esta promoción (si se deja vacío se genera uno automáticamente)...">${esc(existingPromo?.summary || '')}</textarea>
       </label>
 
       <label>Descripción ampliada (opcional)
@@ -7107,7 +7466,7 @@ function openPromoEditorModal(existingPromo = null, onSaved = null) {
 
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
         <button type="button" class="btn g sm" id="peCancelBtn">Cancelar</button>
-        <button type="submit" class="btn sm">${isNew ? 'Crear promoción' : 'Guardar promoción'}</button>
+        <button type="submit" class="btn sm" id="peSubmitBtn">${isNew ? 'Crear promoción' : 'Guardar promoción'}</button>
       </div>
     </form>`;
 
@@ -7126,6 +7485,11 @@ function openPromoEditorModal(existingPromo = null, onSaved = null) {
     if (st === 'oculta') $('peVisible').checked = false;
     else $('peVisible').checked = true;
     if (st === 'nueva') $('peIsNew').checked = true;
+  };
+  $('peIsNew').onchange = () => {
+    if (!$('peIsNew').checked && $('peStatus').value === 'nueva') {
+      $('peStatus').value = 'activa';
+    }
   };
 
   $('peCoverFile').onchange = async e => {
@@ -7167,8 +7531,13 @@ function openPromoEditorModal(existingPromo = null, onSaved = null) {
   $('peCloseX').onclick = closePromoModal;
   $('peCancelBtn').onclick = closePromoModal;
 
-  $('promoEditorForm').onsubmit = e => {
+  let savingPromo = false;
+  let assignedPromoId = existingPromo?.id || null;
+  const prevPromoName = existingPromo ? String(existingPromo.name || '').trim() : '';
+
+  $('promoEditorForm').onsubmit = async e => {
     e.preventDefault();
+    if (savingPromo) return;
     $('peError').hidden = true;
     const name = $('peName').value.trim();
     const location = $('peLocation').value.trim();
@@ -7178,26 +7547,33 @@ function openPromoEditorModal(existingPromo = null, onSaved = null) {
     const isNewLaunch = $('peIsNew').checked;
     const isFeatured = Boolean($('peFeatured')?.checked);
     const visible = status === 'oculta' ? false : $('peVisible').checked;
-    const summary = $('peSummary').value.trim();
+    const rawSummary = $('peSummary').value.trim();
+    const summary = rawSummary || `Promoción residencial de obra nueva en ${location}.`;
     const description = $('peDesc').value.trim();
     const urlInput = $('peCoverUrl').value.trim();
     const finalCover = urlInput ? urlInput : coverUrl;
 
     if (name.length < 2) { $('peError').textContent = 'Indica el nombre de la promoción.'; $('peError').hidden = false; $('peName').focus(); return; }
     if (location.length < 2) { $('peError').textContent = 'Indica la ubicación de la promoción.'; $('peError').hidden = false; $('peLocation').focus(); return; }
-    if (summary.length < 6) { $('peError').textContent = 'Escribe un breve resumen comercial para la tarjeta.'; $('peError').hidden = false; $('peSummary').focus(); return; }
     if (finalCover && !isSafeImageSrc(finalCover)) { $('peError').textContent = 'La URL de portada debe empezar por https:// o http://'; $('peError').hidden = false; return; }
 
-    let promoId = existingPromo?.id;
-    if (isNew) {
-      const baseSlug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 28) || 'promo';
-      promoId = baseSlug;
-      let idx = 2;
-      while (PROMOS.some(p => p.id === promoId)) { promoId = `${baseSlug}-${idx++}`; }
+    let promoId = assignedPromoId;
+    if (!promoId) {
+      if (/cadmia/i.test(name) && !PROMOS.some(p => p.id === 'cadmia')) {
+        promoId = 'cadmia';
+      } else {
+        const baseSlug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 28).replace(/-+$/g, '') || 'promo';
+        promoId = baseSlug;
+        let idx = 2;
+        while (PROMOS.some(p => p.id === promoId)) { promoId = `${baseSlug}-${idx++}`; }
+      }
+      assignedPromoId = promoId;
     }
 
+    const baseExisting = PROMOS.find(p => p.id === promoId) || existingPromo;
+    const maxOrder = PROMOS.reduce((m, p) => Math.max(m, Number(p.order) || 0), 0);
     const updated = normalizePromo({
-      ...(existingPromo || {}),
+      ...(baseExisting || {}),
       id: promoId,
       name,
       location,
@@ -7210,31 +7586,64 @@ function openPromoEditorModal(existingPromo = null, onSaved = null) {
       summary,
       description,
       coverUrl: finalCover,
-      order: existingPromo ? Number(existingPromo.order || 1) : PROMOS.length + 1
+      order: baseExisting ? Number(baseExisting.order || 1) : (maxOrder + 1)
     });
+    delete updated.deleted;
 
+    const toSave = new Map();
     if (isFeatured) {
       PROMOS.forEach(p => {
         if (p.id !== promoId && p.isFeatured) {
           p.isFeatured = false;
-          trackBgOp(cloudSavePromo(p));
+          toSave.set(p.id, p);
         }
       });
     }
 
-    const prevPromoName = existingPromo ? String(existingPromo.name || '').trim() : '';
+    const existingIdx = PROMOS.findIndex(p => p.id === promoId);
+    let savedPromo;
+    if (existingIdx >= 0) {
+      Object.assign(PROMOS[existingIdx], updated);
+      savedPromo = PROMOS[existingIdx];
+    } else {
+      PROMOS.push(updated);
+      savedPromo = updated;
+    }
+    sortPromos(PROMOS);
+    savePromos();
 
-    if (isNew) PROMOS.push(updated);
-    else Object.assign(existingPromo, updated);
+    toSave.set(savedPromo.id, savedPromo);
+    // Garantizar que promociones previas (como Residencial Cadmia) también existan en Cloud Firestore
+    PROMOS.forEach(p => {
+      if (!FIRESTORE_PROMO_IDS.has(String(p.id))) {
+        toSave.set(p.id, p);
+      }
+    });
 
-    const savedPromo = isNew ? updated : existingPromo;
-    closePromoModal();
-    trackBgOp(cloudSavePromo(savedPromo));
+    savingPromo = true;
+    const subBtn = $('peSubmitBtn');
+    const prevBtnTxt = subBtn ? subBtn.textContent : '';
+    if (subBtn) { subBtn.disabled = true; subBtn.textContent = 'Guardando…'; }
+
+    const saveResults = await Promise.all([...toSave.values()].map(async p => ({ id: p.id, ok: await cloudSavePromo(p) })));
+    const mainSavedOk = Boolean(saveResults.find(r => r.id === savedPromo.id)?.ok);
+
+    savingPromo = false;
+    if (subBtn) { subBtn.disabled = false; subBtn.textContent = prevBtnTxt; }
+
     refreshAllPropertyViews();
     if (typeof onSaved === 'function') onSaved(savedPromo);
+
+    if (!mainSavedOk) {
+      $('peError').textContent = 'Guardado en este navegador, pero no se pudo escribir en Cloud Firestore. Revisa tu conexión o permisos de administrador y pulsa de nuevo para reintentar.';
+      $('peError').hidden = false;
+      return;
+    }
+
+    closePromoModal();
     notify(isNew
-      ? `Promoción «${name}» creada${isFeatured ? ' y marcada como portada' : ''}`
-      : `Promoción «${name}» actualizada${isFeatured ? ' (portada)' : ''}`);
+      ? `Promoción «${name}» creada y guardada en Firestore${isFeatured ? ' (portada)' : ''}`
+      : `Promoción «${name}» guardada en Firestore${isFeatured ? ' (portada)' : ''}`);
 
     if (getCfg().appsScriptUrl) {
       const cleanNew = sanitizeSheetName(name);
@@ -7292,28 +7701,58 @@ function openDeletePromoModal(promo, onDeleted = null) {
   dlg.showModal();
   $('delPromoVerifyChk').onchange = () => { $('delPromoConfirmBtn').disabled = !$('delPromoVerifyChk').checked; };
   $('delPromoCancelBtn').onclick = () => dlg.close();
-  $('delPromoConfirmBtn').onclick = () => {
+  $('delPromoConfirmBtn').onclick = async () => {
     if (!$('delPromoVerifyChk').checked) return;
+    const btn = $('delPromoConfirmBtn');
+    btn.disabled = true;
+    btn.textContent = 'Eliminando…';
     const targetId = $('delPromoTarget')?.value || otherPromos[0].id;
+    const ops = [];
     if (linkedUnits.length) {
       linkedUnits.forEach(u => {
         u.promoId = targetId;
-        trackBgOp(cloudSaveUnit(u));
+        if (isValidDocKey(u.ref)) {
+          const clean = stripUndefinedDeep(u);
+          delete clean.deleted;
+          ops.push({ type: 'set', ref: doc(fbDb, 'viviendas', String(u.ref)), data: clean });
+        }
       });
+      saveV();
     }
     PROMOS = PROMOS.filter(p => p.id !== promo.id);
     if (promo.isFeatured && PROMOS.length && !PROMOS.some(p => p.isFeatured)) {
       const fallback = PROMOS.find(p => p.id === targetId) || getPublicPromos()[0] || PROMOS[0];
       if (fallback) {
         fallback.isFeatured = true;
-        trackBgOp(cloudSavePromo(fallback));
+        if (isValidDocKey(fallback.id)) {
+          const clean = stripUndefinedDeep(fallback);
+          delete clean.deleted;
+          ops.push({ type: 'set', ref: doc(fbDb, 'promociones', String(fallback.id)), data: clean });
+        }
       }
     }
+    PROMOS.forEach(p => {
+      if (!FIRESTORE_PROMO_IDS.has(String(p.id)) && isValidDocKey(p.id)) {
+        const clean = stripUndefinedDeep(p);
+        delete clean.deleted;
+        ops.push({ type: 'set', ref: doc(fbDb, 'promociones', String(p.id)), data: clean });
+      }
+    });
+    savePromos();
+    if (ops.length) {
+      LOCAL_WRITE_EPOCH++;
+      try {
+        await commitFirestoreOpsBatched(ops);
+        PROMOS.forEach(p => FIRESTORE_PROMO_IDS.add(String(p.id)));
+      } catch (err) {
+        reportCloudWriteError('la reasignación de viviendas', err);
+      }
+    }
+    await cloudDeletePromo(promo.id, promo);
     if (activeCatalogPromo === promo.id) activeCatalogPromo = 'ALL';
     if (activeAlzadoPromo === promo.id) activeAlzadoPromo = targetId;
     if (adminInvPromo === promo.id) adminInvPromo = 'ALL';
     dlg.close();
-    trackBgOp(cloudDeletePromo(promo.id, promo));
     refreshAllPropertyViews();
     if (typeof onDeleted === 'function') onDeleted(promo);
     notify(`Promoción «${promo.name}» eliminada`);
@@ -7694,8 +8133,12 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
   $('ueCancelBtn').onclick = closeModal;
   $('unitEdCloseX').onclick = closeModal;
 
-  $('unitEditorForm').onsubmit = e => {
+  let savingUnit = false;
+  let savedNewRef = null;
+
+  $('unitEditorForm').onsubmit = async e => {
     e.preventDefault();
+    if (savingUnit) return;
     showErr('');
 
     const promoId = $('uePromo').value || (PROMOS[0]?.id || 'cadmia');
@@ -7724,7 +8167,7 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
     const planSuiteLabel = $('uePlanSuiteLabel').value.trim();
 
     if (!/^[A-Z0-9][A-Z0-9-]{1,23}$/.test(ref)) { showErr('Referencia no válida: usa solo letras, números y guiones (ej. REF-46).'); $('ueRef').focus(); return; }
-    if (isNew && V.some(x => String(x.ref).toUpperCase() === ref)) {
+    if (isNew && savedNewRef !== ref && V.some(x => String(x.ref).toUpperCase() === ref)) {
       showErr(`Ya existe una vivienda con la referencia ${ref}. Elige otra referencia.`);
       $('ueRef').focus();
       return;
@@ -7753,8 +8196,10 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
         src: String(p.src).trim()
       }));
 
+    const existingIdx = V.findIndex(x => String(x.ref).toUpperCase() === ref);
+    const baseUnit = existingIdx >= 0 ? V[existingIdx] : existingUnit;
     const updatedUnit = {
-      ...(existingUnit || {}),
+      ...(baseUnit || {}),
       promoId,
       active,
       ref,
@@ -7771,7 +8216,7 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
       r,
       st,
       cee,
-      photoIdx: existingUnit?.photoIdx || ((V.length % 5) + 1),
+      photoIdx: baseUnit?.photoIdx || ((V.length % 5) + 1),
       customPhotoUrl: sanitizedPhotos[0]?.src || '',
       customPhotos: sanitizedPhotos,
       customPlanUrl: finalPlanUrl || '',
@@ -7784,21 +8229,44 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
     };
     delete updatedUnit.deleted;
 
-    if (isNew) {
+    let targetUnit;
+    if (existingIdx >= 0) {
+      Object.assign(V[existingIdx], updatedUnit);
+      targetUnit = V[existingIdx];
+    } else {
       V.push(updatedUnit);
       V.sort((a, b2) => String(a.ref || '').localeCompare(String(b2.ref || ''), 'es', { numeric: true }));
-    } else {
-      Object.assign(existingUnit, updatedUnit);
+      targetUnit = updatedUnit;
+      savedNewRef = ref;
     }
     activeAlzadoPromo = promoId;
     previewRef = ref;
     if (activePortal !== 'ALL' && activePortal !== portal) activePortal = 'ALL';
 
-    closeModal();
-    trackBgOp(cloudSaveUnit(isNew ? updatedUnit : existingUnit));
+    savingUnit = true;
+    const saveBtn = $('ueSaveBtn');
+    const prevTxt = saveBtn ? saveBtn.textContent : '';
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando…'; }
+
+    const linkedPromo = PROMOS.find(p => p.id === promoId);
+    if (linkedPromo && !FIRESTORE_PROMO_IDS.has(String(linkedPromo.id))) {
+      await cloudSavePromo(linkedPromo);
+    }
+    const savedOk = await cloudSaveUnit(targetUnit);
+
+    savingUnit = false;
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = prevTxt; }
+
     refreshAllPropertyViews();
-    if (typeof onSaved === 'function') onSaved(isNew ? updatedUnit : existingUnit);
-    notify(isNew ? `Vivienda ${ref} creada en ${getPromoById(promoId).name}` : `Vivienda ${ref} actualizada`);
+    if (typeof onSaved === 'function') onSaved(targetUnit);
+
+    if (!savedOk) {
+      showErr('Guardado en este navegador, pero no se pudo escribir en Cloud Firestore. Revisa tu conexión o permisos y pulsa de nuevo para reintentar.');
+      return;
+    }
+
+    closeModal();
+    notify(isNew ? `Vivienda ${ref} creada y guardada en ${getPromoById(promoId).name}` : `Vivienda ${ref} guardada en Firestore`);
   };
 }
 
@@ -7837,6 +8305,16 @@ function openDeleteUnitModal(unit, onDeleted = null) {
    ========================================================================== */
 function renderAdmin(subTab) {
   if (!isVerifiedAdmin()) {
+    if (!AUTH_INITIALIZED) {
+      const sec = $('v-admin');
+      if (sec) {
+        sec.innerHTML = `<div class="panel" style="max-width:480px;margin:32px auto;text-align:center;padding:28px 20px">
+          <h3 style="margin-bottom:6px">Verificando sesión…</h3>
+          <p class="m">Restaurando tu sesión de administrador de forma segura.</p>
+        </div>`;
+      }
+      return;
+    }
     notify('Inicia sesión con una cuenta de administrador para acceder');
     location.hash = 'mi-solicitud';
     return;
@@ -7919,7 +8397,10 @@ function renderAdmin(subTab) {
     body.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
         <p class="m" style="margin:0">Crea nuevas promociones (activas o en construcción), elige cuál aparece en la <b>portada de Inicio</b> y controla su visibilidad en web y alzado.</p>
-        <button class="btn sm" type="button" id="admAddPromoBtn">${ICO('plus')} Añadir nueva promoción</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn g sm" type="button" id="admSyncCloudBtn">${ICO('check')} Sincronizar Firestore (45 viv. Cadmia)</button>
+          <button class="btn sm" type="button" id="admAddPromoBtn">${ICO('plus')} Añadir nueva promoción</button>
+        </div>
       </div>
       <div class="tbl-wrap">
         <table>
@@ -7974,6 +8455,15 @@ function renderAdmin(subTab) {
       }).join('');
     };
     drawPromos();
+
+    $('admSyncCloudBtn').onclick = async () => {
+      const btn = $('admSyncCloudBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Sincronizando…'; }
+      await cloudSeedAll();
+      if (btn) { btn.disabled = false; btn.innerHTML = `${ICO('check')} Sincronizar Firestore (45 viv. Cadmia)`; }
+      drawPromos();
+      refreshAdminHeaderCounts();
+    };
 
     $('admAddPromoBtn').onclick = () => {
       openPromoEditorModal(null, () => {
@@ -10769,32 +11259,57 @@ function initFloatingChat() {
   window.__syncFloatingChatUser = prefillIdentity;
 }
 
+ensureCadmiaUnitsAndPromos({ persistToCloud: false });
 renderApp();
 updateUserHeader();
 route();
 initFloatingChat();
 syncPublicData();
 
+const AUTH_INIT_TIMER = setTimeout(() => {
+  if (!AUTH_INITIALIZED) {
+    AUTH_INITIALIZED = true;
+    updateUserHeader();
+    if (location.hash.startsWith('#admin') || location.hash === '#mi-solicitud') route();
+  }
+}, 4500);
+
 onAuthStateChanged(fbAuth, async fbUser => {
-  if (AUTH_BUSY) return;
+  clearTimeout(AUTH_INIT_TIMER);
+  const firstInit = !AUTH_INITIALIZED;
+  AUTH_INITIALIZED = true;
+  if (AUTH_BUSY) {
+    updateUserHeader();
+    return;
+  }
   if (!fbUser) {
-    if (CURRENT_USER) {
-      setSession(null);
-      if (location.hash.startsWith('#admin')) location.hash = 'inicio';
-      else route();
+    const hadUser = Boolean(CURRENT_USER);
+    setSession(null);
+    if (hadUser || firstInit) {
+      if (location.hash.startsWith('#admin')) {
+        notify('Inicia sesión con una cuenta de administrador para acceder');
+        location.hash = 'mi-solicitud';
+      } else if (hadUser || location.hash === '#mi-solicitud') {
+        route();
+      }
     }
     return;
   }
   const em = (fbUser.email || '').toLowerCase();
+  const h = location.hash || '';
+  const needsRouteRefresh = h.startsWith('#admin') || h === '#mi-solicitud' || h.startsWith('#ficha');
   if (CURRENT_USER && CURRENT_USER.uid === fbUser.uid) {
+    updateUserHeader();
     triggerBackgroundSync();
+    if (firstInit && needsRouteRefresh) route();
     return;
   }
   const role = await resolveUserRoleFast(em);
   setSession({ uid: fbUser.uid, email: em, name: fbUser.displayName || em.split('@')[0], role, isFirebase: true });
   if (window.__syncFloatingChatUser) window.__syncFloatingChatUser();
+  refreshAllPropertyViews();
   triggerBackgroundSync();
-  route();
+  if (needsRouteRefresh) route();
 });
 </script>
 </body>
