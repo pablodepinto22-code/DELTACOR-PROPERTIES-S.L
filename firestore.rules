@@ -1,23 +1,27 @@
 rules_version = '2';
 
-// Reglas de seguridad recomendadas para Cloud Firestore (Deltacor Properties S.L.)
-// Desplegar desde Firebase Console -> Firestore Database -> Reglas
+// Reglas de seguridad endurecidas para Cloud Firestore (Deltacor Properties S.L.)
+// Desplegar desde Firebase Console -> Firestore Database -> Reglas -> Publicar
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Exige sesión real con correo VERIFICADO (evita secuestro de cuentas admin o robo de solicitudes RGPD)
     function isSignedIn() {
-      return request.auth != null && request.auth.token.email != null;
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true;
     }
 
     function userEmail() {
       return request.auth.token.email.lower();
     }
 
+    // Correos de administrador iniciales (puedes quitar 'admin@invercor.es' si ya no lo usas)
     function isBootstrapAdmin() {
       return isSignedIn() && userEmail() in [
-        'admin@invercor.es',
         'deltacor.properties@gmail.com',
-        'estrella.deltacorproperties@gmail.com'
+        'estrella.deltacorproperties@gmail.com',
+        'admin@invercor.es'
       ];
     }
 
@@ -27,6 +31,28 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/admins/$(userEmail())) &&
         get(/databases/$(database)/documents/admins/$(userEmail())).data.role == 'admin'
       );
+    }
+
+    function validSelItem(item) {
+      return item is map
+        && item.keys().hasOnly(['ref', 'estado'])
+        && item.ref is string && item.ref.size() >= 2 && item.ref.size() <= 30
+        && item.estado in ['En estudio', 'En revisión'];
+    }
+
+    // Valida 1..10 selecciones y bloquea auto-aprobación (nunca permite crear en estado Aprobado/Vendido)
+    function validSelecciones(list) {
+      return list is list && list.size() >= 1 && list.size() <= 10
+        && validSelItem(list[0])
+        && (list.size() < 2 || validSelItem(list[1]))
+        && (list.size() < 3 || validSelItem(list[2]))
+        && (list.size() < 4 || validSelItem(list[3]))
+        && (list.size() < 5 || validSelItem(list[4]))
+        && (list.size() < 6 || validSelItem(list[5]))
+        && (list.size() < 7 || validSelItem(list[6]))
+        && (list.size() < 8 || validSelItem(list[7]))
+        && (list.size() < 9 || validSelItem(list[8]))
+        && (list.size() < 10 || validSelItem(list[9]));
     }
 
     // Catálogo público de promociones, viviendas y blog/consejos
@@ -45,7 +71,7 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // Configuración pública de textos web vs configuración sensible de integraciones
+    // Configuración pública de textos web vs configuración sensible de integraciones (solo admins)
     match /config/siteContent {
       allow read: if true;
       allow write: if isAdmin();
@@ -56,7 +82,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Lista de administradores: un usuario solo puede comprobar su propio documento
+    // Lista de administradores: un usuario verificado solo puede comprobar su propio documento
     match /admins/{adminEmail} {
       allow get: if isAdmin() || (isSignedIn() && userEmail() == adminEmail.lower());
       allow list: if isAdmin();
@@ -64,9 +90,9 @@ service cloud.firestore {
     }
 
     // Solicitudes (contienen datos personales RGPD: DNI/NIE, teléfono, ingresos)
-    // - Lectura: únicamente administradores o el propio candidato autenticado por correo
-    // - Creación: permitida con validación básica de esquema (sin estado pre-aprobado)
-    // - Modificación y borrado: exclusivamente administradores
+    // - Lectura: únicamente administradores verificados o el propio candidato con correo verificado
+    // - Creación: administradores o candidatos con validación estricta (sin auto-aprobación ni campos extra)
+    // - Modificación y borrado: exclusivamente administradores verificados
     match /solicitudes/{solId} {
       allow read: if isAdmin() || (
         isSignedIn() &&
@@ -74,27 +100,36 @@ service cloud.firestore {
         resource.data.email.lower() == userEmail()
       );
 
-      allow create: if request.resource.data.keys().hasAll([
+      allow create: if isAdmin() || (
+        request.resource.data.keys().hasAll([
           'id', 'fecha', 'nombre', 'tipoDoc', 'dni', 'email',
           'telefono', 'adultos', 'ingresos', 'selecciones'
         ])
+        && request.resource.data.keys().hasOnly([
+          'id', 'fecha', 'nombre', 'tipoDoc', 'dni', 'email',
+          'telefono', 'adultos', 'ninos', 'mascotas', 'ingresos',
+          'aval', 'otrasOpciones', 'habitacionesDeseadas',
+          'comentario', 'selecciones', 'promoName'
+        ])
         && request.resource.data.id == solId
-        && request.resource.data.nombre is string
-        && request.resource.data.nombre.size() >= 2
-        && request.resource.data.nombre.size() <= 140
-        && request.resource.data.email is string
-        && request.resource.data.email.size() >= 5
-        && request.resource.data.email.size() <= 180
-        && request.resource.data.dni is string
-        && request.resource.data.dni.size() == 9
-        && request.resource.data.ingresos is number
-        && request.resource.data.ingresos >= 0
-        && request.resource.data.ingresos <= 1000000
-        && request.resource.data.selecciones is list
-        && request.resource.data.selecciones.size() >= 1
-        && request.resource.data.selecciones.size() <= 20
-        && (!('archived' in request.resource.data) || request.resource.data.archived == false)
-        && (!('deleted' in request.resource.data) || request.resource.data.deleted == false);
+        && solId.matches('^SOL-[A-Z0-9]{4,20}$')
+        && request.resource.data.fecha is string && request.resource.data.fecha.size() <= 40
+        && request.resource.data.nombre is string && request.resource.data.nombre.size() >= 2 && request.resource.data.nombre.size() <= 140
+        && request.resource.data.tipoDoc in ['DNI', 'NIE']
+        && request.resource.data.dni is string && request.resource.data.dni.size() == 9
+        && request.resource.data.email is string && request.resource.data.email.size() >= 5 && request.resource.data.email.size() <= 180
+        && request.resource.data.telefono is string && request.resource.data.telefono.size() >= 9 && request.resource.data.telefono.size() <= 24
+        && request.resource.data.adultos is number && request.resource.data.adultos >= 1 && request.resource.data.adultos <= 10
+        && (!('ninos' in request.resource.data) || (request.resource.data.ninos is number && request.resource.data.ninos >= 0 && request.resource.data.ninos <= 15))
+        && (!('mascotas' in request.resource.data) || (request.resource.data.mascotas is string && request.resource.data.mascotas.size() <= 180))
+        && request.resource.data.ingresos is number && request.resource.data.ingresos >= 0 && request.resource.data.ingresos <= 1000000
+        && (!('aval' in request.resource.data) || request.resource.data.aval in ['No', 'Aval bancario', 'Avalista solvente'])
+        && (!('otrasOpciones' in request.resource.data) || request.resource.data.otrasOpciones in ['Sí', 'No'])
+        && (!('habitacionesDeseadas' in request.resource.data) || (request.resource.data.habitacionesDeseadas is string && request.resource.data.habitacionesDeseadas.size() <= 60))
+        && (!('comentario' in request.resource.data) || (request.resource.data.comentario is string && request.resource.data.comentario.size() <= 1400))
+        && (!('promoName' in request.resource.data) || (request.resource.data.promoName is string && request.resource.data.promoName.size() <= 200))
+        && validSelecciones(request.resource.data.selecciones)
+      );
 
       allow update, delete: if isAdmin();
     }

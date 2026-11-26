@@ -27,10 +27,6 @@ const PUBLIC_ROOT_FILES = new Set([
   'logo-deltacor-icon.png',
   'og-deltacor.jpg',
   'og-deltacor-square.jpg',
-  'logo-invercor.png',
-  'og-invercor.jpg',
-  'og-invercor.png',
-  'og-invercor-square.jpg',
 ]);
 
 const ALLOWED_HOSTS = new Set(

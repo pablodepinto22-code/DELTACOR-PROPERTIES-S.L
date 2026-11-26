@@ -1249,7 +1249,7 @@ import {
   getAuth, setPersistence, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence,
   GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, updateProfile, signOut, onAuthStateChanged,
-  sendPasswordResetEmail
+  sendPasswordResetEmail, sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 import {
   initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager,
@@ -1297,11 +1297,59 @@ const FIRESTORE_PROMO_IDS = new Set();
 const PENDING_REPAIR_PROMO_IDS = new Set();
 const PENDING_REPAIR_UNIT_REFS = new Set();
 
-// Lista inmutable de administradores iniciales (no modificable desde localStorage)
-const BOOTSTRAP_ADMIN_EMAILS = Object.freeze([
-  'admin@invercor.es',
-  'deltacor.properties@gmail.com',
-  'estrella.deltacorproperties@gmail.com'
+// SHA-256 síncrono para validar hashes de administradores iniciales sin exponer correos en texto plano
+function sha256Hex(str) {
+  const bytes = new TextEncoder().encode(String(str || ''));
+  const K = [
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+  ];
+  const H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const bitLen = bytes.length * 8;
+  const paddedLen = (((bytes.length + 9 + 63) >> 6) << 6);
+  const buf = new Uint8Array(paddedLen);
+  buf.set(bytes);
+  buf[bytes.length] = 0x80;
+  const dv = new DataView(buf.buffer);
+  dv.setUint32(paddedLen - 8, Math.floor(bitLen / 0x100000000), false);
+  dv.setUint32(paddedLen - 4, bitLen >>> 0, false);
+  const w = new Uint32Array(64);
+  const rotr = (n, x) => (x >>> n) | (x << (32 - n));
+  for (let off = 0; off < paddedLen; off += 64) {
+    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(off + i * 4, false);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rotr(7, w[i - 15]) ^ rotr(18, w[i - 15]) ^ (w[i - 15] >>> 3);
+      const s1 = rotr(17, w[i - 2]) ^ rotr(19, w[i - 2]) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+    }
+    let [a, b, c, d, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) {
+      const S1 = rotr(6, e) ^ rotr(11, e) ^ rotr(25, e);
+      const ch = (e & f) ^ (~e & g);
+      const t1 = (h + S1 + ch + K[i] + w[i]) >>> 0;
+      const S0 = rotr(2, a) ^ rotr(13, a) ^ rotr(22, a);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const t2 = (S0 + maj) >>> 0;
+      h = g; g = f; f = e; e = (d + t1) >>> 0;
+      d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+    }
+    H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0; H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
+    H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0; H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+  }
+  return H.map(x => x.toString(16).padStart(8, '0')).join('');
+}
+
+// Hashes SHA-256 inmutables de administradores iniciales (la autorización real la imponen firestore.rules y Apps Script v4.5)
+const BOOTSTRAP_ADMIN_HASHES = Object.freeze([
+  '903e23eb94b38ba15327c7c90992115ceddf9b4b9be735ee048f6fb8f9f5190a',
+  '8f9aa0c233df946c880c56989f73f927a558a9b8c06ca8e6c1d9f6731378f06d',
+  'ff24cda2a1a75869f12542f034abb412366b658baf866be8d46a0246101fd6ce'
 ]);
 
 /* ==========================================================================
@@ -1309,7 +1357,8 @@ const BOOTSTRAP_ADMIN_EMAILS = Object.freeze([
    ========================================================================== */
 const DEFAULT_CFG = {
   baseUrl: location.href.split('#')[0].split('?')[0],
-  googleSheetUrl: 'https://docs.google.com/spreadsheets/d/1r2m4CyIC-p7rrCN7llRK7k7N3bGSbroJ5yFK8NsRFss/edit?usp=sharing',
+  // Por privacidad RGPD el enlace del Google Sheet nunca se expone en el código público; solo se carga para admins desde Firestore
+  googleSheetUrl: '',
   appsScriptUrl: 'https://script.google.com/macros/s/AKfycbyPk_Wo2xtTrDYwgb3oqMCbNrb-EjWWvwevFNEV4s87fnKYZqxH8HSgnzFn8lmp3BXW/exec',
   web3formsKey: 'c05241c5-d58b-4fc9-8cb0-6dc3525388b9'
 };
@@ -1526,23 +1575,28 @@ async function renderScriptVersionBanner(hostId) {
   const currentHost = $(hostId);
   if (!currentHost || !info.configured) return;
 
-  if (info.version !== null && info.version < 4.2) {
+  if (info.version !== null && info.version < 4.5) {
     const curUrl = getCfg().appsScriptUrl || '';
+    const isSecUpgradeOnly = info.version >= 4.4;
     currentHost.innerHTML = `
       <div class="panel" style="margin-bottom:14px;padding:14px 16px;background:var(--warn-bg);border-color:rgba(245,158,11,.5)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:260px">
-            <b style="color:var(--warn-tx);font-size:.92rem">Actualización disponible de Google Apps Script (versión activa en tu enlace: v${esc(info.version)} → nueva v4.4)</b>
+            <b style="color:var(--warn-tx);font-size:.92rem">${isSecUpgradeOnly
+              ? `Actualización de seguridad recomendada de Google Apps Script (v${esc(info.version)} → nueva v4.5)`
+              : `Actualización disponible de Google Apps Script (versión activa: v${esc(info.version)} → nueva v4.5)`}</b>
             <div style="font-size:.82rem;color:var(--tx);margin-top:5px;line-height:1.5">
-              Para usar <b>creación, renombrado y borrado automático de hojas por promoción (con filtros y estilo clonado)</b>, columna <b>«Promoción»</b> en Archivo y <b>celda «Estado» con colores automáticos</b>, actualiza el script a <b>v4.4</b>:
+              ${isSecUpgradeOnly
+                ? 'La versión <b>v4.5</b> verifica criptográficamente tu sesión de administrador de Firebase antes de permitir editar, archivar o borrar hojas/filas del Excel, y limita los envíos públicos a solo insertar candidaturas nuevas en «En revisión»:'
+                : 'Actualiza a <b>v4.5</b> para activar <b>autenticación segura de administrador (Firebase Token)</b>, creación/renombrado/borrado automático de hojas por promoción, columna <b>«Promoción»</b> en Archivo y <b>colores de Estado</b>:'}
               <ol style="margin:6px 0 0 18px;padding:0">
-                <li>Pulsa <b>Copiar Apps Script v4.4</b> y pégalo entero en <b>Extensiones → Apps Script</b> (sustituyendo el código anterior).</li>
+                <li>Pulsa <b>Copiar Apps Script v4.5</b> y pégalo entero en <b>Extensiones → Apps Script</b> (sustituyendo el código anterior).</li>
                 <li>Pulsa <b>Implementar → Administrar implementaciones → Editar (lápiz) → Versión: Nueva versión → Implementar</b>.</li>
                 <li>Si creaste una <i>Nueva implementación</i> con otra URL <code>/exec</code>, pégala aquí abajo y pulsa <b>Guardar URL</b>.</li>
               </ol>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
-              <button type="button" class="btn sm" id="${esc(hostId)}CopyBtn">${ICO('file')} Copiar Apps Script v4.4</button>
+              <button type="button" class="btn sm" id="${esc(hostId)}CopyBtn">${ICO('file')} Copiar Apps Script v4.5</button>
               <button type="button" class="btn g sm" id="${esc(hostId)}RecheckBtn">Comprobar ahora</button>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
@@ -1560,7 +1614,7 @@ async function renderScriptVersionBanner(hostId) {
       copyBtn.onclick = async () => {
         try {
           await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-          notify('Apps Script v4.4 copiado: pégalo en Apps Script y publica «Nueva versión»');
+          notify('Apps Script v4.5 copiado: pégalo en Apps Script y publica «Nueva versión»');
         } catch {
           notify('No se pudo copiar automáticamente');
         }
@@ -1571,9 +1625,9 @@ async function renderScriptVersionBanner(hostId) {
         recheckBtn.disabled = true;
         recheckBtn.textContent = 'Comprobando…';
         const next = await checkAppsScriptVersion(true);
-        if (next.version >= 4.2) {
+        if (next.version >= 4.5) {
           renderScriptVersionBanner(hostId);
-          notify(`Apps Script v${next.version} conectado (${(next.promoSheets || []).join(', ') || 'Promociones'} + ${next.archiveSheet || 'Archivo'})`);
+          notify(`Apps Script v${next.version} seguro conectado (${(next.promoSheets || []).join(', ') || 'Promociones'} + ${next.archiveSheet || 'Archivo'})`);
         } else {
           recheckBtn.disabled = false;
           recheckBtn.textContent = 'Comprobar ahora';
@@ -1595,30 +1649,23 @@ async function renderScriptVersionBanner(hostId) {
         LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '', promoSheets: [] };
         await cloudSaveConfig({ ...getCfg(), appsScriptUrl: nextUrl });
         const next = await checkAppsScriptVersion(true);
-        if (next.version >= 4.2) {
+        if (next.version >= 4.5) {
           renderScriptVersionBanner(hostId);
-          notify(`URL guardada y verificada: Apps Script v${next.version} activo (${(next.promoSheets || []).join(', ') || 'Promociones'} + ${next.archiveSheet || 'Archivo'})`);
+          notify(`URL guardada y verificada: Apps Script v${next.version} seguro activo`);
         } else {
           saveUrlBtn.disabled = false;
           saveUrlBtn.textContent = 'Guardar URL';
           notify(next.invalidResponse
             ? 'URL guardada, pero Apps Script devolvió error/login. Configura Acceso: «Cualquier usuario».'
-            : `URL guardada, pero responde v${next.version || 1}. Publica una «Nueva versión» con el código v4.4.`);
+            : `URL guardada, pero responde v${next.version || 1}. Publica una «Nueva versión» con el código v4.5.`);
         }
       };
     }
-  } else if (info.version >= 4.4 && hostId === 'cfgScriptBanner') {
+  } else if (info.version >= 4.5 && hostId === 'cfgScriptBanner') {
     const pList = (info.promoSheets || []).length ? info.promoSheets.join(', ') : (info.mainSheet || 'Por promoción');
     currentHost.innerHTML = `
       <div class="panel" style="margin-bottom:14px;padding:11px 14px;background:var(--ok-bg);border-color:rgba(16,185,129,.35);color:var(--ok-tx);font-size:.84rem">
-        <b>Apps Script v${esc(info.version)} conectado correctamente</b> · Hojas: <b>${esc(pList)}</b> · Archivo: <b>${esc(info.archiveSheet || 'Archivo')}</b> (creación, renombrado y borrado automático de hojas + filtros/estilo + colores de Estado)
-      </div>`;
-  } else if (info.version >= 4.2 && hostId === 'cfgScriptBanner') {
-    const pList = (info.promoSheets || []).length ? info.promoSheets.join(', ') : (info.mainSheet || 'Por promoción');
-    currentHost.innerHTML = `
-      <div class="panel" style="margin-bottom:14px;padding:11px 14px;background:var(--ok-bg);border-color:rgba(16,185,129,.35);color:var(--ok-tx);font-size:.84rem">
-        <b>Apps Script v${esc(info.version)} conectado correctamente</b> · Hojas: <b>${esc(pList)}</b> · Archivo: <b>${esc(info.archiveSheet || 'Archivo')}</b>
-        <div class="m" style="margin-top:4px;color:var(--tx)">Actualización disponible (<b>v4.4</b>): copia abajo el código actualizado y publica «Nueva versión» para que al <b>borrar una promoción</b> también se borre automáticamente su hoja del Excel (además de crearla con autofiltros y renombrarla).</div>
+        <b>Apps Script v${esc(info.version)} conectado y protegido</b> · Hojas: <b>${esc(pList)}</b> · Archivo: <b>${esc(info.archiveSheet || 'Archivo')}</b> (verificación Firebase Admin Token + gestión automática de hojas)
       </div>`;
   } else if (info.invalidResponse) {
     currentHost.innerHTML = `
@@ -1631,7 +1678,11 @@ async function renderScriptVersionBanner(hostId) {
 }
 
 async function postToAppsScript(url, body) {
-  const serialized = JSON.stringify(body);
+  const payload = { ...(body || {}) };
+  if (fbAuth.currentUser && typeof fbAuth.currentUser.getIdToken === 'function') {
+    try { payload.idToken = await fbAuth.currentUser.getIdToken(); } catch (_) {}
+  }
+  const serialized = JSON.stringify(payload);
   try {
     const res = await fetch(url, {
       method: 'POST',
@@ -1652,6 +1703,9 @@ async function postToAppsScript(url, body) {
         };
       } else if (data && data.ok) {
         LAST_APPS_SCRIPT_CHECK = { url, version: 1, checkedAt: Date.now(), mainSheet: '', archiveSheet: '', promoSheets: [] };
+      }
+      if (data && data.error === 'admin_auth_required') {
+        notify('Google Sheets rechazó la operación: inicia sesión con un correo de administrador verificado.');
       }
       return { ok: res.ok && data.ok !== false, data, error: data?.error || '', opaque: false };
     } catch {
@@ -1938,12 +1992,100 @@ async function flushSheetQueue() {
   }
 }
 
-const APPS_SCRIPT_TEMPLATE = `// DELTACOR PROPERTIES · Google Sheets Sync v4.4
-// Una hoja por promoción (creación automática con estilo/autofiltro clonado antes de «Archivo» + renombrado + borrado)
-// + hoja «Archivo» con columna «Promoción» + columna «Estado» (col F) con colores automáticos
+const APPS_SCRIPT_TEMPLATE = `// DELTACOR PROPERTIES · Google Sheets Sync v4.5 (Seguro)
+// Verificación criptográfica Firebase Admin Token en todas las acciones de gestión + inserción pública estricta (append-only, Estado forzado «En revisión»)
+// + Una hoja por promoción (creación automática con estilo/autofiltro clonado antes de «Archivo» + renombrado + borrado) + colores de Estado
+var SCRIPT_VERSION = 4.5;
+var FIREBASE_PROJECT_ID = 'invencor-a1477';
+var FIREBASE_API_KEY = 'AIzaSyAl7NBWnMGu5sTDTs4drdh7SsfxRCozpIg';
+// Hashes SHA-256 de administradores iniciales (también se aceptan admins activos en Firestore /admins/{email})
+var BOOTSTRAP_ADMIN_HASHES = [
+  '903e23eb94b38ba15327c7c90992115ceddf9b4b9be735ee048f6fb8f9f5190a',
+  '8f9aa0c233df946c880c56989f73f927a558a9b8c06ca8e6c1d9f6731378f06d',
+  'ff24cda2a1a75869f12542f034abb412366b658baf866be8d46a0246101fd6ce'
+];
+
 function jsonOut_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function sha256Hex_(str) {
+  var raw = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(str || ''), Utilities.Charset.UTF_8);
+  var hex = '';
+  for (var i = 0; i < raw.length; i++) {
+    var b = (raw[i] + 256) % 256;
+    hex += (b < 16 ? '0' : '') + b.toString(16);
+  }
+  return hex;
+}
+
+function verifyAdminToken_(idToken) {
+  var token = String(idToken || '').trim();
+  if (!token || token.length < 40 || token.length > 8192) return { ok: false };
+  var cache = null;
+  var cacheKey = '';
+  try {
+    cache = CacheService.getScriptCache();
+    cacheKey = 'adm_' + sha256Hex_(token).slice(0, 32);
+    var cachedEmail = cache.get(cacheKey);
+    if (cachedEmail) return { ok: true, email: cachedEmail };
+  } catch (e) {}
+
+  try {
+    var lookupRes = UrlFetchApp.fetch(
+      'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FIREBASE_API_KEY,
+      {
+        method: 'post',
+        contentType: 'application/json',
+        payload: JSON.stringify({ idToken: token }),
+        muteHttpExceptions: true
+      }
+    );
+    if (lookupRes.getResponseCode() !== 200) return { ok: false };
+    var body = JSON.parse(lookupRes.getContentText() || '{}');
+    var user = (body.users && body.users[0]) || null;
+    if (!user || user.disabled || user.emailVerified !== true || !user.email) return { ok: false };
+    var email = String(user.email).trim().toLowerCase();
+    var authorized = BOOTSTRAP_ADMIN_HASHES.indexOf(sha256Hex_(email)) !== -1;
+
+    if (!authorized) {
+      var fsRes = UrlFetchApp.fetch(
+        'https://firestore.googleapis.com/v1/projects/' + FIREBASE_PROJECT_ID +
+        '/databases/(default)/documents/admins/' + encodeURIComponent(email),
+        {
+          method: 'get',
+          headers: { Authorization: 'Bearer ' + token },
+          muteHttpExceptions: true
+        }
+      );
+      if (fsRes.getResponseCode() === 200) {
+        var doc = JSON.parse(fsRes.getContentText() || '{}');
+        var roleVal = doc && doc.fields && doc.fields.role && doc.fields.role.stringValue;
+        authorized = !roleVal || String(roleVal).trim().toLowerCase() === 'admin';
+      }
+    }
+    if (!authorized) return { ok: false };
+    if (cache && cacheKey) {
+      try { cache.put(cacheKey, email, 240); } catch (ce) {}
+    }
+    return { ok: true, email: email };
+  } catch (err) {
+    return { ok: false };
+  }
+}
+
+function checkPublicInsertQuota_() {
+  try {
+    var cache = CacheService.getScriptCache();
+    var bucket = 'pub_ins_' + Math.floor(Date.now() / 600000);
+    var cur = Number(cache.get(bucket) || '0');
+    if (cur >= 40) return false;
+    cache.put(bucket, String(cur + 1), 660);
+    return true;
+  } catch (e) {
+    return true;
+  }
 }
 
 function sanitizeSheetName_(name) {
@@ -2401,22 +2543,23 @@ function doGet() {
     var archSheet = findSheetByNameInsensitive_(ss, 'Archivo');
     return jsonOut_({
       ok: true,
-      version: 4.4,
-      revision: '4.4',
+      version: SCRIPT_VERSION,
+      revision: '4.5',
+      authRequired: true,
       mainSheet: promoSheets[0] || '',
       promoSheets: promoSheets,
       archiveSheet: archSheet ? archSheet.getName() : '',
-      status: 'DELTACOR Sheets sync v4.4 activo (creación, renombrado y borrado de hojas por promoción + filtros/estilo + colores de Estado)'
+      status: 'DELTACOR Sheets sync v4.5 seguro activo (Firebase Admin Token + inserción pública protegida + gestión de hojas)'
     });
   } catch (err) {
-    return jsonOut_({ ok: false, version: 4.4, error: String(err && err.message || err) });
+    return jsonOut_({ ok: false, version: SCRIPT_VERSION, error: String(err && err.message || err) });
   }
 }
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(15000)) {
-    return jsonOut_({ ok: false, version: 4.4, error: 'busy' });
+    return jsonOut_({ ok: false, version: SCRIPT_VERSION, error: 'busy' });
   }
   try {
     var raw = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
@@ -2427,9 +2570,26 @@ function doPost(e) {
     var archiveHeaders = data.archiveHeaders || headers.concat(['Promoción', 'Motivo archivo', 'Fecha archivo', 'Archivado por']);
     var statusCol = getStatusColIndex_(headers);
     var archStatusCol = getStatusColIndex_(archiveHeaders);
+    var action = String(data.action || 'upsert');
+
+    // Todas las operaciones de gestión requieren token de administrador verificado en Firebase
+    var adminOnlyActions = {
+      ensure_promo_sheet: true,
+      delete_promo_sheet: true,
+      'delete': true,
+      archive: true,
+      restore: true,
+      sync_archive: true,
+      sync_all: true,
+      upsert_batch: true
+    };
+    var auth = verifyAdminToken_(data.idToken);
+    if (adminOnlyActions[action] && !auth.ok) {
+      return jsonOut_({ ok: false, version: SCRIPT_VERSION, action: action, error: 'admin_auth_required' });
+    }
 
     // 0. Crear o renombrar hoja de promoción inmediatamente desde la web (clona estilo/filtros y la coloca antes de Archivo)
-    if (data.action === 'ensure_promo_sheet') {
+    if (action === 'ensure_promo_sheet') {
       var targetName = resolveTargetSheetNames_(ss, data, archiveName)[0];
       var oldName = data.oldSheetName ? sanitizeSheetName_(data.oldSheetName) : '';
       var renamed = false;
@@ -2454,7 +2614,7 @@ function doPost(e) {
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 4.4,
+        version: SCRIPT_VERSION,
         action: 'ensure_promo_sheet',
         sheetName: shPromo.getName(),
         created: created,
@@ -2464,13 +2624,13 @@ function doPost(e) {
     }
 
     // 0b. Eliminar hoja de promoción del Excel cuando se borra una promoción desde la web
-    if (data.action === 'delete_promo_sheet') {
+    if (action === 'delete_promo_sheet') {
       var delPromoName = data.sheetName ? sanitizeSheetName_(data.sheetName) : '';
       var archLowerDel = String(archiveName || 'Archivo').trim().toLowerCase();
       if (!delPromoName || delPromoName.toLowerCase() === archLowerDel) {
         return jsonOut_({
           ok: true,
-          version: 4.4,
+          version: SCRIPT_VERSION,
           action: 'delete_promo_sheet',
           sheetName: delPromoName,
           deleted: false,
@@ -2482,7 +2642,7 @@ function doPost(e) {
       if (!shToDelete) {
         return jsonOut_({
           ok: true,
-          version: 4.4,
+          version: SCRIPT_VERSION,
           action: 'delete_promo_sheet',
           sheetName: delPromoName,
           deleted: false,
@@ -2493,7 +2653,7 @@ function doPost(e) {
       if (ss.getSheets().length <= 1) {
         return jsonOut_({
           ok: true,
-          version: 4.4,
+          version: SCRIPT_VERSION,
           action: 'delete_promo_sheet',
           sheetName: shToDelete.getName(),
           deleted: false,
@@ -2506,7 +2666,7 @@ function doPost(e) {
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 4.4,
+        version: SCRIPT_VERSION,
         action: 'delete_promo_sheet',
         sheetName: removedSheetName,
         deleted: true,
@@ -2515,7 +2675,7 @@ function doPost(e) {
     }
 
     // 1. Eliminar candidatura de Archivo o de todas las hojas de promociones
-    if (data.action === 'delete') {
+    if (action === 'delete') {
       var deleted = 0;
       var sheetList = [];
       if (data.sheetName) {
@@ -2530,7 +2690,7 @@ function doPost(e) {
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 4.4,
+        version: SCRIPT_VERSION,
         action: 'delete',
         sheets: sheetList,
         deleted: deleted
@@ -2538,7 +2698,7 @@ function doPost(e) {
     }
 
     // 2. Mover a hoja "Archivo" (elimina de su promoción y añade a Archivo con Estado en color + Promoción)
-    if (data.action === 'archive') {
+    if (action === 'archive') {
       var delRes = deleteIdFromAllPromoSheets_(ss, archiveName, data.id);
       var archSheet = getOrCreateSheet_(ss, archiveName, archiveHeaders, true, archiveName);
       var archRow = (data.archiveRow || []).slice();
@@ -2551,7 +2711,7 @@ function doPost(e) {
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 4.4,
+        version: SCRIPT_VERSION,
         action: 'archive',
         removedFrom: delRes.sheets,
         removed: delRes.total,
@@ -2562,7 +2722,7 @@ function doPost(e) {
     }
 
     // 3. Restaurar desde "Archivo" a la hoja de su promoción (con Estado en amarillo)
-    if (data.action === 'restore') {
+    if (action === 'restore') {
       var archSheet2 = findSheetByNameInsensitive_(ss, archiveName);
       var removedArch = deleteRowsById_(archSheet2, data.id);
       var restTargets = resolveTargetSheetNames_(ss, data, archiveName);
@@ -2577,7 +2737,7 @@ function doPost(e) {
       SpreadsheetApp.flush();
       return jsonOut_({
         ok: true,
-        version: 4.4,
+        version: SCRIPT_VERSION,
         action: 'restore',
         sheets: restTargets,
         removedFromArchive: removedArch,
@@ -2587,7 +2747,7 @@ function doPost(e) {
     }
 
     // 4. Sincronizar hoja "Archivo" completa en un solo bloque (Estado en col F con colores + Promoción)
-    if (data.action === 'sync_archive') {
+    if (action === 'sync_archive') {
       var archSheet3 = getOrCreateSheet_(ss, archiveName, archiveHeaders, true, archiveName);
       var archRows = (data.rows || []).map(function(r) { return normalizeRow_(r, archiveHeaders.length); });
       var archMatrix = [archiveHeaders].concat(archRows);
@@ -2607,11 +2767,11 @@ function doPost(e) {
       }
       applyStatusConditionalRules_(archSheet3, archStatusCol);
       SpreadsheetApp.flush();
-      return jsonOut_({ ok: true, version: 4.4, action: 'sync_archive', archiveSheet: archSheet3.getName(), rows: archRows.length });
+      return jsonOut_({ ok: true, version: SCRIPT_VERSION, action: 'sync_archive', archiveSheet: archSheet3.getName(), rows: archRows.length });
     }
 
     // 5. Reconstrucción completa de todas las hojas por promoción (Estado en col F con colores)
-    if (data.action === 'sync_all') {
+    if (action === 'sync_all') {
       var sheetGroups = (data.sheets && data.sheets.length)
         ? data.sheets
         : [{ name: resolveTargetSheetNames_(ss, data, archiveName)[0], rows: data.rows || [] }];
@@ -2642,11 +2802,11 @@ function doPost(e) {
         totalRows += grpRows.length;
       }
       SpreadsheetApp.flush();
-      return jsonOut_({ ok: true, version: 4.4, action: 'sync_all', promoSheets: syncedNames, rows: totalRows });
+      return jsonOut_({ ok: true, version: SCRIPT_VERSION, action: 'sync_all', promoSheets: syncedNames, rows: totalRows });
     }
 
     // 6. Sincronización incremental por lote agrupada por hoja de promoción
-    if (data.action === 'upsert_batch') {
+    if (action === 'upsert_batch') {
       var items = data.items || [];
       var grouped = {};
       for (var j = 0; j < items.length; j++) {
@@ -2698,15 +2858,63 @@ function doPost(e) {
         ensureHeaderFilter_(sheet, headers.length);
       }
       SpreadsheetApp.flush();
-      return jsonOut_({ ok: true, version: 4.4, action: 'upsert_batch', sheets: groupKeys, updated: updatedCount, inserted: insertedCount });
+      return jsonOut_({ ok: true, version: SCRIPT_VERSION, action: 'upsert_batch', sheets: groupKeys, updated: updatedCount, inserted: insertedCount });
     }
 
-    // 7. Actualización quirúrgica de una sola candidatura en su(s) hoja(s) de promoción
-    if (data.action && data.action !== 'upsert') {
-      return jsonOut_({ ok: false, version: 4.4, error: 'unknown_action:' + data.action });
+    // 7. Inserción pública protegida o actualización de administrador sobre una candidatura
+    if (action !== 'upsert') {
+      return jsonOut_({ ok: false, version: SCRIPT_VERSION, error: 'unknown_action:' + action });
     }
-    var row = data.row || [];
-    var id = data.id || row[0];
+    var row = Array.isArray(data.row) ? data.row.slice() : [];
+    var id = String(data.id || row[0] || '').trim();
+    if (!auth.ok) {
+      // Modo público anónimo: solo añadir candidatura nueva válida (nunca modificar/sobrescribir ni crear hojas arbitrarias)
+      if (!checkPublicInsertQuota_()) {
+        return jsonOut_({ ok: false, version: SCRIPT_VERSION, error: 'rate_limited' });
+      }
+      if (!/^SOL-[A-Z0-9]{4,20}$/.test(id) || row.length < 6 || row.length > 25) {
+        return jsonOut_({ ok: false, version: SCRIPT_VERSION, error: 'invalid_payload' });
+      }
+      var existingPromoSheets = getPromoSheets_(ss, archiveName);
+      if (!existingPromoSheets.length) {
+        return jsonOut_({ ok: false, version: SCRIPT_VERSION, error: 'no_promo_sheets' });
+      }
+      // Evita que un usuario anónimo sobrescriba una candidatura existente
+      for (var ep = 0; ep < existingPromoSheets.length; ep++) {
+        if (findRowsById_(existingPromoSheets[ep], id).length > 0) {
+          return jsonOut_({ ok: false, version: SCRIPT_VERSION, action: 'upsert', error: 'admin_auth_required' });
+        }
+      }
+      // Solo escribe en hojas de promoción YA EXISTENTES (nunca permite crear hojas spam)
+      var reqNames = resolveTargetSheetNames_(ss, data, archiveName);
+      var pubSheets = [];
+      for (var rn = 0; rn < reqNames.length; rn++) {
+        var foundSh = findSheetByNameInsensitive_(ss, reqNames[rn]);
+        if (foundSh && foundSh.getName().toLowerCase() !== String(archiveName || 'Archivo').trim().toLowerCase()) {
+          if (pubSheets.indexOf(foundSh) === -1) pubSheets.push(foundSh);
+        }
+      }
+      if (!pubSheets.length) pubSheets.push(existingPromoSheets[0]);
+      // Fuerza Estado = 'En revisión' en servidor para impedir auto-aprobación
+      var safePubRow = normalizeRow_(row, headers.length);
+      safePubRow[0] = sanitizeCellValue_(id);
+      if (statusCol >= 1 && statusCol <= headers.length) {
+        safePubRow[statusCol - 1] = 'En revisión';
+      }
+      var pubInsertedNames = [];
+      for (var ps = 0; ps < pubSheets.length; ps++) {
+        var targetPubSh = pubSheets[ps];
+        ensureHeaders_(targetPubSh, headers);
+        var newPubRowNum = targetPubSh.getLastRow() + 1;
+        targetPubSh.getRange(newPubRowNum, 1, 1, headers.length).setValues([safePubRow]);
+        if (statusCol) styleStatusCell_(targetPubSh, newPubRowNum, statusCol, 'En revisión');
+        ensureHeaderFilter_(targetPubSh, headers.length);
+        pubInsertedNames.push(targetPubSh.getName());
+      }
+      SpreadsheetApp.flush();
+      return jsonOut_({ ok: true, version: SCRIPT_VERSION, action: 'upsert', mode: 'public_append', sheets: pubInsertedNames, updated: 0, inserted: pubInsertedNames.length });
+    }
+
     var targets = resolveTargetSheetNames_(ss, data, archiveName);
     var upd = 0, ins = 0;
     for (var t = 0; t < targets.length; t++) {
@@ -2717,9 +2925,9 @@ function doPost(e) {
       ins += resUpsert.inserted;
     }
     SpreadsheetApp.flush();
-    return jsonOut_({ ok: true, version: 4.4, action: 'upsert', sheets: targets, updated: upd, inserted: ins });
+    return jsonOut_({ ok: true, version: SCRIPT_VERSION, action: 'upsert', sheets: targets, updated: upd, inserted: ins });
   } catch (err) {
-    return jsonOut_({ ok: false, version: 4.4, error: String(err && err.message || err) });
+    return jsonOut_({ ok: false, version: SCRIPT_VERSION, error: String(err && err.message || err) });
   } finally {
     lock.releaseLock();
   }
@@ -2967,6 +3175,7 @@ let CURRENT_USER = null;
 function isVerifiedAdmin() {
   const fbUser = fbAuth.currentUser;
   if (!CURRENT_USER || CURRENT_USER.role !== 'admin' || !fbUser) return false;
+  if (fbUser.emailVerified !== true) return false;
   return fbUser.uid === CURRENT_USER.uid && String(fbUser.email || '').trim().toLowerCase() === CURRENT_USER.email;
 }
 
@@ -2979,6 +3188,10 @@ function clearSensitiveSessionState() {
     sessionStorage.removeItem('inv-session');
     sessionStorage.removeItem('dc-my-receipts-v1');
     sessionStorage.removeItem('inv-chat-user-v1');
+    const prevCfg = safeGetJson(localStorage, 'inv-cfg', null);
+    if (prevCfg && prevCfg.googleSheetUrl) {
+      safeSetItem(localStorage, 'inv-cfg', JSON.stringify({ ...prevCfg, googleSheetUrl: '' }));
+    }
   } catch {}
 }
 
@@ -2988,7 +3201,8 @@ function setSession(user) {
         uid: String(user.uid || ''),
         email: String(user.email || '').trim().toLowerCase(),
         name: String(user.name || '').trim().slice(0, 120),
-        role: user.role === 'admin' ? 'admin' : 'candidate',
+        emailVerified: user.emailVerified === true,
+        role: (user.role === 'admin' && user.emailVerified === true) ? 'admin' : 'candidate',
         isFirebase: true
       }
     : null;
@@ -3000,7 +3214,7 @@ function setSession(user) {
 function isConfiguredAdminEmail(email) {
   const em = String(email || '').trim().toLowerCase();
   if (!em) return false;
-  return BOOTSTRAP_ADMIN_EMAILS.includes(em) || CLOUD_ADMINS.some(a => String(a.email || '').toLowerCase() === em);
+  return BOOTSTRAP_ADMIN_HASHES.includes(sha256Hex(em)) || CLOUD_ADMINS.some(a => String(a.email || '').toLowerCase() === em);
 }
 
 async function fetchRoleFromFirestore(email) {
@@ -3017,9 +3231,9 @@ async function fetchRoleFromFirestore(email) {
   }
 }
 
-async function resolveUserRoleFast(email) {
+async function resolveUserRoleFast(email, isVerified = true) {
   const em = String(email || '').trim().toLowerCase();
-  if (!em) return 'candidate';
+  if (!em || isVerified !== true) return 'candidate';
   if (isConfiguredAdminEmail(em)) return 'admin';
   const remotePromise = fetchRoleFromFirestore(em);
   const resolved = await Promise.race([
@@ -3029,8 +3243,8 @@ async function resolveUserRoleFast(email) {
   if (resolved !== null) return resolved;
   // Si Firestore tarda más de 5s en arrancar, actualizamos el rol en cuanto responda
   remotePromise.then(freshRole => {
-    if (freshRole === 'admin' && CURRENT_USER && CURRENT_USER.email === em && CURRENT_USER.role !== 'admin') {
-      setSession({ ...CURRENT_USER, role: 'admin' });
+    if (freshRole === 'admin' && CURRENT_USER && CURRENT_USER.email === em && CURRENT_USER.emailVerified === true && CURRENT_USER.role !== 'admin') {
+      setSession({ ...CURRENT_USER, role: 'admin', emailVerified: true });
       refreshAllPropertyViews();
       triggerBackgroundSync();
       route({ silent: true });
@@ -3040,6 +3254,7 @@ async function resolveUserRoleFast(email) {
 }
 
 function triggerBackgroundSync() {
+  if (!CURRENT_USER || CURRENT_USER.emailVerified !== true) return;
   const prevOnline = FB_DB_ONLINE;
   const prevProtectedSig = JSON.stringify({ s: SOLS, a: CLOUD_ADMINS });
   syncProtectedData().then(async () => {
@@ -3078,12 +3293,13 @@ async function loginUser(email, pass) {
     await ensurePersistentAuth();
     const cred = await signInWithEmailAndPassword(fbAuth, em, pass);
     const userEmail = cred.user.email.toLowerCase();
-    const role = await resolveUserRoleFast(userEmail);
-    const u = { uid: cred.user.uid, email: userEmail, name: cred.user.displayName || userEmail.split('@')[0], role, isFirebase: true };
+    const emailVerified = cred.user.emailVerified === true;
+    const role = emailVerified ? await resolveUserRoleFast(userEmail, true) : 'candidate';
+    const u = { uid: cred.user.uid, email: userEmail, name: cred.user.displayName || userEmail.split('@')[0], role, emailVerified, isFirebase: true };
     AUTH_INITIALIZED = true;
     setSession(u);
-    triggerBackgroundSync();
-    return { ok: true, user: u };
+    if (emailVerified) triggerBackgroundSync();
+    return { ok: true, user: u, needsVerification: !emailVerified };
   } catch (err) {
     // Mensaje genérico para credenciales erróneas (evita enumeración de cuentas)
     const msgMap = {
@@ -3111,12 +3327,16 @@ async function registerWithEmail(name, email, pass) {
     const cred = await createUserWithEmailAndPassword(fbAuth, em, pass);
     const cleanName = String(name || '').trim().slice(0, 120);
     if (cleanName) updateProfile(cred.user, { displayName: cleanName }).catch(() => {});
-    const role = await resolveUserRoleFast(em);
-    const u = { uid: cred.user.uid, email: em, name: cleanName || em.split('@')[0], role, isFirebase: true };
+    const emailVerified = cred.user.emailVerified === true;
+    if (!emailVerified && typeof sendEmailVerification === 'function') {
+      try { await sendEmailVerification(cred.user); } catch (_) {}
+    }
+    const role = emailVerified ? await resolveUserRoleFast(em, true) : 'candidate';
+    const u = { uid: cred.user.uid, email: em, name: cleanName || em.split('@')[0], role, emailVerified, isFirebase: true };
     AUTH_INITIALIZED = true;
     setSession(u);
-    triggerBackgroundSync();
-    return { ok: true, user: u };
+    if (emailVerified) triggerBackgroundSync();
+    return { ok: true, user: u, needsVerification: !emailVerified };
   } catch (err) {
     const msgMap = {
       'auth/email-already-in-use': 'Ese correo ya está registrado. Inicia sesión o recupera tu contraseña.',
@@ -3128,6 +3348,40 @@ async function registerWithEmail(name, email, pass) {
     return { ok: false, msg: msgMap[err.code] || 'No se pudo crear la cuenta en este momento.' };
   } finally {
     AUTH_BUSY = false;
+  }
+}
+
+async function resendVerificationEmail() {
+  const fbUser = fbAuth.currentUser;
+  if (!fbUser) return { ok: false, msg: 'Inicia sesión primero.' };
+  if (fbUser.emailVerified) return { ok: true, msg: 'Tu correo ya está verificado.' };
+  const lim = checkRateLimit('email-verify', 30000);
+  if (!lim.allowed) return { ok: false, msg: `Espera ${lim.waitSec}s antes de reenviar el enlace de verificación.` };
+  try {
+    await sendEmailVerification(fbUser);
+    return { ok: true, msg: `Enlace de verificación enviado a ${fbUser.email}. Revisa también tu carpeta de spam.` };
+  } catch (_) {
+    return { ok: false, msg: 'No se pudo reenviar el correo ahora. Inténtalo en un minuto.' };
+  }
+}
+
+async function refreshVerificationStatus() {
+  const fbUser = fbAuth.currentUser;
+  if (!fbUser) return { ok: false, verified: false };
+  try {
+    if (typeof fbUser.reload === 'function') await fbUser.reload();
+    if (typeof fbUser.getIdToken === 'function') await fbUser.getIdToken(true);
+    const verified = fbUser.emailVerified === true;
+    if (!verified) return { ok: true, verified: false };
+    const em = (fbUser.email || '').toLowerCase();
+    const role = await resolveUserRoleFast(em, true);
+    setSession({ uid: fbUser.uid, email: em, name: fbUser.displayName || em.split('@')[0], role, emailVerified: true, isFirebase: true });
+    if (role === 'admin') refreshAllPropertyViews();
+    triggerBackgroundSync();
+    route({ silent: true });
+    return { ok: true, verified: true, role };
+  } catch (_) {
+    return { ok: false, verified: false };
   }
 }
 
@@ -3155,11 +3409,12 @@ async function signInWithGoogle(onSuccess) {
     const provider = new GoogleAuthProvider();
     const res = await signInWithPopup(fbAuth, provider);
     const em = (res.user.email || '').toLowerCase();
-    const role = await resolveUserRoleFast(em);
-    const user = { uid: res.user.uid, email: em, name: res.user.displayName || em.split('@')[0], role, isFirebase: true };
+    const emailVerified = res.user.emailVerified !== false;
+    const role = emailVerified ? await resolveUserRoleFast(em, true) : 'candidate';
+    const user = { uid: res.user.uid, email: em, name: res.user.displayName || em.split('@')[0], role, emailVerified, isFirebase: true };
     AUTH_INITIALIZED = true;
     setSession(user);
-    triggerBackgroundSync();
+    if (emailVerified) triggerBackgroundSync();
     if (onSuccess) onSuccess(user);
   } catch (err) {
     if (err.code === 'auth/popup-closed-by-user') return;
@@ -4048,11 +4303,10 @@ async function syncPublicData() {
   const prevPromosSig = buildPromosRenderSig();
   const prevUnitsMap = new Map(V.map(u => [u.ref, JSON.stringify(u)]));
   try {
-    const [pSnap, vSnap, bSnap, cSnap, scSnap] = await Promise.all([
+    const [pSnap, vSnap, bSnap, scSnap] = await Promise.all([
       getDocs(collection(fbDb, 'promociones')).catch(() => ({ empty: true, docs: [] })),
       getDocs(collection(fbDb, 'viviendas')),
       getDocs(collection(fbDb, 'consejos')),
-      getDoc(doc(fbDb, 'config', 'general')).catch(() => ({ exists: () => false })),
       getDoc(doc(fbDb, 'config', 'siteContent')).catch(() => ({ exists: () => false }))
     ]);
     FB_DB_ONLINE = true;
@@ -4097,16 +4351,6 @@ async function syncPublicData() {
       saveBlog();
       if (window.renderBlogList && JSON.stringify(BLOG) !== prevBlogSig) renderBlogList();
     }
-    if (cSnap && cSnap.exists()) {
-      const remote = cSnap.data();
-      saveCfg({
-        ...getCfg(),
-        ...remote,
-        googleSheetUrl: remote.googleSheetUrl || getCfg().googleSheetUrl || DEFAULT_CFG.googleSheetUrl,
-        appsScriptUrl: remote.appsScriptUrl || getCfg().appsScriptUrl || DEFAULT_CFG.appsScriptUrl,
-        web3formsKey: remote.web3formsKey || getCfg().web3formsKey || DEFAULT_CFG.web3formsKey
-      });
-    }
     if (scSnap && scSnap.exists()) {
       SITE_CONTENT = mergeSiteContent(scSnap.data());
       saveSiteContent();
@@ -4137,7 +4381,7 @@ async function syncPublicData() {
 }
 
 async function syncProtectedData() {
-  if (!CURRENT_USER || !fbAuth.currentUser) return;
+  if (!CURRENT_USER || !fbAuth.currentUser || fbAuth.currentUser.emailVerified !== true) return;
   try {
     if (isVerifiedAdmin()) {
       const [sSnap, aSnap, cSnap] = await Promise.all([
@@ -4483,12 +4727,14 @@ function updateUserHeader() {
       <button type="button" class="danger" id="menuLogoutBtn">${ICO('logout')} Cerrar sesión</button>
     `;
   } else {
+    const needsVerify = CURRENT_USER.emailVerified !== true;
     menu.innerHTML = `
       <div class="user-menu-head">
         <b>${esc(CURRENT_USER.name)}</b>
         <small>${esc(CURRENT_USER.email)}</small>
+        ${needsVerify ? '<span class="role-tag" style="background:var(--warn-tx)">Verifica tu correo</span>' : ''}
       </div>
-      <a href="#mi-solicitud" data-menu-close>${ICO('file')} Mi solicitud y estado</a>
+      <a href="#mi-solicitud" data-menu-close>${ICO('file')} ${needsVerify ? 'Verificar correo / Mi solicitud' : 'Mi solicitud y estado'}</a>
       <a href="#contacto" data-menu-close>${ICO('plus')} Nueva candidatura</a>
       <hr>
       <button type="button" class="danger" id="menuLogoutBtn">${ICO('logout')} Cerrar sesión</button>
@@ -4600,6 +4846,14 @@ function openAuthModal(defaultEmail = '') {
         return;
       }
       if ($('dlg')?.open) $('dlg').close();
+      if (res.needsVerification) {
+        notify(isSignup
+          ? `Cuenta creada. Verifica el enlace enviado a ${res.user.email} para activar tu acceso.`
+          : `Verifica tu correo (${res.user.email}) para acceder a tus datos privados.`);
+        if (location.hash !== '#mi-solicitud') location.hash = 'mi-solicitud';
+        else route({ silent: true });
+        return;
+      }
       const isAdm = isVerifiedAdmin();
       notify(isAdm
         ? `Bienvenido, ${res.user.name}. Desplegable de administración activado.`
@@ -5155,8 +5409,12 @@ function bindUniqueForm(hostRoot = document) {
   elPick.onchange = () => {
     const r = elPick.value.trim().toUpperCase();
     if (avail.some(v => v.ref === r) && !SEL.includes(r)) {
-      SEL.push(r);
-      renderTags();
+      if (SEL.length >= 10) {
+        notify('Puedes seleccionar un máximo de 10 viviendas por candidatura');
+      } else {
+        SEL.push(r);
+        renderTags();
+      }
     } else if (r && !avail.some(v => v.ref === r)) {
       notify('Esa referencia no está disponible o ya está reservada');
     }
@@ -5234,7 +5492,7 @@ function bindUniqueForm(hostRoot = document) {
       otrasOpciones: elOt.checked ? 'Sí' : 'No',
       habitacionesDeseadas: habs.length ? habs.join(', ') : 'Indiferente',
       comentario: elTx.value.trim().slice(0, 1200),
-      selecciones: SEL.map(r => ({ ref: r, estado: 'En estudio' }))
+      selecciones: SEL.slice(0, 10).map(r => ({ ref: r, estado: 'En estudio' }))
     };
     payload.promoName = getSolPromoLabel(payload);
 
@@ -7062,6 +7320,47 @@ function renderMiSolicitud() {
   const sec = $('v-mi-solicitud');
 
   if (CURRENT_USER) {
+    if (CURRENT_USER.emailVerified !== true) {
+      sec.innerHTML = `
+      <div class="head">
+        <div>
+          <h2>Verifica tu correo electrónico</h2>
+          <p>Por seguridad y cumplimiento RGPD, necesitamos confirmar que eres el titular de <b>${esc(CURRENT_USER.email)}</b> antes de mostrar solicitudes o habilitar permisos de acceso.</p>
+        </div>
+      </div>
+      <div class="panel" style="max-width:620px">
+        <p style="margin-bottom:12px">Te hemos enviado un enlace de verificación a <b>${esc(CURRENT_USER.email)}</b>. Ábrelo desde tu bandeja de entrada (o revisa la carpeta de spam) y después pulsa <b>«Ya lo verifiqué»</b>.</p>
+        <div class="cta" style="margin-bottom:12px">
+          <button type="button" class="btn sm" id="checkVerifyBtn">${ICO('check')} Ya lo verifiqué · Comprobar</button>
+          <button type="button" class="btn g sm" id="resendVerifyBtn">${ICO('mail')} Reenviar enlace de verificación</button>
+        </div>
+        <p class="m" style="font-size:.8rem">Consejo: si accedes con el botón <b>Continuar con Google</b>, tu correo queda verificado automáticamente al instante.</p>
+      </div>`;
+      $('checkVerifyBtn').onclick = async () => {
+        const b = $('checkVerifyBtn');
+        b.disabled = true;
+        b.textContent = 'Comprobando…';
+        const res = await refreshVerificationStatus();
+        if (res.verified) {
+          notify(res.role === 'admin' ? 'Correo verificado · Acceso de administrador activado' : 'Correo verificado correctamente');
+          if (res.role === 'admin') location.hash = 'admin/promociones';
+          else renderMiSolicitud();
+        } else {
+          b.disabled = false;
+          b.innerHTML = `${ICO('check')} Ya lo verifiqué · Comprobar`;
+          notify('Tu correo todavía aparece sin verificar. Abre el enlace recibido en tu email y vuelve a intentarlo.');
+        }
+      };
+      $('resendVerifyBtn').onclick = async () => {
+        const b = $('resendVerifyBtn');
+        b.disabled = true;
+        const res = await resendVerificationEmail();
+        notify(res.msg);
+        b.disabled = false;
+      };
+      return;
+    }
+
     const isAdmin = isVerifiedAdmin();
     sec.innerHTML = `
     <div class="head">
@@ -7206,6 +7505,11 @@ function renderMiSolicitud() {
       }
       return;
     }
+    if (res.needsVerification) {
+      notify(`Verifica tu correo (${res.user.email}) para acceder a tus datos privados.`);
+      renderMiSolicitud();
+      return;
+    }
     const isAdm = isVerifiedAdmin();
     notify(isAdm
       ? `Sesión iniciada como ${res.user.name}. Abriendo panel de gestión…`
@@ -7227,14 +7531,16 @@ function renderMiSolicitud() {
       $('quickLookupCode')?.focus();
       return;
     }
-    try {
-      const q = query(collection(fbDb, 'solicitudes'), where('email', '==', em));
-      const snap = await getDocs(q);
-      const remote = snap.docs.map(d => d.data()).filter(s => s && !s.deleted);
-      if (remote.length) {
-        SOLS = [...remote, ...SOLS.filter(s => s && !s.deleted && s.email !== em)];
-      }
-    } catch (_) {}
+    if (fbAuth.currentUser && fbAuth.currentUser.emailVerified === true) {
+      try {
+        const q = query(collection(fbDb, 'solicitudes'), where('email', '==', em));
+        const snap = await getDocs(q);
+        const remote = snap.docs.map(d => d.data()).filter(s => s && !s.deleted);
+        if (remote.length) {
+          SOLS = [...remote, ...SOLS.filter(s => s && !s.deleted && s.email !== em)];
+        }
+      } catch (_) {}
+    }
     if ($('ls')) $('ls').innerHTML = renderSolicitudCards(em, { verificationCode: code });
   };
 }
@@ -10306,13 +10612,13 @@ function renderAdmin(subTab) {
           <input id="cfgUrl" type="url" value="${esc(c.baseUrl)}" required>
         </label>
         <details open style="margin:12px 0 16px;padding:10px 14px;box-shadow:none;background:var(--card2)">
-          <summary style="font-size:.82rem;color:var(--mut)">Sincronización con Google Apps Script v4.4 (auto-hoja por promoción + renombrado + borrado + filtros/estilo + Archivo)</summary>
+          <summary style="font-size:.82rem;color:var(--mut)">Sincronización segura con Google Apps Script v4.5 (Firebase Admin Token + auto-hoja por promoción + borrado + Archivo)</summary>
           <div style="margin-top:12px">
             <label>URL de Apps Script (debe acabar en /exec)
               <input id="cfgSheets" type="url" value="${esc(c.appsScriptUrl)}" placeholder="https://script.google.com/macros/s/XXXXX/exec">
             </label>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v4.4 (Crear / Renombrar / Borrar hojas)</button>
+              <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v4.5 (Seguro)</button>
               <button type="button" class="btn g sm" id="testAppsScriptBtn">Comprobar versión</button>
             </div>
           </div>
@@ -10329,7 +10635,7 @@ function renderAdmin(subTab) {
     $('copyAppsScriptBtn').onclick = async () => {
       try {
         await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-        notify('Apps Script v4.4 copiado: pégalo en Apps Script y publica una «Nueva versión»');
+        notify('Apps Script v4.5 copiado: pégalo en Apps Script y publica una «Nueva versión»');
       } catch (_) {
         notify('No se pudo copiar automáticamente');
       }
@@ -10343,10 +10649,10 @@ function renderAdmin(subTab) {
       btn.disabled = false;
       btn.textContent = 'Comprobar versión';
       renderScriptVersionBanner('cfgScriptBanner');
-      if (info.version >= 4.4) {
-        notify(`Conectado a Apps Script v${info.version} (${(info.promoSheets || []).join(', ') || 'Promociones'} + ${info.archiveSheet || 'Archivo'})`);
-      } else if (info.version >= 4.2) {
-        notify(`Conectado a Apps Script v${info.version} (actualiza a v4.4 si quieres borrado automático de hojas al eliminar promociones)`);
+      if (info.version >= 4.5) {
+        notify(`Conectado a Apps Script v${info.version} seguro (${(info.promoSheets || []).join(', ') || 'Promociones'} + ${info.archiveSheet || 'Archivo'})`);
+      } else if (info.version >= 4.4) {
+        notify(`Conectado a Apps Script v${info.version}. Actualiza a v4.5 para proteger las acciones admin con Firebase Token.`);
       } else if (info.version) {
         notify(`Tu enlace sigue en v${info.version}. En Apps Script pulsa Implementar → Administrar implementaciones → Editar → Nueva versión.`);
       } else {
@@ -11606,19 +11912,20 @@ onAuthStateChanged(fbAuth, async fbUser => {
     return;
   }
   const em = (fbUser.email || '').toLowerCase();
+  const emailVerified = fbUser.emailVerified === true;
   const h = location.hash || '';
   const needsRouteRefresh = h.startsWith('#admin') || h === '#mi-solicitud' || h.startsWith('#ficha');
-  if (CURRENT_USER && CURRENT_USER.uid === fbUser.uid) {
+  if (CURRENT_USER && CURRENT_USER.uid === fbUser.uid && CURRENT_USER.emailVerified === emailVerified) {
     updateUserHeader();
-    triggerBackgroundSync();
+    if (emailVerified) triggerBackgroundSync();
     if (firstInit && needsRouteRefresh) route({ silent: true });
     return;
   }
-  const role = await resolveUserRoleFast(em);
-  setSession({ uid: fbUser.uid, email: em, name: fbUser.displayName || em.split('@')[0], role, isFirebase: true });
+  const role = emailVerified ? await resolveUserRoleFast(em, true) : 'candidate';
+  setSession({ uid: fbUser.uid, email: em, name: fbUser.displayName || em.split('@')[0], role, emailVerified, isFirebase: true });
   if (window.__syncFloatingChatUser) window.__syncFloatingChatUser();
   if (role === 'admin') refreshAllPropertyViews();
-  triggerBackgroundSync();
+  if (emailVerified) triggerBackgroundSync();
   if (needsRouteRefresh) route({ silent: true });
 });
 </script>
