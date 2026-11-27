@@ -108,6 +108,13 @@ header{position:sticky;top:0;z-index:50;background:var(--hd);backdrop-filter:blu
 .nav-acts{display:flex;align-items:center;gap:8px;position:relative;flex-shrink:0}
 .icon-btn{background:var(--card);border:1px solid var(--line);color:var(--tx);width:36px;height:36px;border-radius:4px;display:grid;place-items:center;cursor:pointer;font-size:.95rem;transition:.15s}
 .icon-btn:hover{border-color:var(--b1);color:var(--b1)}
+.ig-btn{text-decoration:none}
+.ig-btn:hover{border-color:#d62976;color:#d62976;background:rgba(214,41,118,.08)}
+.btn-ig{background:linear-gradient(135deg,#833ab4 0%,#d62976 55%,#f56040 100%);border-color:transparent;color:#fff}
+.btn-ig:hover{filter:brightness(1.06);color:#fff;border-color:transparent}
+.footer-social{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:10px 0 12px}
+.footer-ig-link{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:99px;border:1px solid var(--line);background:var(--card2);color:var(--tx);font-size:.8rem;font-weight:600;text-decoration:none;transition:.15s}
+.footer-ig-link:hover{border-color:#d62976;color:#d62976}
 .user-pill{background:var(--card);border:1px solid var(--line);color:var(--tx);padding:7px 13px;border-radius:4px;font:600 .82rem 'Plus Jakarta Sans',sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:.15s;white-space:nowrap}
 .user-pill:hover{border-color:var(--b1);color:var(--b1)}
 .user-pill.is-admin{border-color:var(--b1);background:var(--b1-soft);color:var(--b1);font-weight:700}
@@ -125,9 +132,11 @@ header{position:sticky;top:0;z-index:50;background:var(--hd);backdrop-filter:blu
 
 #bur{display:none;background:var(--tx);color:var(--bg);border:0;border-radius:4px;font-size:1.15rem;padding:6px 11px;cursor:pointer}
 @media(max-width:1260px){
-  .nav{padding:.48rem 14px;gap:8px}
-  .brand-logo-img{height:60px;max-width:214px}
-  .links a{padding:8px 6px;font-size:.78rem}
+  .nav{padding:.48rem 12px;gap:6px}
+  .brand-logo-img{height:54px;max-width:190px}
+  .links a{padding:8px 5px;font-size:.76rem}
+  .nav-acts{gap:5px}
+  .user-pill{padding:6px 10px;font-size:.78rem}
 }
 @media(max-width:1150px){
   .brand-logo-img{height:64px;max-width:236px}
@@ -1123,8 +1132,10 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 }
 
 @media(max-width:390px){
-  .brand-logo-img{height:40px;max-width:152px}
-  .user-pill{max-width:112px;padding:5px 8px;font-size:.74rem}
+  .brand-logo-img{height:38px;max-width:136px}
+  .user-pill{max-width:96px;padding:5px 7px;font-size:.73rem}
+  .icon-btn{width:32px;height:32px}
+  .nav-acts{gap:5px}
   .nav{padding:6px 10px;gap:6px}
   .hero .cta{grid-template-columns:1fr}
   .stats b{font-size:1.24rem}
@@ -1155,6 +1166,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
         <span id="userBtnLabel"><span class="lbl-full">Iniciar sesión</span><span class="lbl-short">Acceder</span></span>
       </button>
       <div class="user-menu" id="userMenu" role="menu"></div>
+      <a class="icon-btn ig-btn" id="igNavBtn" href="https://www.instagram.com/deltacor.properties?knvt=a2lycWp6Y2NqbWt0" target="_blank" rel="noopener noreferrer" title="Síguenos en Instagram (@deltacor.properties)" aria-label="Instagram de Deltacor Properties"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
       <button type="button" class="icon-btn" id="themeBtn" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18V3z"/></svg></button>
       <button type="button" id="bur" aria-label="Abrir menú" aria-expanded="false" aria-controls="nl">☰</button>
     </div>
@@ -1180,6 +1192,9 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
         <img class="footer-logo-img" src="./logo-deltacor.png?v=3" alt="Deltacor Properties" width="1177" height="450" loading="lazy" decoding="async">
       </span>
     </a>
+  </div>
+  <div class="footer-social" id="footerSocial">
+    <a class="footer-ig-link" id="igFooterLink" href="https://www.instagram.com/deltacor.properties?knvt=a2lycWp6Y2NqbWt0" target="_blank" rel="noopener noreferrer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg> @deltacor.properties</a>
   </div>
   © 2026 <b>Deltacor Properties S.L.</b> · Promociones de Obra Nueva ·
   <a href="#privacidad">Aviso Legal, Privacidad y Cookies</a>
@@ -3717,7 +3732,8 @@ const ICONS = {
   heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
   bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
   mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
-  whatsapp: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>'
+  whatsapp: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+  instagram: '<rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>'
 };
 const ICO = (name, cls = 'ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ''}</svg>`;
 
@@ -4328,9 +4344,8 @@ function getAllPromoUnits(promoId = 'ALL') {
 }
 
 function refreshAllPropertyViews() {
-  const pubCount = getPublicUnits().length;
   const navViv = document.querySelector('#nl a[data-r="viviendas"]');
-  if (navViv) navViv.textContent = `Viviendas (${pubCount})`;
+  if (navViv) navViv.textContent = 'Viviendas';
   if (isVerifiedAdmin() && typeof updateUserHeader === 'function') updateUserHeader();
   if (window.applySiteContent) window.applySiteContent();
   const isInicioOn = $('v-inicio')?.classList.contains('on');
@@ -4384,6 +4399,7 @@ const DEFAULT_SITE_CONTENT = {
   officeEmail: 'deltacor.properties@gmail.com',
   officePhone: '',
   whatsappPhone: '',
+  instagramUrl: 'https://www.instagram.com/deltacor.properties?knvt=a2lycWp6Y2NqbWt0',
   mapUrl: 'https://www.openstreetmap.org/export/embed.html?bbox=-3.8820%2C40.3120%2C-3.8500%2C40.3320&layer=mapnik&marker=40.3223%2C-3.8649',
   legalTitular: 'En cumplimiento de la Ley 34/2002 (LSSI-CE), se informa que el presente sitio web es titularidad de Deltacor Properties S.L., con domicilio en Móstoles (Madrid).',
   legalRgpd: 'Responsable: Deltacor Properties S.L. · Finalidad: Gestionar las solicitudes de arrendamiento, evaluar preliminarmente la solvencia económica y habilitar el acceso al área privada y plataforma documental Rentger. · Legitimación: Consentimiento expreso del interesado y aplicación de medidas precontractuales (art. 6.1.a y 6.1.b RGPD). · Destinatarios: Herramientas de gestión interna (Google Workspace/Sheets) y plataforma de validación documental Rentger únicamente en caso de pre-aprobación. · Derechos: Acceso, rectificación, supresión y oposición mediante solicitud escrita a deltacor.properties@gmail.com.',
@@ -5614,7 +5630,7 @@ document.addEventListener('click', e => {
 const NAV_ITEMS = [
   ['inicio', 'Inicio'],
   ['promociones', 'Promociones'],
-  ['viviendas', `Viviendas (${getPublicUnits().length})`],
+  ['viviendas', 'Viviendas'],
   ['alzado', 'Alzado'],
   ['condiciones', 'Condiciones'],
   ['quienes', 'Quiénes somos'],
@@ -5626,7 +5642,7 @@ if ($('nl').children.length !== NAV_ITEMS.length) {
   $('nl').innerHTML = NAV_ITEMS.map(r => `<a href="#${r[0]}" data-r="${r[0]}">${r[1]}</a>`).join('');
 } else {
   const navVivInit = $('nl').querySelector('a[data-r="viviendas"]');
-  if (navVivInit) navVivInit.textContent = `Viviendas (${getPublicUnits().length})`;
+  if (navVivInit) navVivInit.textContent = 'Viviendas';
 }
 
 const MAX_SEL_UNITS = 10;
@@ -6883,7 +6899,7 @@ function renderApp() {
             ${p.isNew && !pHidden ? '<span class="new-tag-inline">NUEVA</span>' : ''}
             ${pHidden ? '<span class="off-tag-inline">OCULTA</span>' : ''}
             ${p.status === 'construccion' ? '<span style="font-size:.66rem;opacity:.85">· En obra</span>' : ''}
-            <span style="opacity:.8">(${isAdmin ? `${pAct}/${pAll.length}` : pAct})</span>
+            ${isAdmin ? `<span style="opacity:.8">(${pAct}/${pAll.length})</span>` : ''}
           </button>`;
         }).join('')}
         ${isAdmin && (hasAnyHidden || alzadoShowInactive) ? `
@@ -7490,6 +7506,24 @@ function renderApp() {
     const waHref = waDigits
       ? `https://wa.me/${waDigits}?text=${encodeURIComponent('Hola, me gustaría recibir información sobre las nuevas viviendas en alquiler de Deltacor Properties.')}`
       : '';
+    const rawIg = String(sc.instagramUrl !== undefined ? sc.instagramUrl : DEFAULT_SITE_CONTENT.instagramUrl).trim();
+    const igHref = rawIg && isSafeHttpUrl(rawIg) ? rawIg : '';
+    if ($('igNavBtn')) {
+      if (igHref) {
+        $('igNavBtn').href = igHref;
+        $('igNavBtn').hidden = false;
+      } else {
+        $('igNavBtn').hidden = true;
+      }
+    }
+    if ($('footerSocial') && $('igFooterLink')) {
+      if (igHref) {
+        $('igFooterLink').href = igHref;
+        $('footerSocial').hidden = false;
+      } else {
+        $('footerSocial').hidden = true;
+      }
+    }
     if ($('waFab')) {
       if (waHref) {
         $('waFab').href = waHref;
@@ -7499,18 +7533,24 @@ function renderApp() {
       }
     }
     if ($('oficinaWaWrap')) {
-      if (waHref) {
+      const socialBtns = [];
+      if (waHref) socialBtns.push(`<a class="btn ok sm" href="${esc(waHref)}" target="_blank" rel="noopener noreferrer">${ICO('whatsapp')} Escribir por WhatsApp</a>`);
+      if (igHref) socialBtns.push(`<a class="btn btn-ig sm" href="${esc(igHref)}" target="_blank" rel="noopener noreferrer">${ICO('instagram')} Instagram</a>`);
+      if (socialBtns.length) {
         $('oficinaWaWrap').hidden = false;
-        $('oficinaWaWrap').innerHTML = `<a class="btn ok sm" href="${esc(waHref)}" target="_blank" rel="noopener noreferrer">${ICO('whatsapp')} Escribir por WhatsApp</a>`;
+        $('oficinaWaWrap').innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap">${socialBtns.join('')}</div>`;
       } else {
         $('oficinaWaWrap').hidden = true;
         $('oficinaWaWrap').innerHTML = '';
       }
     }
     document.querySelectorAll('[data-alert-wa-slot]').forEach(slot => {
-      if (waHref) {
+      const btns = [];
+      if (waHref) btns.push(`<a class="btn ok sm" href="${esc(waHref)}" target="_blank" rel="noopener noreferrer">${ICO('whatsapp')} WhatsApp</a>`);
+      if (igHref) btns.push(`<a class="btn btn-ig sm" href="${esc(igHref)}" target="_blank" rel="noopener noreferrer">${ICO('instagram')} Seguir en Instagram</a>`);
+      if (btns.length) {
         slot.hidden = false;
-        slot.innerHTML = `<span class="m" style="font-size:.8rem">¿Prefieres trato inmediato?</span><a class="btn ok sm" href="${esc(waHref)}" target="_blank" rel="noopener noreferrer">${ICO('whatsapp')} Escribir por WhatsApp</a>`;
+        slot.innerHTML = `<span class="m" style="font-size:.8rem">¿Prefieres contacto o novedades directas?</span>${btns.join('')}`;
       } else {
         slot.hidden = true;
         slot.innerHTML = '';
@@ -7551,6 +7591,8 @@ function renderApp() {
     const waHref = waNum
       ? `https://wa.me/${waNum}?text=${encodeURIComponent('Hola, quiero apuntarme a los avisos de nuevas viviendas de Deltacor Properties.')}`
       : '';
+    const rawIg = String(SITE_CONTENT.instagramUrl !== undefined ? SITE_CONTENT.instagramUrl : DEFAULT_SITE_CONTENT.instagramUrl).trim();
+    const igHref = rawIg && isSafeHttpUrl(rawIg) ? rawIg : '';
 
     const drawForm = () => {
       const card = $(`${p}Card`);
@@ -7717,8 +7759,8 @@ function renderApp() {
               <li>${ICO('check')} <span><b>Solo lo que buscas:</b> filtramos por dormitorios y presupuesto orientativo.</span></li>
               <li>${ICO('check')} <span><b>Sin spam ni intermediarios:</b> trato directo con la propiedad y baja inmediata.</span></li>
             </ul>
-            <div class="alert-wa-row" data-alert-wa-slot ${waHref ? '' : 'hidden'}>
-              ${waHref ? `<span class="m" style="font-size:.8rem">¿Prefieres trato inmediato?</span><a class="btn ok sm" href="${esc(waHref)}" target="_blank" rel="noopener noreferrer">${ICO('whatsapp')} Escribir por WhatsApp</a>` : ''}
+            <div class="alert-wa-row" data-alert-wa-slot ${(waHref || igHref) ? '' : 'hidden'}>
+              ${(waHref || igHref) ? `<span class="m" style="font-size:.8rem">¿Prefieres contacto o novedades directas?</span>${waHref ? `<a class="btn ok sm" href="${esc(waHref)}" target="_blank" rel="noopener noreferrer">${ICO('whatsapp')} WhatsApp</a>` : ''}${igHref ? `<a class="btn btn-ig sm" href="${esc(igHref)}" target="_blank" rel="noopener noreferrer">${ICO('instagram')} Seguir en Instagram</a>` : ''}` : ''}
             </div>
           </div>
           <div class="alert-form-card" id="${p}Card"></div>
@@ -8054,17 +8096,12 @@ function renderApp() {
 
     const sw = $('catPromoSwitcher');
     if (sw) {
-      const allCount = allPubUnits.length;
       sw.innerHTML = `
-        <button type="button" class="chip ${activeCatalogPromo === 'ALL' ? 'on' : ''}" data-cat-promo="ALL">Todas las promociones (${allCount})</button>
-        ${pubPromos.map(p => {
-          const cnt = getPublicUnits(p.id).length;
-          return `<button type="button" class="chip ${activeCatalogPromo === p.id ? 'on' : ''}" data-cat-promo="${esc(p.id)}">
+        <button type="button" class="chip ${activeCatalogPromo === 'ALL' ? 'on' : ''}" data-cat-promo="ALL">Todas las promociones</button>
+        ${pubPromos.map(p => `<button type="button" class="chip ${activeCatalogPromo === p.id ? 'on' : ''}" data-cat-promo="${esc(p.id)}">
             ${esc(p.name)}
             ${p.isNew ? '<span class="new-tag-inline">NUEVA</span>' : ''}
-            <span style="opacity:.8">(${cnt})</span>
-          </button>`;
-        }).join('')}`;
+          </button>`).join('')}`;
       sw.onclick = e => {
         const b = e.target.closest('[data-cat-promo]');
         if (!b) return;
@@ -11924,6 +11961,9 @@ function renderAdmin(subTab) {
             <input id="scOffWhatsApp" type="tel" value="${esc(sc.whatsappPhone || '')}" placeholder="Ej. +34 600 000 000">
           </label>
         </div>
+        <label>Instagram oficial (URL https:// — activa botón de IG en cabecera, pie y contacto)
+          <input id="scInstagramUrl" type="url" value="${esc(sc.instagramUrl !== undefined ? sc.instagramUrl : DEFAULT_SITE_CONTENT.instagramUrl)}" placeholder="https://www.instagram.com/deltacor.properties">
+        </label>
         <label>URL de mapa embebido (OpenStreetMap o Google Maps iframe https://)
           <input id="scMapUrl" type="url" value="${esc(sc.mapUrl)}" placeholder="https://www.openstreetmap.org/export/embed.html?...">
         </label>
@@ -12087,6 +12127,10 @@ function renderAdmin(subTab) {
         officeEmail: $('scOffEmail').value.trim() || DEFAULT_SITE_CONTENT.officeEmail,
         officePhone: $('scOffPhone').value.trim(),
         whatsappPhone: $('scOffWhatsApp').value.trim(),
+        instagramUrl: (() => {
+          const u = $('scInstagramUrl').value.trim();
+          return u && isSafeHttpUrl(u) ? u : '';
+        })(),
         mapUrl: mapUrl || DEFAULT_SITE_CONTENT.mapUrl,
         legalTitular: $('scLegTit').value.trim() || DEFAULT_SITE_CONTENT.legalTitular,
         legalRgpd: $('scLegRgpd').value.trim() || DEFAULT_SITE_CONTENT.legalRgpd,
