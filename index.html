@@ -1460,7 +1460,12 @@ const DEFAULT_CFG = {
   // Por privacidad RGPD el enlace del Google Sheet nunca se expone en el código público; solo se carga para admins desde Firestore
   googleSheetUrl: '',
   appsScriptUrl: 'https://script.google.com/macros/s/AKfycbyPk_Wo2xtTrDYwgb3oqMCbNrb-EjWWvwevFNEV4s87fnKYZqxH8HSgnzFn8lmp3BXW/exec',
-  web3formsKey: 'c05241c5-d58b-4fc9-8cb0-6dc3525388b9'
+  web3formsKey: '1f42df2b-5bbc-47da-8453-9d42c617c9c0'
+};
+const LEGACY_WEB3FORMS_KEYS = new Set(['c05241c5-d58b-4fc9-8cb0-6dc3525388b9']);
+const resolveWeb3FormsKey = raw => {
+  const k = String(raw || '').trim();
+  return (!k || LEGACY_WEB3FORMS_KEYS.has(k)) ? DEFAULT_CFG.web3formsKey : k;
 };
 
 const SHEET_HEADERS = ['ID', 'Fecha', 'Nombre', 'Documento', 'Email', 'Estado', 'Teléfono', 'Adultos', 'Niños', 'Mascotas', 'Ingresos (€/mes)', 'Renta máx. 3x (€)', 'Aval', 'Viviendas y estados', 'Otras opciones', 'Habitaciones', 'Comentarios'];
@@ -3562,11 +3567,11 @@ const getCfg = () => {
     baseUrl,
     googleSheetUrl,
     appsScriptUrl,
-    web3formsKey: String(saved.web3formsKey || DEFAULT_CFG.web3formsKey || '').trim()
+    web3formsKey: resolveWeb3FormsKey(saved.web3formsKey)
   };
 };
 async function sendWeb3Forms(fields) {
-  const key = String(getCfg().web3formsKey || DEFAULT_CFG.web3formsKey || '').trim();
+  const key = resolveWeb3FormsKey(getCfg().web3formsKey);
   if (!key) return { ok: false, skipped: true, message: 'Falta Access Key de Web3Forms' };
   try {
     const formData = new FormData();
@@ -3594,7 +3599,7 @@ const saveCfg = (c) => {
     baseUrl: isSafeHttpUrl(c?.baseUrl) ? String(c.baseUrl).trim() : DEFAULT_CFG.baseUrl,
     googleSheetUrl: isSafeHttpUrl(c?.googleSheetUrl, ['docs.google.com']) ? String(c.googleSheetUrl).trim() : '',
     appsScriptUrl: isSafeHttpUrl(c?.appsScriptUrl, ['script.google.com']) ? String(c.appsScriptUrl).trim() : '',
-    web3formsKey: String(c?.web3formsKey || DEFAULT_CFG.web3formsKey || '').trim()
+    web3formsKey: resolveWeb3FormsKey(c?.web3formsKey)
   };
   safeSetItem(localStorage, 'inv-cfg', JSON.stringify(clean));
 };
@@ -5043,7 +5048,7 @@ async function syncProtectedData() {
           ...remote,
           googleSheetUrl: remote.googleSheetUrl || getCfg().googleSheetUrl || DEFAULT_CFG.googleSheetUrl,
           appsScriptUrl: remote.appsScriptUrl || getCfg().appsScriptUrl || DEFAULT_CFG.appsScriptUrl,
-          web3formsKey: remote.web3formsKey || getCfg().web3formsKey || DEFAULT_CFG.web3formsKey
+          web3formsKey: resolveWeb3FormsKey(remote.web3formsKey || getCfg().web3formsKey)
         });
       }
     } else {
