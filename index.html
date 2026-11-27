@@ -488,7 +488,6 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .alz-occ-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:.78rem;font-weight:600}
 .alz-occ-bar{height:8px;border-radius:99px;overflow:hidden;display:flex;background:var(--card2);border:1px solid var(--line)}
 .alz-occ-bar .seg-d{background:#84bd38;transition:width .3s}
-.alz-occ-bar .seg-u{background:#0284c7;transition:width .3s}
 .alz-occ-bar .seg-r{background:#f59e0b;transition:width .3s}
 .alz-occ-bar .seg-a{background:#ef4444;transition:width .3s}
 .alz-occ-bar .seg-c{background:#3c4d5b;transition:width .3s}
@@ -538,7 +537,6 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 
 /* Color modes */
 .alz-unit.m-st-D{border-left:4px solid #84bd38}
-.alz-unit.m-st-U{border-left:4px solid #0284c7;background:rgba(2,132,199,.07)}
 .alz-unit.m-st-R{border-left:4px solid #f59e0b;background:rgba(245,158,11,.07)}
 .alz-unit.m-st-A{border-left:4px solid #ef4444;background:rgba(239,68,68,.06);opacity:.62}
 .alz-unit.m-st-C{border-left:4px solid #3c4d5b;background:rgba(60,77,91,.07);opacity:.78}
@@ -4371,10 +4369,10 @@ function isUnitPublic(v) {
   const p = getPromoById(v.promoId || 'cadmia');
   return Boolean(p && p.visible !== false && p.status !== 'oculta');
 }
-const normalizeUnitSt = st => ['D', 'U', 'R', 'A', 'C'].includes(st) ? st : 'D';
-const isUnitOpenSt = st => st === 'D' || st === 'U';
+const normalizeUnitSt = st => ['D', 'R', 'A', 'C'].includes(st) ? st : 'D';
+const isUnitOpenSt = st => normalizeUnitSt(st) === 'D';
 function isUnitBookable(v) {
-  if (!isUnitPublic(v) || !isUnitOpenSt(v.st)) return false;
+  if (!isUnitPublic(v) || normalizeUnitSt(v.st) !== 'D') return false;
   const p = getPromoById(v.promoId || 'cadmia');
   return Boolean(p && p.status !== 'construccion');
 }
@@ -4469,6 +4467,7 @@ function migrateLegacyUnit(u) {
     ...u,
     promoId: String(u.promoId || 'cadmia').trim() || 'cadmia',
     tipoInmueble: String(u.tipoInmueble || 'piso').toLowerCase() === 'nave' ? 'nave' : 'piso',
+    st: normalizeUnitSt(u.st),
     active: u.active !== false,
     nombre: migrateLegacyPromoText(u.nombre || ''),
     desc: migrateLegacyPromoText(u.desc || '')
@@ -5857,7 +5856,7 @@ function openWaitlistModal(unit) {
   const preEmail = (CURRENT_USER?.email || savedChat?.email || '').trim();
   const prePhone = (savedChat?.phone || '').trim();
   const safeRef = esc(unit.ref);
-  const safeSt = ['D', 'U', 'R', 'A', 'C'].includes(unit.st) ? unit.st : 'R';
+  const safeSt = ['D', 'R', 'A', 'C'].includes(unit.st) ? unit.st : 'R';
 
   dlg.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
@@ -6014,7 +6013,7 @@ function buildPlanSvg(v) {
   </div>`;
 }
 
-const stLabel = s => ({ D: 'Disponible', U: 'Usada', R: 'Reservada', A: 'Alquilada', C: 'En construcción' }[s] || 'Disponible');
+const stLabel = s => ({ D: 'Disponible', R: 'Reservada', A: 'Alquilada', C: 'En construcción' }[s] || 'Disponible');
 const floorShortLabel = fl => Number(fl) === 0 ? 'PB' : `P${fl}`;
 const floorFullLabel = fl => Number(fl) === 0 ? 'Planta Baja' : `Planta ${fl}`;
 
@@ -6028,9 +6027,9 @@ const propertyCard = v => {
   const safeRef = esc(v.ref);
   const safeRefUri = encodeURIComponent(v.ref);
   const safeSt = normalizeUnitSt(v.st);
-  const promoInlineTag = pr.status === 'usada' && safeSt !== 'U'
+  const promoInlineTag = pr.status === 'usada'
     ? ' <span class="st U" style="font-size:.6rem;padding:1px 6px;margin-left:4px;vertical-align:middle">USADA</span>'
-    : (pr.isNew && safeSt !== 'U' ? ' <span class="st NEW" style="font-size:.6rem;padding:1px 6px;margin-left:4px;vertical-align:middle">NUEVA</span>' : '');
+    : (pr.isNew ? ' <span class="st NEW" style="font-size:.6rem;padding:1px 6px;margin-left:4px;vertical-align:middle">NUEVA</span>' : '');
   const naveTag = isNave ? ' <span class="st NAVE" style="font-size:.6rem;padding:1px 6px;margin-left:4px;vertical-align:middle">NAVE</span>' : '';
   return `
 <article class="card">
@@ -7072,14 +7071,12 @@ function renderApp() {
     const inCmp = CMP.includes(cur.ref);
     const curBookable = isUnitBookable(cur);
 
-    const cntD = scopeUnits.filter(v => v.st === 'D').length;
-    const cntU = scopeUnits.filter(v => v.st === 'U').length;
+    const cntD = scopeUnits.filter(v => isUnitOpenSt(v.st)).length;
     const cntR = scopeUnits.filter(v => v.st === 'R').length;
     const cntA = scopeUnits.filter(v => v.st === 'A').length;
     const cntC = scopeUnits.filter(v => v.st === 'C').length;
     const tot = scopeUnits.length || 1;
     const pctD = (cntD / tot * 100).toFixed(1);
-    const pctU = (cntU / tot * 100).toFixed(1);
     const pctR = (cntR / tot * 100).toFixed(1);
     const pctA = (cntA / tot * 100).toFixed(1);
     const pctC = (cntC / tot * 100).toFixed(1);
@@ -7111,7 +7108,7 @@ function renderApp() {
 
     const roomPalette = { 1: '#a3d959', 2: '#84bd38', 3: '#5a8e1b', 4: '#3c4d5b', 5: '#24303a' };
     const legendHtml = alzadoColorMode === 'status'
-      ? `<span><i class="dot ok"></i>Disponible (${cntD})</span>${cntU > 0 ? `<span><i class="dot" style="background:#0284c7"></i>Usada (${cntU})</span>` : ''}<span><i class="dot warn"></i>Reservada (${cntR})</span><span><i class="dot bad"></i>Alquilada (${cntA})</span>${cntC > 0 ? `<span><i class="dot" style="background:#546777"></i>En construcción (${cntC})</span>` : ''}`
+      ? `<span><i class="dot ok"></i>Disponible (${cntD})</span><span><i class="dot warn"></i>Reservada (${cntR})</span><span><i class="dot bad"></i>Alquilada (${cntA})</span>${cntC > 0 ? `<span><i class="dot" style="background:#546777"></i>En construcción (${cntC})</span>` : ''}`
       : alzadoColorMode === 'rooms'
         ? roomCounts.map(n => `<span><i class="dot" style="background:${roomPalette[Math.min(5, n)] || '#3c4d5b'}"></i>${n} Dormitorio${n > 1 ? 's' : ''}</span>`).join('')
         : `<span><i class="dot ok"></i>Hasta 1.050 €/mes</span><span><i class="dot" style="background:#3c4d5b"></i>1.051 – 1.350 €/mes</span><span><i class="dot" style="background:#8a5624"></i>Más de 1.350 €/mes</span>`;
@@ -7202,7 +7199,6 @@ function renderApp() {
               <select id="alzFSt">
                 <option value="ALL" ${alzadoFilters.st === 'ALL' ? 'selected' : ''}>Todos los estados</option>
                 <option value="D" ${alzadoFilters.st === 'D' ? 'selected' : ''}>Solo disponibles</option>
-                <option value="U" ${alzadoFilters.st === 'U' ? 'selected' : ''}>Usadas</option>
                 <option value="R" ${alzadoFilters.st === 'R' ? 'selected' : ''}>Reservadas</option>
                 <option value="A" ${alzadoFilters.st === 'A' ? 'selected' : ''}>Alquiladas</option>
                 <option value="C" ${alzadoFilters.st === 'C' ? 'selected' : ''}>En construcción</option>
@@ -7240,9 +7236,8 @@ function renderApp() {
             <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">${legendHtml}</div>
             <span class="st ${matchedUnits.length ? 'D' : 'R'}">${matchedUnits.length} de ${scopeUnits.length} viviendas resaltadas${alzadoFilters.fl !== null ? ' · ' + floorFullLabel(alzadoFilters.fl) : ''}</span>
           </div>
-          <div class="alz-occ-bar" title="Disponibles ${pctD}%${cntU ? ` · Usadas ${pctU}%` : ''} · Reservadas ${pctR}% · Alquiladas ${pctA}%${cntC ? ` · En construcción ${pctC}%` : ''}">
+          <div class="alz-occ-bar" title="Disponibles ${pctD}% · Reservadas ${pctR}% · Alquiladas ${pctA}%${cntC ? ` · En construcción ${pctC}%` : ''}">
             <div class="seg-d" style="width:${pctD}%"></div>
-            <div class="seg-u" style="width:${pctU}%"></div>
             <div class="seg-r" style="width:${pctR}%"></div>
             <div class="seg-a" style="width:${pctA}%"></div>
             <div class="seg-c" style="width:${pctC}%"></div>
@@ -8220,7 +8215,7 @@ function renderApp() {
         $('ch')?.querySelector('[data-h="0"]')?.classList.add('on');
       }
     }
-    const isUsadaUnit = v => v.st === 'U' || getPromoById(v.promoId).status === 'usada';
+    const isUsadaUnit = v => getPromoById(v.promoId).status === 'usada';
     const hasPubUsadas = allPubUnits.some(isUsadaUnit);
     if ($('usadaFilterChip')) {
       $('usadaFilterChip').hidden = !hasPubUsadas;
@@ -8957,7 +8952,7 @@ function renderFicha(ref) {
         <div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
             <span class="tag" style="margin:0">${esc(promo.name.toUpperCase())}</span>
-            ${safeSt === 'U' ? '<span class="st U">USADA</span>' : (promo.status === 'usada' ? '<span class="st U">USADAS</span>' : (promo.isNew ? '<span class="st NEW">NUEVA · OBRA NUEVA</span>' : ''))}
+            ${promo.status === 'usada' ? '<span class="st U">USADAS</span>' : (promo.isNew ? '<span class="st NEW">NUEVA · OBRA NUEVA</span>' : '')}
             ${isNave ? '<span class="st NAVE">NAVE</span>' : ''}
             <span class="m" style="font-size:.76rem;font-weight:700">${esc(v.portal)} · ${floorFullLabel(v.pl)}</span>
           </div>
@@ -9663,7 +9658,6 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
         <label>Estado *
           <select id="ueSt">
             <option value="D" ${curSt === 'D' ? 'selected' : ''}>Disponible</option>
-            <option value="U" ${curSt === 'U' ? 'selected' : ''}>Usada</option>
             <option value="R" ${curSt === 'R' ? 'selected' : ''}>Reservada</option>
             <option value="A" ${curSt === 'A' ? 'selected' : ''}>Alquilada</option>
             <option value="C" ${curSt === 'C' ? 'selected' : ''}>En construcción</option>
@@ -10482,11 +10476,10 @@ function renderAdmin(subTab) {
           <option value="ACTIVE" ${adminInvVis === 'ACTIVE' ? 'selected' : ''}>Solo activas en web</option>
           <option value="INACTIVE" ${adminInvVis === 'INACTIVE' ? 'selected' : ''}>Solo ocultas / desactivadas</option>
           <option value="ST_D" ${adminInvVis === 'ST_D' ? 'selected' : ''}>Estado: Disponibles</option>
-          <option value="ST_U" ${adminInvVis === 'ST_U' ? 'selected' : ''}>Estado: Usadas</option>
           <option value="ST_C" ${adminInvVis === 'ST_C' ? 'selected' : ''}>Estado: En construcción</option>
           <option value="ST_A" ${adminInvVis === 'ST_A' ? 'selected' : ''}>Estado: Alquiladas</option>
         </select>
-        <input id="admSearch" placeholder="Buscar REF-01, nave, usada, tipología..." style="max-width:250px;margin:0">
+        <input id="admSearch" placeholder="Buscar REF-01, nave, tipología, portal..." style="max-width:250px;margin:0">
       </div>
       <button class="btn sm" type="button" id="addUnitBtn">${ICO('plus')} Añadir vivienda / nave</button>
     </div>
@@ -10512,14 +10505,13 @@ function renderAdmin(subTab) {
         if (adminInvVis === 'ACTIVE' && v.active === false) return false;
         if (adminInvVis === 'INACTIVE' && v.active !== false) return false;
         if (adminInvVis === 'ST_D' && v.st !== 'D') return false;
-        if (adminInvVis === 'ST_U' && v.st !== 'U') return false;
         if (adminInvVis === 'ST_C' && v.st !== 'C') return false;
         if (adminInvVis === 'ST_A' && v.st !== 'A') return false;
         if (!q) return true;
-        const pName = getPromoById(v.promoId).name;
+        const pr = getPromoById(v.promoId);
         const kindTxt = isNaveUnit(v) ? 'nave industrial' : 'piso vivienda';
-        const stTxt = stLabel(v.st);
-        return `${v.ref} ${v.nombre || ''} ${v.portal || ''} ${v.ori || ''} ${pName} ${kindTxt} ${stTxt}`.toLowerCase().includes(q);
+        const promoStTxt = pr.status === 'usada' ? 'usada usadas' : '';
+        return `${v.ref} ${v.nombre || ''} ${v.portal || ''} ${v.ori || ''} ${pr.name} ${kindTxt} ${promoStTxt}`.toLowerCase().includes(q);
       });
     };
 
@@ -10548,7 +10540,6 @@ function renderAdmin(subTab) {
           <td>
             <select data-st="${esc(v.ref)}" style="width:142px;margin:0;padding:5px 8px">
               <option value="D" ${v.st === 'D' ? 'selected' : ''}>Disponible</option>
-              <option value="U" ${v.st === 'U' ? 'selected' : ''}>Usada</option>
               <option value="R" ${v.st === 'R' ? 'selected' : ''}>Reservada</option>
               <option value="A" ${v.st === 'A' ? 'selected' : ''}>Alquilada</option>
               <option value="C" ${v.st === 'C' ? 'selected' : ''}>En construcción</option>
@@ -10634,7 +10625,7 @@ function renderAdmin(subTab) {
       if (e.target.dataset.st) {
         const v = V.find(x => x.ref === e.target.dataset.st);
         const val = e.target.value;
-        if (v && ['D', 'U', 'R', 'A', 'C'].includes(val)) {
+        if (v && ['D', 'R', 'A', 'C'].includes(val)) {
           v.st = val;
           refreshAdminHeaderCounts();
           refreshAllPropertyViews();
