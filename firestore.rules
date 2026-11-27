@@ -115,8 +115,8 @@ service cloud.firestore {
         && solId.matches('^SOL-[A-Z0-9]{4,20}$')
         && request.resource.data.fecha is string && request.resource.data.fecha.size() <= 40
         && request.resource.data.nombre is string && request.resource.data.nombre.size() >= 2 && request.resource.data.nombre.size() <= 140
-        && request.resource.data.tipoDoc in ['DNI', 'NIE']
-        && request.resource.data.dni is string && request.resource.data.dni.size() == 9
+        && request.resource.data.tipoDoc in ['DNI', 'NIE', 'Pasaporte']
+        && request.resource.data.dni is string && request.resource.data.dni.size() >= 5 && request.resource.data.dni.size() <= 20
         && request.resource.data.email is string && request.resource.data.email.size() >= 5 && request.resource.data.email.size() <= 180
         && request.resource.data.telefono is string && request.resource.data.telefono.size() >= 9 && request.resource.data.telefono.size() <= 24
         && request.resource.data.adultos is number && request.resource.data.adultos >= 1 && request.resource.data.adultos <= 10

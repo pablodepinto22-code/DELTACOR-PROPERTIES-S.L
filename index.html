@@ -5336,15 +5336,38 @@ function downloadQrPng(text, filename, label = '', sublabel = '') {
 }
 
 /* ==========================================================================
-   VALIDACIÓN REAL DE DNI / NIE ESPAÑOL
+   NORMALIZACIÓN Y VALIDACIÓN FLEXIBLE DE DOCUMENTO (DNI / NIE / PASAPORTE)
    ========================================================================== */
+function normalizeDocNumber(value, docType = '') {
+  let clean = String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[\s.\-\/]+/g, '');
+  // Quita prefijo opcional ES si va seguido de formato DNI/NIE estándar
+  if (/^ES([0-9XYZ][0-9]{6,7}[A-Z])$/.test(clean)) clean = clean.slice(2);
+  if (docType !== 'Pasaporte') {
+    // DNI clásico de 7 dígitos + letra -> rellena 0 a la izquierda (8 dígitos + letra)
+    if (/^[0-9]{7}[A-Z]$/.test(clean)) clean = '0' + clean;
+    // NIE de 6 dígitos tras X/Y/Z + letra -> rellena 0 tras prefijo
+    else if (/^[XYZ][0-9]{6}[A-Z]$/.test(clean)) clean = clean[0] + '0' + clean.slice(1);
+  }
+  return clean;
+}
+
 function isValidDniNie(value) {
-  const str = String(value || '').trim().toUpperCase();
+  const str = normalizeDocNumber(value);
   if (!/^[0-9XYZ][0-9]{7}[A-Z]$/.test(str)) return false;
   const niePrefix = { X: '0', Y: '1', Z: '2' };
   const numStr = (niePrefix[str[0]] || str[0]) + str.slice(1, 8);
   const letters = 'TRWAGMYFPDXBNJZSQVHLCKE';
   return letters[parseInt(numStr, 10) % 23] === str[8];
+}
+
+function isFlexibleDocValid(value, docType = '') {
+  const clean = normalizeDocNumber(value, docType);
+  if (!/^[A-Z0-9]{5,20}$/.test(clean)) return false;
+  const digits = (clean.match(/[0-9]/g) || []).length;
+  return digits >= 4;
 }
 
 /* ==========================================================================
@@ -5962,12 +5985,13 @@ function renderUniqueForm(preselectedRef = null) {
       <label>3. Nombre y apellidos del solicitante principal *
         <input id="nm" required minlength="2" maxlength="120" autocomplete="name" value="${esc(preName)}" placeholder="Ej. Laura Gómez Martín">
       </label>
-      <label>4. Tipo y número de documento (DNI / NIE) *
-        <div style="display:grid;grid-template-columns:92px minmax(0,1fr);gap:8px">
-          <select id="docType" aria-label="Tipo de documento"><option value="DNI">DNI</option><option value="NIE">NIE</option></select>
-          <input id="dni" required placeholder="12345678Z" maxlength="9" autocomplete="off" style="text-transform:uppercase">
+      <label>4. Tipo y número de documento (DNI / NIE / Pasaporte) *
+        <div style="display:grid;grid-template-columns:112px minmax(0,1fr);gap:8px">
+          <select id="docType" aria-label="Tipo de documento"><option value="DNI">DNI</option><option value="NIE">NIE</option><option value="Pasaporte">Pasaporte</option></select>
+          <input id="dni" required minlength="5" maxlength="20" placeholder="12345678Z o X1234567L" autocomplete="off" style="text-transform:uppercase">
         </div>
-        <span class="err-txt" id="dniErr" hidden>DNI o NIE no válido (revisa la letra de control).</span>
+        <span class="err-txt" id="dniErr" hidden>Introduce un DNI, NIE o Pasaporte válido (mín. 5 caracteres y 4 números; puedes incluir espacios o guiones).</span>
+        <span class="m" id="dniHint" hidden style="display:block;font-size:.76rem;color:var(--warn-tx);margin-top:4px"></span>
       </label>
     </div>
 
@@ -6048,6 +6072,7 @@ function bindUniqueForm(hostRoot = document) {
   const elDocType = q('#docType');
   const elDni = q('#dni');
   const elDniErr = q('#dniErr');
+  const elDniHint = q('#dniHint');
   const elNm = q('#nm');
   const elEm = q('#em');
   const elTl = q('#tl');
@@ -6120,27 +6145,49 @@ function bindUniqueForm(hostRoot = document) {
     elMt.required = isYes;
   };
 
-  const syncDocTypeAndValidate = (showErr = true) => {
-    const raw = elDni.value.trim().toUpperCase();
-    if (/^[XYZ]/.test(raw)) elDocType.value = 'NIE';
-    else if (/^[0-9]/.test(raw)) elDocType.value = 'DNI';
-    const expectedMatch = elDocType.value === 'NIE' ? /^[XYZ]/.test(raw) : /^[0-9]/.test(raw);
-    const valid = expectedMatch && isValidDniNie(raw);
+  const syncDocTypeAndValidate = (showErr = true, normalizeInput = false, autoDetectType = true) => {
+    const rawTrim = elDni.value.trim();
+    let clean = normalizeDocNumber(rawTrim, elDocType.value);
+    if (autoDetectType && elDocType.value !== 'Pasaporte') {
+      if (/^[XYZ][0-9]/.test(clean)) elDocType.value = 'NIE';
+      else if (/^[0-9]/.test(clean)) elDocType.value = 'DNI';
+      clean = normalizeDocNumber(rawTrim, elDocType.value);
+    }
+    if (normalizeInput && clean && rawTrim.toUpperCase() !== clean) {
+      elDni.value = clean;
+    }
+    const valid = isFlexibleDocValid(clean, elDocType.value);
     if (showErr) {
-      elDni.classList.toggle('invalid', raw.length > 0 && !valid);
-      elDniErr.hidden = !raw.length || valid;
+      elDni.classList.toggle('invalid', rawTrim.length > 0 && !valid);
+      elDniErr.hidden = !rawTrim.length || valid;
+      if (elDniHint) {
+        const looksLikeSpanishDoc = elDocType.value !== 'Pasaporte' && /^[0-9XYZ][0-9]{7}[A-Z]$/.test(clean);
+        if (valid && looksLikeSpanishDoc && !isValidDniNie(clean)) {
+          elDniHint.textContent = 'Revisa la letra por si hubiera una errata (puedes enviar la solicitud igualmente).';
+          elDniHint.hidden = false;
+        } else {
+          elDniHint.hidden = true;
+        }
+      }
     }
     return valid;
   };
 
   elDni.oninput = () => {
-    const raw = elDni.value.trim().toUpperCase();
-    if (/^[XYZ]/.test(raw)) elDocType.value = 'NIE';
-    else if (/^[0-9]/.test(raw)) elDocType.value = 'DNI';
-    if (!elDniErr.hidden) syncDocTypeAndValidate(true);
+    if (elDocType.value !== 'Pasaporte') {
+      const clean = normalizeDocNumber(elDni.value, elDocType.value);
+      if (/^[XYZ][0-9]/.test(clean)) elDocType.value = 'NIE';
+      else if (/^[0-9]/.test(clean)) elDocType.value = 'DNI';
+    }
+    if (!elDniErr.hidden || (elDniHint && !elDniHint.hidden)) syncDocTypeAndValidate(true, false, true);
   };
-  elDni.onblur = () => syncDocTypeAndValidate(true);
-  elDocType.onchange = () => { if (elDni.value.trim()) syncDocTypeAndValidate(true); };
+  elDni.onblur = () => syncDocTypeAndValidate(true, true, true);
+  elDocType.onchange = () => {
+    elDni.placeholder = elDocType.value === 'Pasaporte'
+      ? 'Ej. PAA123456'
+      : (elDocType.value === 'NIE' ? 'Ej. X1234567L' : 'Ej. 12345678Z');
+    if (elDni.value.trim()) syncDocTypeAndValidate(true, false, false);
+  };
 
   elIn.oninput = updateLiveSolvency;
   renderTags();
@@ -6153,9 +6200,9 @@ function bindUniqueForm(hostRoot = document) {
     if (cleanName.length < 2) {
       notify('Introduce tu nombre y apellidos completos (mín. 2 caracteres)'); elNm.focus(); return;
     }
-    if (!syncDocTypeAndValidate(true)) {
+    if (!syncDocTypeAndValidate(true, true)) {
       elDni.classList.add('invalid'); elDniErr.hidden = false; elDni.focus();
-      notify('Por favor, introduce un DNI o NIE válido'); return;
+      notify('Introduce un DNI, NIE o Pasaporte válido (mín. 5 caracteres)'); return;
     }
     const cleanEmail = elEm.value.trim().toLowerCase().slice(0, 160);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail) || cleanEmail.length < 5) {
@@ -6178,12 +6225,14 @@ function bindUniqueForm(hostRoot = document) {
     if (submitBtn?.disabled) return;
 
     const habs = [...fm.querySelectorAll('input[name="hab"]:checked')].map(c => Number(c.value));
+    const resolvedDocType = ['DNI', 'NIE', 'Pasaporte'].includes(elDocType.value) ? elDocType.value : 'DNI';
+    const cleanDoc = normalizeDocNumber(elDni.value, resolvedDocType).slice(0, 20);
     const payload = {
       id: generateSolId(),
       fecha: new Date().toLocaleString('es-ES'),
       nombre: cleanName,
-      tipoDoc: elDocType.value === 'NIE' ? 'NIE' : 'DNI',
-      dni: elDni.value.trim().toUpperCase().slice(0, 9),
+      tipoDoc: resolvedDocType,
+      dni: cleanDoc,
       email: cleanEmail,
       telefono: cleanPhone,
       adultos: Math.max(1, Math.min(10, Math.round(Number(elAd.value) || 1))),
@@ -6266,6 +6315,9 @@ function bindUniqueForm(hostRoot = document) {
     const savedId = payload.id;
     SEL = [];
     fm.reset();
+    elDni.classList.remove('invalid');
+    elDniErr.hidden = true;
+    if (elDniHint) elDniHint.hidden = true;
     elMw.hidden = true;
     elMt.required = false;
     setTimeout(() => {
@@ -8267,10 +8319,11 @@ function renderSolicitudCards(email, opts = {}) {
   });
   let found = [...byId.values()].filter(s => String(s.email || '').trim().toLowerCase() === normEmail);
   if (verCode) {
+    const verClean = verCode.replace(/[\s.\-\/]+/g, '');
     found = found.filter(s => {
       const idMatch = String(s.id || '').trim().toUpperCase() === verCode;
-      const dniClean = String(s.dni || s.dniLast4 || '').trim().toUpperCase();
-      const dniTailMatch = verCode.length >= 4 && dniClean.length >= 4 && dniClean.slice(-4) === verCode.slice(-4);
+      const dniClean = String(s.dni || s.dniLast4 || '').trim().toUpperCase().replace(/[\s.\-\/]+/g, '');
+      const dniTailMatch = verClean.length >= 4 && dniClean.length >= 4 && dniClean.slice(-4) === verClean.slice(-4);
       return idMatch || dniTailMatch;
     });
   }
