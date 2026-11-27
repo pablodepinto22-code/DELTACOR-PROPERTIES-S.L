@@ -1200,7 +1200,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
         <img class="brand-logo-img" id="brandLogoImg" src="./logo-deltacor.png?v=3" alt="Deltacor Properties" width="1177" height="450" decoding="async" fetchpriority="high">
       </span>
     </a>
-    <nav class="links" id="nl" aria-label="Navegación principal"><a href="#inicio" data-r="inicio">Inicio</a><a href="#promociones" data-r="promociones">Promociones</a><a href="#viviendas" data-r="viviendas">Viviendas</a><a href="#alzado" data-r="alzado">Alzado</a><a href="#condiciones" data-r="condiciones">Condiciones</a><a href="#quienes" data-r="quienes">Quiénes somos</a><a href="#consejos" data-r="consejos">Consejos</a><a href="#contacto" data-r="contacto">Solicitar</a><a href="#mi-solicitud" data-r="mi-solicitud" id="clientAreaBtn" class="nav-client-btn" aria-expanded="false" aria-haspopup="true" aria-controls="clientAreaMenu">Área de clientes <svg class="nav-chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></a></nav>
+    <nav class="links" id="nl" aria-label="Navegación principal"><a href="#inicio" data-r="inicio">Inicio</a><a href="#promociones" data-r="promociones">Promociones</a><a href="#viviendas" data-r="viviendas">Viviendas</a><a href="#alzado" data-r="alzado">Alzado</a><a href="#condiciones" data-r="condiciones">Condiciones</a><a href="#quienes" data-r="quienes">Quiénes somos</a><a href="#consejos" data-r="consejos">Consejos</a><a href="#contacto" data-r="contacto">Solicitar</a><a href="#area-clientes" data-r="area-clientes" id="clientAreaBtn" class="nav-client-btn" aria-expanded="false" aria-haspopup="true" aria-controls="clientAreaMenu">Área de clientes <svg class="nav-chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></a></nav>
     <div class="client-menu" id="clientAreaMenu" role="menu" aria-label="Área de clientes"></div>
     <div class="nav-acts">
       <button type="button" class="user-pill" id="userBtn" aria-expanded="false" aria-haspopup="true">
@@ -3952,6 +3952,11 @@ async function resolveUserRoleFast(email, isVerified = true) {
   return isConfiguredAdminEmail(em) ? 'admin' : 'candidate';
 }
 
+const isClientAreaHash = h => {
+  const s = String(h || '').replace(/^#/, '');
+  return s === 'area-clientes' || s.startsWith('area-clientes/') || s === 'mi-solicitud' || s.startsWith('mi-solicitud/');
+};
+
 function triggerBackgroundSync() {
   if (!CURRENT_USER || CURRENT_USER.emailVerified !== true) return;
   const prevOnline = FB_DB_ONLINE;
@@ -3964,7 +3969,7 @@ function triggerBackgroundSync() {
     const nextProtectedSig = JSON.stringify({ s: SOLS, a: CLOUD_ADMINS, u: SUBS });
     const protectedChanged = nextProtectedSig !== prevProtectedSig || FB_DB_ONLINE !== prevOnline;
     const h = (location.hash || '').replace(/^#/, '');
-    if (h === 'mi-solicitud' || h.startsWith('mi-solicitud/')) {
+    if (isClientAreaHash(h)) {
       if (protectedChanged) route({ silent: true });
       return;
     }
@@ -5526,7 +5531,7 @@ function updateUserHeader() {
       <a href="#admin/usuarios" data-menu-close>${ICO('lock')} Usuarios y Roles</a>
       <a href="#admin/config" data-menu-close>${ICO('sliders')} Integraciones y Google Sheets</a>
       <hr>
-      <a href="#mi-solicitud" data-menu-close>${ICO('search')} Ver vista de candidato</a>
+      <a href="#area-clientes" data-menu-close>${ICO('search')} Área de clientes (vista candidato)</a>
       <button type="button" class="danger" id="menuLogoutBtn">${ICO('logout')} Cerrar sesión</button>
     `;
   } else {
@@ -5535,10 +5540,12 @@ function updateUserHeader() {
       <div class="user-menu-head">
         <b>${esc(CURRENT_USER.name)}</b>
         <small>${esc(CURRENT_USER.email)}</small>
-        ${needsVerify ? '<span class="role-tag" style="background:var(--warn-tx)">Verifica tu correo</span>' : ''}
+        ${needsVerify
+          ? '<span class="role-tag" style="background:var(--warn-tx)">Verifica tu correo</span>'
+          : '<span class="role-tag">Área de clientes</span>'}
       </div>
-      <a href="#mi-solicitud" data-menu-close>${ICO('file')} ${needsVerify ? 'Verificar correo / Mis solicitudes' : 'Mis solicitudes'}</a>
-      <a href="#mi-solicitud/historial" data-menu-close>${ICO('clock')} Historial</a>
+      <a href="#area-clientes" data-menu-close>${ICO('file')} ${needsVerify ? 'Verificar correo / Mis solicitudes' : 'Mis solicitudes'}</a>
+      <a href="#area-clientes/historial" data-menu-close>${ICO('clock')} Historial</a>
       <a href="#contacto" data-menu-close>${ICO('plus')} Nueva candidatura</a>
       <hr>
       <button type="button" class="danger" id="menuLogoutBtn">${ICO('logout')} Cerrar sesión</button>
@@ -5622,7 +5629,7 @@ function openAuthModal(defaultEmail = '') {
         notify(isAdm
           ? `Bienvenido, ${user.name}. Desplegable de administración activado.`
           : `Bienvenido, ${user.name}`);
-        if (location.hash.startsWith('#mi-solicitud') || location.hash.startsWith('#admin') || location.hash.startsWith('#ficha')) route({ silent: true });
+        if (isClientAreaHash(location.hash) || location.hash.startsWith('#admin') || location.hash.startsWith('#ficha')) route({ silent: true });
         else refreshAllPropertyViews();
         if (isAdm) {
           requestAnimationFrame(() => {
@@ -5658,7 +5665,7 @@ function openAuthModal(defaultEmail = '') {
         notify(isSignup
           ? `Cuenta creada. Verifica el enlace enviado a ${res.user.email} para activar tu acceso.`
           : `Verifica tu correo (${res.user.email}) para acceder a tus datos privados.`);
-        if (!location.hash.startsWith('#mi-solicitud')) location.hash = 'mi-solicitud';
+        if (!isClientAreaHash(location.hash)) location.hash = 'mi-solicitud';
         else route({ silent: true });
         return;
       }
@@ -5666,7 +5673,7 @@ function openAuthModal(defaultEmail = '') {
       notify(isAdm
         ? `Bienvenido, ${res.user.name}. Desplegable de administración activado.`
         : `Bienvenido, ${res.user.name}`);
-      if (location.hash.startsWith('#mi-solicitud') || location.hash.startsWith('#admin') || location.hash.startsWith('#ficha')) route({ silent: true });
+      if (isClientAreaHash(location.hash) || location.hash.startsWith('#admin') || location.hash.startsWith('#ficha')) route({ silent: true });
       else refreshAllPropertyViews();
       if (isAdm) {
         requestAnimationFrame(() => {
@@ -5683,20 +5690,20 @@ const ensureClientMenu = () => {
   const menu = $('clientAreaMenu');
   if (!menu || menu.childElementCount) return menu;
   menu.innerHTML = `
-    <a class="client-opt" id="clientOptSolicitudes" href="#mi-solicitud" role="menuitem" data-client-close>
+    <a class="client-opt" id="clientOptSolicitudes" href="#area-clientes" role="menuitem" data-client-close>
       <svg class="client-opt-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h.01M13 12h2M9 16h.01M13 16h2"/></svg>
       <span class="client-opt-body">
         <b class="client-opt-title">Mis solicitudes</b>
-        <small class="client-opt-sub">Consulta el estado actual de tus candidaturas en Deltacor.</small>
+        <small class="client-opt-sub">Consulta el estado actual de tus candidaturas en curso en Deltacor.</small>
       </span>
       <svg class="client-opt-end" viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
     </a>
     <hr class="client-sep">
-    <a class="client-opt" id="clientOptHistorial" href="#mi-solicitud/historial" role="menuitem" data-client-close>
+    <a class="client-opt" id="clientOptHistorial" href="#area-clientes/historial" role="menuitem" data-client-close>
       <svg class="client-opt-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
       <span class="client-opt-body">
         <b class="client-opt-title">Historial</b>
-        <small class="client-opt-sub">Revisa tu registro de solicitudes anteriores, cerradas o archivadas.</small>
+        <small class="client-opt-sub">Recopila tus solicitudes pasadas, cerradas o archivadas.</small>
       </span>
       <svg class="client-opt-end" viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
     </a>`;
@@ -5796,10 +5803,12 @@ const NAV_ITEMS = [
   ['quienes', 'Quiénes somos'],
   ['consejos', 'Consejos'],
   ['contacto', 'Solicitar'],
-  ['mi-solicitud', 'Área de clientes']
+  ['area-clientes', 'Área de clientes']
 ];
 if ($('nl').children.length !== NAV_ITEMS.length) {
-  $('nl').innerHTML = NAV_ITEMS.map(r => `<a href="#${r[0]}" data-r="${r[0]}">${r[1]}</a>`).join('');
+  $('nl').innerHTML = NAV_ITEMS.map(r => r[0] === 'area-clientes'
+    ? `<a href="#area-clientes" data-r="area-clientes" id="clientAreaBtn" class="nav-client-btn" aria-expanded="false" aria-haspopup="true" aria-controls="clientAreaMenu">${r[1]} <svg class="nav-chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></a>`
+    : `<a href="#${r[0]}" data-r="${r[0]}">${r[1]}</a>`).join('');
 } else {
   const navVivInit = $('nl').querySelector('a[data-r="viviendas"]');
   if (navVivInit) navVivInit.textContent = 'Viviendas';
@@ -5941,9 +5950,9 @@ function buildCandidateReplyMessage(sol) {
   const promo = getSolPromoLabel(sol);
   const base = getCfg().baseUrl;
   if (st === 'Aprobado') {
-    return `Hola ${firstName}, somos el equipo de Deltacor Properties (${promo}). Tu candidatura ${sol.id} (${refs}) ha sido PRE-APROBADA. Ya tienes activo el acceso para subir tu documentación en Rentger desde «Área de clientes → Mis solicitudes» (${base}#mi-solicitud). ¿Tienes alguna duda?`;
+    return `Hola ${firstName}, somos el equipo de Deltacor Properties (${promo}). Tu candidatura ${sol.id} (${refs}) ha sido PRE-APROBADA. Ya tienes activo el acceso para subir tu documentación en Rentger desde «Área de clientes → Mis solicitudes» (${base}#area-clientes). ¿Tienes alguna duda?`;
   }
-  return `Hola ${firstName}, somos el equipo de Deltacor Properties (${promo}). Hemos recibido tu candidatura ${sol.id} para ${refs} y estamos revisando tu solicitud. Te avisaremos en cuanto tengamos novedad. Puedes consultar el estado en ${base}#mi-solicitud.`;
+  return `Hola ${firstName}, somos el equipo de Deltacor Properties (${promo}). Hemos recibido tu candidatura ${sol.id} para ${refs} y estamos revisando tu solicitud. Te avisaremos en cuanto tengamos novedad. Puedes consultar el estado en ${base}#area-clientes.`;
 }
 
 function openWaitlistModal(unit) {
@@ -6547,7 +6556,7 @@ function bindUniqueForm(hostRoot = document) {
     elMw.hidden = true;
     elMt.required = false;
     setTimeout(() => {
-      location.hash = 'mi-solicitud';
+      location.hash = 'area-clientes';
       setTimeout(() => {
         if ($('quickLookupEmail')) $('quickLookupEmail').value = savedEmail;
         if ($('quickLookupCode')) $('quickLookupCode').value = savedId;
@@ -8612,54 +8621,115 @@ function renderApp() {
 }
 
 /* ==========================================================================
-   ÁREA DE CLIENTES: MIS SOLICITUDES E HISTORIAL (#mi-solicitud)
+   ÁREA DE CLIENTES: MIS SOLICITUDES E HISTORIAL (#area-clientes / #mi-solicitud)
    ========================================================================== */
-function renderSolicitudCards(email, opts = {}) {
+function parseEsDateMs(raw) {
+  const s = String(raw || '').trim();
+  if (!s) return 0;
+  const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if (iso) {
+    return Date.UTC(+iso[1], +iso[2] - 1, +iso[3], +(iso[4] || 0), +(iso[5] || 0), +(iso[6] || 0));
+  }
+  const es = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if (es) {
+    return Date.UTC(+es[3], +es[2] - 1, +es[1], +(es[4] || 0), +(es[5] || 0), +(es[6] || 0));
+  }
+  const t = Date.parse(s);
+  return Number.isFinite(t) ? t : 0;
+}
+
+function getSolLifecycle(s) {
+  const sels = Array.isArray(s?.selecciones) ? s.selecciones : [];
+  if (s?.archived) {
+    const reason = String(s.archiveReason || '').trim();
+    const label = reason === 'Vendido'
+      ? 'Cerrada · Operación formalizada'
+      : reason === 'Rechazada'
+        ? 'Finalizada · No seleccionada'
+        : (reason ? `Archivada · ${reason}` : 'Archivada');
+    return {
+      isPast: true,
+      kind: reason === 'Vendido' ? 'sold' : reason === 'Rechazada' ? 'rejected' : 'archived',
+      reason: reason || 'Archivada',
+      label,
+      badgeClass: reason === 'Vendido' ? 'D' : reason === 'Rechazada' ? 'A' : 'OFF'
+    };
+  }
+  if (!sels.length) {
+    return { isPast: false, kind: 'active', reason: '', label: 'En curso', badgeClass: 'R' };
+  }
+  const unitStates = sels.map(item => {
+    const st = normSolStatus(item.estado);
+    const prop = V.find(v => v.ref === item.ref);
+    const unitAlreadyGone = Boolean(prop && prop.e === 'Alquilado' && st === 'En revisión');
+    const unitPast = st === 'Vendido' || st === 'Rechazada' || unitAlreadyGone;
+    return { item, st, prop, unitAlreadyGone, unitPast };
+  });
+  if (!unitStates.every(u => u.unitPast)) {
+    return { isPast: false, kind: 'active', reason: '', label: 'En curso', badgeClass: 'R' };
+  }
+  if (unitStates.some(u => u.st === 'Vendido')) {
+    return { isPast: true, kind: 'sold', reason: 'Vendido', label: 'Cerrada · Operación formalizada', badgeClass: 'D' };
+  }
+  if (unitStates.every(u => u.unitAlreadyGone)) {
+    return { isPast: true, kind: 'closed', reason: 'Vivienda ya alquilada', label: 'Finalizada · Vivienda ya alquilada', badgeClass: 'OFF' };
+  }
+  return { isPast: true, kind: 'rejected', reason: 'Rechazada', label: 'Finalizada · No seleccionada', badgeClass: 'A' };
+}
+
+function getUserSolicitudesBuckets(email, verificationCode = '') {
   const normEmail = String(email || '').trim().toLowerCase();
-  const verCode = String(opts.verificationCode || '').trim().toUpperCase();
-  const mode = opts.mode === 'historial' ? 'historial' : 'solicitudes';
+  const verCode = String(verificationCode || '').trim().toUpperCase();
   const byId = new Map();
   [...SOLS, ...getSessionReceipts()].forEach(s => {
     if (!s || s.deleted || !s.id) return;
     if (!byId.has(s.id)) byId.set(s.id, s);
   });
-  let found = [...byId.values()]
+  let all = [...byId.values()]
     .filter(s => String(s.email || '').trim().toLowerCase() === normEmail)
-    .sort((a, b) => String(b.archivedAt || b.fecha || b.id || '').localeCompare(String(a.archivedAt || a.fecha || a.id || '')));
+    .sort((a, b) => {
+      const tb = parseEsDateMs(b.archivedAt || b.fecha);
+      const ta = parseEsDateMs(a.archivedAt || a.fecha);
+      if (tb !== ta) return tb - ta;
+      return String(b.id || '').localeCompare(String(a.id || ''));
+    });
   if (verCode) {
     const verClean = verCode.replace(/[\s.\-\/]+/g, '');
-    found = found.filter(s => {
+    all = all.filter(s => {
       const idMatch = String(s.id || '').trim().toUpperCase() === verCode;
       const dniClean = String(s.dni || s.dniLast4 || '').trim().toUpperCase().replace(/[\s.\-\/]+/g, '');
       const dniTailMatch = verClean.length >= 4 && dniClean.length >= 4 && dniClean.slice(-4) === verClean.slice(-4);
       return idMatch || dniTailMatch;
     });
   }
+  const past = [];
+  const active = [];
+  all.forEach(s => {
+    if (getSolLifecycle(s).isPast) past.push(s);
+    else active.push(s);
+  });
+  return { all, active, past };
+}
 
-  const isSolFinalized = s => {
-    if (s.archived) return true;
-    const sels = Array.isArray(s.selecciones) ? s.selecciones : [];
-    return sels.length > 0 && sels.every(x => {
-      const st = normSolStatus(x.estado);
-      return st === 'Vendido' || st === 'Rechazada';
-    });
-  };
+function renderSolicitudCards(email, opts = {}) {
+  const verCode = String(opts.verificationCode || '').trim().toUpperCase();
+  const mode = opts.mode === 'historial' ? 'historial' : 'solicitudes';
+  const { active: activeFound, past: pastFound } = getUserSolicitudesBuckets(email, verCode);
 
   if (mode === 'historial') {
-    if (!found.length) {
+    if (!pastFound.length) {
+      if (activeFound.length) {
+        return `<div class="panel" style="background:var(--card2)"><p class="m">Todavía no tienes solicitudes pasadas en tu historial. Actualmente tienes <b>${activeFound.length}</b> solicitud${activeFound.length === 1 ? '' : 'es'} en curso. <a href="#area-clientes" style="color:var(--b1);font-weight:700">Ver Mis solicitudes →</a></p></div>`;
+      }
       return `<div class="panel" style="background:var(--card2)"><p class="m">${verCode
-        ? 'No encontramos solicitudes en el historial que coincidan con ese correo y código de verificación.'
-        : 'Todavía no hay solicitudes registradas en tu historial.'} <a href="#viviendas" style="color:var(--b1);font-weight:700">Explorar viviendas →</a></p></div>`;
+        ? 'No encontramos solicitudes pasadas en el historial que coincidan con ese correo y código de verificación.'
+        : 'Todavía no hay solicitudes pasadas registradas en tu historial.'} <a href="#viviendas" style="color:var(--b1);font-weight:700">Explorar viviendas →</a></p></div>`;
     }
-    const closedCount = found.filter(isSolFinalized).length;
-    const activeCount = found.length - closedCount;
-    const rowsHtml = found.map(s => {
+    const soldCount = pastFound.filter(s => getSolLifecycle(s).kind === 'sold').length;
+    const otherPastCount = pastFound.length - soldCount;
+    const rowsHtml = pastFound.map(s => {
       const sels = Array.isArray(s.selecciones) ? s.selecciones : [];
-      const archivedTag = s.archived
-        ? `<span class="st OFF">Archivada${s.archiveReason ? ` · ${esc(s.archiveReason)}` : ''}</span>`
-        : isSolFinalized(s)
-          ? '<span class="st C">Finalizada</span>'
-          : '<span class="st D">En curso</span>';
+      const lc = getSolLifecycle(s);
       return `
       <div class="panel" data-hist-card="${esc(s.id)}" style="background:var(--card2);margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
@@ -8667,16 +8737,18 @@ function renderSolicitudCards(email, opts = {}) {
             <b>Ref. ${esc(s.id)}</b> · <span class="m">${esc(s.nombre || '')}</span>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            ${archivedTag}
-            <span class="m" style="font-size:.78rem">${esc(s.fecha || '')}${s.archivedAt ? ` · Cerrada ${esc(s.archivedAt)}` : ''}</span>
+            <span class="st ${lc.badgeClass}">${esc(lc.label)}</span>
+            <span class="m" style="font-size:.78rem">${s.fecha ? `Solicitada ${esc(s.fecha)}` : ''}${s.archivedAt ? `${s.fecha ? ' · ' : ''}Cerrada ${esc(s.archivedAt)}` : ''}</span>
           </div>
         </div>
         <div style="display:grid;gap:6px">
           ${sels.map(item => {
             const prop = V.find(v => v.ref === item.ref);
             const promo = prop ? getPromoById(prop.promoId || 'cadmia') : null;
-            const st = normSolStatus(item.estado);
-            const badgeClass = st === 'Aprobado' || st === 'Vendido' ? 'D' : st === 'Rechazada' ? 'A' : 'R';
+            const rawSt = normSolStatus(item.estado);
+            const unitGone = Boolean(prop && prop.e === 'Alquilado' && rawSt === 'En revisión');
+            const stLabel = unitGone ? 'Ya alquilada' : (rawSt === 'Vendido' ? 'Formalizada' : rawSt);
+            const badgeClass = rawSt === 'Vendido' ? 'D' : rawSt === 'Rechazada' ? 'A' : 'OFF';
             return `
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:6px;background:var(--card);border:1px solid var(--line)">
               <div style="min-width:0">
@@ -8684,29 +8756,31 @@ function renderSolicitudCards(email, opts = {}) {
                 ${promo ? `<span class="m" style="font-size:.76rem"> · ${esc(promo.name)}</span>` : ''}
                 ${prop ? `<span class="m" style="font-size:.76rem"> · ${esc(unitRoomsShort(prop))} · ${eur(prop.r)}/mes</span>` : ''}
               </div>
-              <span class="st ${badgeClass}">${esc(st)}</span>
+              <span class="st ${badgeClass}">${esc(stLabel)}</span>
             </div>`;
           }).join('')}
         </div>
       </div>`;
     }).join('');
     return `
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-        <span class="st C">Total registradas: ${found.length}</span>
-        <span class="st D">En curso: ${activeCount}</span>
-        <span class="st OFF">Cerradas / archivadas: ${closedCount}</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="st C">Solicitudes pasadas: ${pastFound.length}</span>
+          ${soldCount ? `<span class="st D">Formalizadas: ${soldCount}</span>` : ''}
+          ${otherPastCount ? `<span class="st OFF">No seleccionadas / cerradas: ${otherPastCount}</span>` : ''}
+        </div>
+        ${activeFound.length ? `<a href="#area-clientes" style="font-size:.82rem;font-weight:700;color:var(--b1);text-decoration:none">Ver ${activeFound.length} en curso →</a>` : ''}
       </div>
       ${rowsHtml}`;
   }
 
-  const activeFound = found.filter(s => !s.archived);
   if (!activeFound.length) {
-    if (found.length) {
-      return `<div class="panel" style="background:var(--card2)"><p class="m">No tienes solicitudes activas en este momento, pero constan <b>${found.length}</b> solicitud${found.length === 1 ? '' : 'es'} en tu historial. <a href="#mi-solicitud/historial" style="color:var(--b1);font-weight:700">Ver historial →</a></p></div>`;
+    if (pastFound.length) {
+      return `<div class="panel" style="background:var(--card2)"><p class="m">No tienes solicitudes activas en este momento, pero constan <b>${pastFound.length}</b> solicitud${pastFound.length === 1 ? '' : 'es'} pasada${pastFound.length === 1 ? '' : 's'} en tu historial. <a href="#area-clientes/historial" style="color:var(--b1);font-weight:700">Ver historial →</a></p></div>`;
     }
     return `<div class="panel" style="background:var(--card2)"><p class="m">${verCode
-      ? 'No encontramos ninguna candidatura que coincida con ese correo y código de verificación. Revisa tu referencia (SOL-...) o los últimos 4 caracteres de tu DNI/NIE.'
-      : 'No encontramos candidaturas registradas con ese correo electrónico.'} <a href="#contacto" style="color:var(--b1);font-weight:700">Enviar candidatura →</a></p></div>`;
+      ? 'No encontramos ninguna candidatura activa que coincida con ese correo y código de verificación. Revisa tu referencia (SOL-...) o los últimos 4 caracteres de tu DNI/NIE.'
+      : 'No tienes candidaturas activas registradas con este correo electrónico.'} <a href="#contacto" style="color:var(--b1);font-weight:700">Enviar candidatura →</a></p></div>`;
   }
   const buildSolProgressHtml = st => {
     if (st === 'Rechazada') {
@@ -8778,17 +8852,27 @@ function renderSolicitudCards(email, opts = {}) {
 function renderMiSolicitud(subTab = 'solicitudes') {
   const sec = $('v-mi-solicitud');
   const activeSub = subTab === 'historial' ? 'historial' : 'solicitudes';
-  const tabsHtml = `
+  const buildTabsHtml = (counts = null) => {
+    const solSuffix = counts ? ` (${counts.active})` : '';
+    const histSuffix = counts ? ` (${counts.past})` : '';
+    return `
     <div class="tabs" id="clientAreaTabs" style="margin-bottom:16px">
-      <a class="chip ${activeSub === 'solicitudes' ? 'on' : ''}" id="caTabSol" href="#mi-solicitud" style="text-decoration:none">${ICO('file')} Mis solicitudes</a>
-      <a class="chip ${activeSub === 'historial' ? 'on' : ''}" id="caTabHist" href="#mi-solicitud/historial" style="text-decoration:none">${ICO('clock')} Historial</a>
+      <a class="chip ${activeSub === 'solicitudes' ? 'on' : ''}" id="caTabSol" href="#area-clientes" style="text-decoration:none">${ICO('file')} Mis solicitudes${solSuffix}</a>
+      <a class="chip ${activeSub === 'historial' ? 'on' : ''}" id="caTabHist" href="#area-clientes/historial" style="text-decoration:none">${ICO('clock')} Historial${histSuffix}</a>
     </div>`;
+  };
+  const syncTabCounts = email => {
+    const b = getUserSolicitudesBuckets(email);
+    if ($('caTabSol')) $('caTabSol').innerHTML = `${ICO('file')} Mis solicitudes (${b.active.length})`;
+    if ($('caTabHist')) $('caTabHist').innerHTML = `${ICO('clock')} Historial (${b.past.length})`;
+  };
 
   if (CURRENT_USER) {
     if (CURRENT_USER.emailVerified !== true) {
       sec.innerHTML = `
       <div class="head">
         <div>
+          <span class="tag" style="margin-bottom:8px">ÁREA DE CLIENTES</span>
           <h2>Verifica tu correo electrónico</h2>
           <p>Por seguridad y cumplimiento RGPD, necesitamos confirmar que eres el titular de <b>${esc(CURRENT_USER.email)}</b> antes de mostrar solicitudes o habilitar permisos de acceso.</p>
         </div>
@@ -8827,29 +8911,31 @@ function renderMiSolicitud(subTab = 'solicitudes') {
     }
 
     const isAdmin = isVerifiedAdmin();
+    const initBuckets = !isAdmin ? getUserSolicitudesBuckets(CURRENT_USER.email) : null;
     sec.innerHTML = `
     <div class="head">
       <div>
         <span class="tag" style="margin-bottom:8px">ÁREA DE CLIENTES</span>
-        <h2>Mi cuenta · ${esc(CURRENT_USER.name)}</h2>
+        <h2>Área de clientes · ${activeSub === 'historial' ? 'Historial' : 'Mis solicitudes'}</h2>
+        <p style="font-weight:600;color:var(--tx);margin-bottom:4px">Mi cuenta · ${esc(CURRENT_USER.name)} <span class="m" style="font-weight:500">(${esc(CURRENT_USER.email)})</span></p>
         <p>${isAdmin
           ? 'Has iniciado sesión con perfil de administrador. Usa el menú desplegable superior derecho con tu nombre para gestionar viviendas, candidaturas y QRs.'
           : (activeSub === 'historial'
-            ? 'Consulta el registro cronológico completo de tus candidaturas enviadas, cerradas o archivadas.'
+            ? 'Aquí se recopilan tus solicitudes que ya pasaron: operaciones formalizadas, no seleccionadas o cerradas.'
             : 'Consulta el estado actualizado de tus solicitudes activas y accede a la fase documental cuando seas pre-aprobado.')}</p>
       </div>
       ${isAdmin ? `<a class="btn sm" href="#admin/inventario">Abrir herramientas de gestión →</a>` : ''}
     </div>
-    ${tabsHtml}
+    ${buildTabsHtml(initBuckets ? { active: initBuckets.active.length, past: initBuckets.past.length } : null)}
     <div class="panel" style="max-width:760px">
       ${isAdmin ? `
-        <label>${activeSub === 'historial' ? 'Consultar historial completo por correo de solicitante' : 'Consultar solicitudes activas por correo de solicitante'}
+        <label>${activeSub === 'historial' ? 'Consultar historial de solicitudes pasadas por correo' : 'Consultar solicitudes activas por correo de solicitante'}
           <div style="display:flex;gap:10px;margin-top:5px;flex-wrap:wrap">
             <input id="quickLookupEmail" type="email" maxlength="160" placeholder="correo@solicitante.com" style="margin:0;flex:1;min-width:200px">
             <button type="button" class="btn sm" id="quickLookupBtn">Buscar</button>
           </div>
         </label>
-        <div id="ls" style="margin-top:14px"><p class="m">Introduce el correo de un solicitante para consultar ${activeSub === 'historial' ? 'su historial completo' : 'el estado de sus solicitudes'}.</p></div>
+        <div id="ls" style="margin-top:14px"><p class="m">Introduce el correo de un solicitante para consultar ${activeSub === 'historial' ? 'sus solicitudes pasadas en el historial' : 'el estado de sus solicitudes activas'}.</p></div>
       ` : `
         <div id="ls">${renderSolicitudCards(CURRENT_USER.email, { mode: activeSub })}</div>
       `}
@@ -8864,12 +8950,14 @@ function renderMiSolicitud(subTab = 'solicitudes') {
     } else if (CURRENT_USER.email) {
       (async () => {
         try {
-          const q = query(collection(fbDb, 'solicitudes'), where('email', '==', CURRENT_USER.email.toLowerCase()));
+          const curEm = CURRENT_USER.email.toLowerCase();
+          const q = query(collection(fbDb, 'solicitudes'), where('email', '==', curEm));
           const snap = await getDocs(q);
           const remote = snap.docs.map(d => d.data()).filter(s => s && !s.deleted);
           if (remote.length) {
-            SOLS = [...remote, ...SOLS.filter(s => s && !s.deleted && s.email !== CURRENT_USER.email.toLowerCase())];
+            SOLS = [...remote, ...SOLS.filter(s => s && !s.deleted && String(s.email || '').trim().toLowerCase() !== curEm)];
             if ($('ls')) $('ls').innerHTML = renderSolicitudCards(CURRENT_USER.email, { mode: activeSub });
+            syncTabCounts(CURRENT_USER.email);
           }
         } catch (_) {}
       })();
@@ -8890,13 +8978,13 @@ function renderMiSolicitud(subTab = 'solicitudes') {
   <div class="head">
     <div>
       <span class="tag" style="margin-bottom:8px">ÁREA DE CLIENTES</span>
-      <h2>${activeSub === 'historial' ? 'Historial de solicitudes' : 'Mis solicitudes'}</h2>
+      <h2>Área de clientes · ${activeSub === 'historial' ? 'Historial' : 'Mis solicitudes'}</h2>
       <p>${activeSub === 'historial'
-        ? 'Inicia sesión con tu cuenta o verifica tu correo y código para consultar tu registro completo de solicitudes anteriores.'
-        : 'Inicia sesión con tu cuenta o consulta directamente el estado de tu solicitud con tu correo y código de verificación.'}</p>
+        ? 'Inicia sesión con tu cuenta o verifica tu correo y código para consultar las solicitudes que ya pasaron (cerradas, formalizadas o archivadas).'
+        : 'Inicia sesión con tu cuenta o consulta directamente el estado de tu solicitud activa con tu correo y código de verificación.'}</p>
     </div>
   </div>
-  ${tabsHtml}
+  ${buildTabsHtml()}
   <div class="split">
     <div class="panel">
       <h3>Iniciar sesión en tu cuenta</h3>
@@ -11202,8 +11290,8 @@ function renderAdmin(subTab) {
           <span class="m">Acción realizada por: <b>${esc(CURRENT_USER.email)}</b></span>
         </div>
         <label class="confirm-check">
-          <input type="checkbox" id="rejArchiveOpt">
-          <span>Guardar una copia en la pestaña <b>Archivo</b> (y en la hoja <b>Archivo</b> de Excel) de manera opcional</span>
+          <input type="checkbox" id="rejArchiveOpt" checked>
+          <span>Guardar copia en <b>Archivo</b> e <b>Historial</b> del cliente (y en la hoja <b>Archivo</b> de Excel)</span>
         </label>
         ${hasLiveSync && sol.email ? `
           <label class="confirm-check">
@@ -12679,7 +12767,7 @@ function renderAdmin(subTab) {
 const ALLOWED_ROUTES = new Set([
   'inicio', 'promociones', 'viviendas', 'ficha', 'alzado',
   'condiciones', 'quienes', 'consejos', 'contacto',
-  'mi-solicitud', 'admin', 'privacidad'
+  'area-clientes', 'mi-solicitud', 'admin', 'privacidad'
 ]);
 
 const ROUTE_TITLES = {
@@ -12691,6 +12779,7 @@ const ROUTE_TITLES = {
   quienes: 'Quiénes somos | Deltacor Properties S.L.',
   consejos: 'Consejos y guías de alquiler | Deltacor Properties',
   contacto: 'Solicitar vivienda · Candidatura única | Deltacor Properties',
+  'area-clientes': 'Área de clientes · Mis solicitudes | Deltacor Properties',
   'mi-solicitud': 'Área de clientes · Mis solicitudes | Deltacor Properties',
   admin: 'Panel de administración | Deltacor Properties',
   privacidad: 'Política de Privacidad y Protección de Datos | Deltacor Properties'
@@ -12704,16 +12793,17 @@ function route(opts = {}) {
   const raw = location.hash.slice(1) || 'inicio';
   const [rawName, rawParam] = raw.split('/');
   const routeName = ALLOWED_ROUTES.has(rawName) ? rawName : 'inicio';
+  const isClientRoute = routeName === 'area-clientes' || routeName === 'mi-solicitud';
   const param = safeDecodeParam(rawParam || '');
-  const routeKey = `${routeName}/${param}`;
+  const routeKey = `${isClientRoute ? 'area-clientes' : routeName}/${param}`;
 
   if (routeName !== 'ficha') {
-    document.title = (routeName === 'mi-solicitud' && param === 'historial')
+    document.title = (isClientRoute && param === 'historial')
       ? 'Área de clientes · Historial | Deltacor Properties'
       : (ROUTE_TITLES[routeName] || ROUTE_TITLES.inicio);
   }
 
-  const targetEl = $('v-' + routeName) || $('v-inicio');
+  const targetEl = $(isClientRoute ? 'v-mi-solicitud' : ('v-' + routeName)) || $('v-inicio');
   const sameView = Boolean(targetEl && targetEl.classList.contains('on'));
   const sameRouteKey = LAST_ROUTE_KEY === routeKey;
   const isInitialBoot = !LAST_ROUTE_NAME;
@@ -12726,7 +12816,8 @@ function route(opts = {}) {
     targetEl.classList.add('on');
   }
 
-  document.querySelectorAll('.links a').forEach(a => a.classList.toggle('on', a.dataset.r === routeName));
+  const navActiveRoute = isClientRoute ? 'area-clientes' : routeName;
+  document.querySelectorAll('.links a').forEach(a => a.classList.toggle('on', a.dataset.r === navActiveRoute));
   const mobTabActive = routeName === 'ficha' ? 'viviendas' : routeName;
   document.querySelectorAll('#mobTabbar .mob-tab').forEach(a => a.classList.toggle('on', a.dataset.r === mobTabActive));
 
@@ -12772,9 +12863,9 @@ function route(opts = {}) {
     renderAlzadoPage();
   } else if (routeName === 'condiciones') {
     if (window.updateCondicionesSim) window.updateCondicionesSim();
-  } else if (routeName === 'mi-solicitud') {
+  } else if (isClientRoute) {
     renderMiSolicitud(param);
-  } else if (routeName === 'inicio' || !$('v-' + routeName)) {
+  } else if (routeName === 'inicio' || !targetEl) {
     refreshInicio();
   }
   LAST_ROUTE_NAME = routeName;
@@ -13921,7 +14012,7 @@ const AUTH_INIT_TIMER = setTimeout(() => {
   if (!AUTH_INITIALIZED) {
     AUTH_INITIALIZED = true;
     updateUserHeader();
-    if (location.hash.startsWith('#admin') || location.hash.startsWith('#mi-solicitud')) route({ silent: true });
+    if (location.hash.startsWith('#admin') || isClientAreaHash(location.hash)) route({ silent: true });
   }
 }, 4500);
 
@@ -13942,7 +14033,7 @@ onAuthStateChanged(fbAuth, async fbUser => {
       if (location.hash.startsWith('#admin')) {
         notify('Inicia sesión con una cuenta de administrador para acceder');
         location.hash = 'mi-solicitud';
-      } else if (hadUser || location.hash.startsWith('#mi-solicitud')) {
+      } else if (hadUser || isClientAreaHash(location.hash)) {
         route({ silent: true });
       }
     }
@@ -13951,7 +14042,7 @@ onAuthStateChanged(fbAuth, async fbUser => {
   const em = (fbUser.email || '').toLowerCase();
   const emailVerified = fbUser.emailVerified === true;
   const h = location.hash || '';
-  const needsRouteRefresh = h.startsWith('#admin') || h.startsWith('#mi-solicitud') || h.startsWith('#ficha');
+  const needsRouteRefresh = h.startsWith('#admin') || isClientAreaHash(h) || h.startsWith('#ficha');
   if (CURRENT_USER && CURRENT_USER.uid === fbUser.uid && CURRENT_USER.emailVerified === emailVerified) {
     updateUserHeader();
     if (emailVerified) triggerBackgroundSync();
