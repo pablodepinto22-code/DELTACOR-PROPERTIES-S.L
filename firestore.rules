@@ -134,6 +134,31 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Suscriptores a alertas de nuevas viviendas ("Entérate antes que nadie")
+    // - Lectura, modificación y borrado: únicamente administradores verificados
+    // - Creación: pública con validación estricta de campos, longitudes y estado inicial 'Activo'
+    match /suscriptores/{subId} {
+      allow read, update, delete: if isAdmin();
+
+      allow create: if isAdmin() || (
+        request.resource.data.keys().hasAll(['id', 'fecha', 'nombre', 'email', 'estado'])
+        && request.resource.data.keys().hasOnly([
+          'id', 'fecha', 'nombre', 'email', 'telefono',
+          'habitaciones', 'presupuesto', 'origen', 'estado'
+        ])
+        && request.resource.data.id == subId
+        && subId.matches('^SUB-[A-Z0-9]{4,20}$')
+        && request.resource.data.fecha is string && request.resource.data.fecha.size() <= 40
+        && request.resource.data.nombre is string && request.resource.data.nombre.size() >= 2 && request.resource.data.nombre.size() <= 140
+        && request.resource.data.email is string && request.resource.data.email.size() >= 5 && request.resource.data.email.size() <= 180
+        && (!('telefono' in request.resource.data) || (request.resource.data.telefono is string && request.resource.data.telefono.size() <= 24))
+        && (!('habitaciones' in request.resource.data) || (request.resource.data.habitaciones is string && request.resource.data.habitaciones.size() <= 40))
+        && (!('presupuesto' in request.resource.data) || (request.resource.data.presupuesto is string && request.resource.data.presupuesto.size() <= 40))
+        && (!('origen' in request.resource.data) || (request.resource.data.origen is string && request.resource.data.origen.size() <= 60))
+        && request.resource.data.estado == 'Activo'
+      );
+    }
+
     // Bloquear cualquier otra colección por defecto
     match /{document=**} {
       allow read, write: if false;
