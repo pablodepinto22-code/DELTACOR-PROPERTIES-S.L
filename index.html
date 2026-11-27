@@ -1572,6 +1572,9 @@ function updateMailQuotaBadge() {
   } else if (typeof info.remainingEmailQuota === 'number' && info.remainingEmailQuota >= 0) {
     badge.textContent = `${info.remainingEmailQuota} correos disponibles hoy`;
     badge.style.color = info.remainingEmailQuota > 5 ? 'var(--ok-tx)' : 'var(--warn-tx)';
+  } else if (info.version >= 4.6 && info.remainingEmailQuota === -1) {
+    badge.textContent = 'Falta ejecutar «autorizarPermisos» (▶) una vez en Apps Script';
+    badge.style.color = 'var(--warn-tx)';
   } else if (info.version >= 4.6) {
     badge.textContent = 'Apps Script v4.6 listo';
     badge.style.color = 'var(--ok-tx)';
@@ -1654,9 +1657,9 @@ async function renderScriptVersionBanner(hostId) {
                 ? 'La versión <b>v4.6</b> mantiene toda la seguridad de v4.5 y añade el <b>envío automático de correos HTML corporativos</b> al candidato cuando cambias su estado (Aprobado con botón a Rentger, Vendido o Rechazada):'
                 : 'Actualiza a <b>v4.6</b> para activar <b>autenticación segura de administrador (Firebase Token)</b>, <b>emails automáticos por cambio de estado</b>, creación/borrado de hojas por promoción y colores de Estado:'}
               <ol style="margin:6px 0 0 18px;padding:0">
-                <li>Pulsa <b>Copiar Apps Script v4.6</b> y pégalo entero en <b>Extensiones → Apps Script</b> (sustituyendo el código anterior).</li>
-                <li>Pulsa <b>Implementar → Administrar implementaciones → Editar (lápiz) → Versión: Nueva versión → Implementar</b> y acepta el permiso de envío de correo una sola vez.</li>
-                <li>Si creaste una <i>Nueva implementación</i> con otra URL <code>/exec</code>, pégala aquí abajo y pulsa <b>Guardar URL</b>.</li>
+                <li>Pulsa <b>Copiar Apps Script v4.6</b> y pégalo entero en <b>Extensiones → Apps Script</b> (sustituyendo el código anterior) y guarda.</li>
+                <li>En la barra superior del editor elige <code>autorizarPermisos</code> y pulsa <b>▶ Ejecutar</b> una sola vez (acepta los permisos de verificación y correo).</li>
+                <li>Pulsa <b>Implementar → Administrar implementaciones → Editar (lápiz) → Versión: Nueva versión → Implementar</b>.</li>
               </ol>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
@@ -1677,7 +1680,7 @@ async function renderScriptVersionBanner(hostId) {
     if (copyBtn) {
       copyBtn.onclick = () => copyTextToClipboard(
         APPS_SCRIPT_TEMPLATE,
-        'Apps Script v4.6 copiado: pégalo en Apps Script y publica «Nueva versión»',
+        'Apps Script v4.6 copiado: pégalo en Apps Script, ejecuta «autorizarPermisos» (▶) y publica «Nueva versión»',
         'No se pudo copiar automáticamente'
       );
     }
@@ -1727,6 +1730,12 @@ async function renderScriptVersionBanner(hostId) {
         }
       };
     }
+  } else if (info.version >= 4.6 && info.remainingEmailQuota === -1) {
+    currentHost.innerHTML = `
+      <div class="panel" style="margin-bottom:14px;padding:12px 15px;background:var(--warn-bg);border-color:rgba(245,158,11,.5);color:var(--tx);font-size:.83rem">
+        <b style="color:var(--warn-tx)">Apps Script v${esc(info.version)} conectado, pero faltan permisos de Google (Verificación + Correo).</b><br>
+        Abre <b>Extensiones → Apps Script</b>, selecciona <code>autorizarPermisos</code> en la barra superior y pulsa <b>▶ Ejecutar</b> una sola vez para conceder permisos.
+      </div>`;
   } else if (info.version >= 4.6 && hostId === 'cfgScriptBanner') {
     const pList = (info.promoSheets || []).length ? info.promoSheets.join(', ') : (info.mainSheet || 'Por promoción');
     const qInfo = typeof info.remainingEmailQuota === 'number' && info.remainingEmailQuota >= 0
@@ -1746,10 +1755,10 @@ async function renderScriptVersionBanner(hostId) {
   }
 }
 
-async function postToAppsScript(url, body) {
+async function postToAppsScript(url, body, _forceRefresh = false) {
   const payload = { ...(body || {}) };
   if (fbAuth.currentUser && typeof fbAuth.currentUser.getIdToken === 'function') {
-    try { payload.idToken = await fbAuth.currentUser.getIdToken(); } catch (_) {}
+    try { payload.idToken = await fbAuth.currentUser.getIdToken(_forceRefresh); } catch (_) {}
   }
   const serialized = JSON.stringify(payload);
   try {
@@ -1778,8 +1787,20 @@ async function postToAppsScript(url, body) {
       } else if (data && data.ok) {
         LAST_APPS_SCRIPT_CHECK = { url, version: 1, checkedAt: Date.now(), mainSheet: '', archiveSheet: '', promoSheets: [], emailEnabled: false, remainingEmailQuota: null };
       }
-      if (data && data.error === 'admin_auth_required') {
-        notify('Google Sheets rechazó la operación: inicia sesión con un correo de administrador verificado.');
+      if (data && data.error === 'admin_auth_required' && !_forceRefresh && fbAuth.currentUser && (data.reason === 'lookup_400' || !data.reason)) {
+        return postToAppsScript(url, body, true);
+      }
+      if (data && data.error === 'script_permission_required') {
+        notify('Falta autorizar permisos en Google Apps Script: abre Extensiones → Apps Script, elige «autorizarPermisos» y pulsa ▶ Ejecutar una sola vez.');
+      } else if (data && data.error === 'admin_auth_required') {
+        const hint = data.reason === 'not_admin'
+          ? 'Tu correo no figura como administrador en Firestore (/admins).'
+          : data.reason === 'email_not_verified'
+          ? 'Verifica primero tu correo electrónico.'
+          : data.reason === 'lookup_403'
+          ? 'La API Key de Firebase bloqueó la verificación desde Apps Script.'
+          : 'Si ya eres admin, abre Apps Script y pulsa ▶ Ejecutar en «autorizarPermisos» una vez.';
+        notify(`Google Sheets rechazó la operación: ${hint}`);
       }
       return { ok: res.ok && data.ok !== false, data, error: data?.error || '', opaque: false };
     } catch {
@@ -2133,7 +2154,7 @@ async function sendStatusChangeEmail(sol, { ref = '', status = '', prop = null, 
       notify('Estado actualizado, pero falta autorizar el permiso de correo en Google Apps Script (v4.6).');
     } else if (errCode === 'mail_quota_exceeded') {
       notify('Estado actualizado, pero se alcanzó el límite diario de correos de Gmail hoy.');
-    } else if (errCode !== 'admin_auth_required') {
+    } else if (errCode !== 'admin_auth_required' && errCode !== 'script_permission_required') {
       notify(`Estado actualizado, pero no se pudo enviar el correo automático (${errCode || 'revisa Apps Script v4.6'}).`);
     }
   }
@@ -2141,8 +2162,8 @@ async function sendStatusChangeEmail(sol, { ref = '', status = '', prop = null, 
 }
 
 const APPS_SCRIPT_TEMPLATE = `// DELTACOR PROPERTIES · Google Sheets Sync & Emails v4.6 (Seguro)
-// Verificación criptográfica Firebase Admin Token en todas las acciones de gestión + inserción pública estricta (append-only, Estado forzado «En revisión»)
-// + Envío automático de correos HTML corporativos por cambio de estado (solo admin verificado) + una hoja por promoción + Archivo
+// IMPORTANTE (solo 1 vez tras pegar): elige «autorizarPermisos» arriba y pulsa ▶ Ejecutar para conceder permisos de Sheets + Firebase + Correo.
+// Después pulsa Implementar → Administrar implementaciones → Editar (lápiz) → Nueva versión → Implementar.
 var SCRIPT_VERSION = 4.6;
 var FIREBASE_PROJECT_ID = 'invencor-a1477';
 var FIREBASE_API_KEY = 'AIzaSyAl7NBWnMGu5sTDTs4drdh7SsfxRCozpIg';
@@ -2152,6 +2173,18 @@ var BOOTSTRAP_ADMIN_HASHES = [
   '8f9aa0c233df946c880c56989f73f927a558a9b8c06ca8e6c1d9f6731378f06d',
   'ff24cda2a1a75869f12542f034abb412366b658baf866be8d46a0246101fd6ce'
 ];
+
+// Ejecuta esta función UNA VEZ (botón ▶ Ejecutar) para autorizar Sheets + UrlFetchApp (Firebase) + MailApp (Emails)
+function autorizarPermisos() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var quota = MailApp.getRemainingDailyQuota();
+  var ping = UrlFetchApp.fetch(
+    'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FIREBASE_API_KEY,
+    { method: 'post', contentType: 'application/json', payload: JSON.stringify({ idToken: 'ping' }), muteHttpExceptions: true }
+  );
+  Logger.log('PERMISOS OK · Hoja: ' + ss.getName() + ' · Cuota correo hoy: ' + quota + ' · Auth HTTP: ' + ping.getResponseCode());
+  return { ok: true, sheet: ss.getName(), quota: quota, authHttp: ping.getResponseCode() };
+}
 
 function jsonOut_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
@@ -2170,7 +2203,7 @@ function sha256Hex_(str) {
 
 function verifyAdminToken_(idToken) {
   var token = String(idToken || '').trim();
-  if (!token || token.length < 40 || token.length > 8192) return { ok: false };
+  if (!token || token.length < 40 || token.length > 8192) return { ok: false, reason: 'missing_token' };
   var cache = null;
   var cacheKey = '';
   try {
@@ -2190,10 +2223,12 @@ function verifyAdminToken_(idToken) {
         muteHttpExceptions: true
       }
     );
-    if (lookupRes.getResponseCode() !== 200) return { ok: false };
+    var lookupCode = lookupRes.getResponseCode();
+    if (lookupCode !== 200) return { ok: false, reason: 'lookup_' + lookupCode };
     var body = JSON.parse(lookupRes.getContentText() || '{}');
     var user = (body.users && body.users[0]) || null;
-    if (!user || user.disabled || user.emailVerified !== true || !user.email) return { ok: false };
+    if (!user || user.disabled || !user.email) return { ok: false, reason: 'invalid_user' };
+    if (user.emailVerified !== true) return { ok: false, reason: 'email_not_verified' };
     var email = String(user.email).trim().toLowerCase();
     var authorized = BOOTSTRAP_ADMIN_HASHES.indexOf(sha256Hex_(email)) !== -1;
 
@@ -2213,13 +2248,17 @@ function verifyAdminToken_(idToken) {
         authorized = !roleVal || String(roleVal).trim().toLowerCase() === 'admin';
       }
     }
-    if (!authorized) return { ok: false };
+    if (!authorized) return { ok: false, reason: 'not_admin' };
     if (cache && cacheKey) {
       try { cache.put(cacheKey, email, 240); } catch (ce) {}
     }
     return { ok: true, email: email };
   } catch (err) {
-    return { ok: false };
+    var msg = String(err && err.message || err).toLowerCase();
+    if (msg.indexOf('permission') !== -1 || msg.indexOf('permiso') !== -1 || msg.indexOf('authorization') !== -1 || msg.indexOf('external_request') !== -1) {
+      return { ok: false, error: 'script_permission_required', reason: 'urlfetch_permission' };
+    }
+    return { ok: false, reason: 'verify_exception' };
   }
 }
 
@@ -2885,7 +2924,7 @@ function doPost(e) {
     };
     var auth = verifyAdminToken_(data.idToken);
     if (adminOnlyActions[action] && !auth.ok) {
-      return jsonOut_({ ok: false, version: SCRIPT_VERSION, action: action, error: 'admin_auth_required' });
+      return jsonOut_({ ok: false, version: SCRIPT_VERSION, action: action, error: auth.error || 'admin_auth_required', reason: auth.reason || '' });
     }
 
     // 00. Envío automático de email HTML corporativo al candidato (solo admin verificado)
@@ -3187,7 +3226,7 @@ function doPost(e) {
       // Evita que un usuario anónimo sobrescriba una candidatura existente
       for (var ep = 0; ep < existingPromoSheets.length; ep++) {
         if (findRowsById_(existingPromoSheets[ep], id).length > 0) {
-          return jsonOut_({ ok: false, version: SCRIPT_VERSION, action: 'upsert', error: 'admin_auth_required' });
+          return jsonOut_({ ok: false, version: SCRIPT_VERSION, action: 'upsert', error: auth.error || 'admin_auth_required', reason: auth.reason || '' });
         }
       }
       // Solo escribe en hojas de promoción YA EXISTENTES (nunca permite crear hojas spam)
