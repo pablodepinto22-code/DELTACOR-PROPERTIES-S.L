@@ -632,6 +632,29 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .arch-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:3px;font-size:.73rem;font-weight:700;border:1px solid var(--line)}
 .arch-badge.sold{background:var(--ok-bg);color:var(--ok-tx);border-color:rgba(16,185,129,.4)}
 .arch-badge.rej{background:var(--bad-bg);color:var(--bad-tx);border-color:rgba(239,68,68,.4)}
+.auto-mail-bar{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.auto-mail-toggle{display:inline-flex;align-items:center;gap:8px;margin:0;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--tx)}
+.auto-mail-toggle input{width:16px;height:16px;margin:0;accent-color:var(--b1);cursor:pointer;flex-shrink:0}
+
+/* Barra visual de progreso de candidatura (#mi-solicitud) */
+.sol-unit-card{padding:14px 15px;border-radius:6px;background:var(--card);border:1px solid var(--line);margin-bottom:10px}
+.sol-unit-card:last-child{margin-bottom:0}
+.sol-unit-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.sol-stepper{display:flex;align-items:flex-start;gap:0;margin:4px 0 12px;width:100%}
+.sol-step{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;padding:0 4px}
+.sol-step:not(:last-child)::after{content:"";position:absolute;top:12px;left:calc(50% + 14px);right:calc(-50% + 14px);height:2px;background:var(--line);z-index:0}
+.sol-step.done:not(:last-child)::after{background:var(--b1)}
+.sol-step.rej-prev:not(:last-child)::after{background:rgba(239,68,68,.4)}
+.sol-step-dot{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;position:relative;z-index:1;border:2px solid var(--line);background:var(--card);color:var(--mut);flex-shrink:0}
+.sol-step.done .sol-step-dot{background:var(--b1);border-color:var(--b1);color:#fff}
+.sol-step.cur .sol-step-dot{background:var(--card);border-color:var(--b1);color:var(--b1);box-shadow:0 0 0 3px var(--b1-soft)}
+.sol-step.cur.is-rev .sol-step-dot{border-color:var(--warn-tx);color:var(--warn-tx);box-shadow:0 0 0 3px var(--warn-bg)}
+.sol-step.cur.is-ok .sol-step-dot{background:var(--ok-bg);border-color:var(--ok-tx);color:var(--ok-tx);box-shadow:0 0 0 3px rgba(16,185,129,.18)}
+.sol-step.rej .sol-step-dot{background:var(--bad-bg);border-color:var(--bad-tx);color:var(--bad-tx)}
+.sol-step-lbl{margin-top:5px;font-size:.72rem;font-weight:700;line-height:1.25;color:var(--mut);word-break:break-word}
+.sol-step.done .sol-step-lbl,.sol-step.cur .sol-step-lbl{color:var(--tx)}
+.sol-step.rej .sol-step-lbl{color:var(--bad-tx)}
+.sol-unit-foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-top:10px;border-top:1px dashed var(--line)}
 .card-leaving{opacity:0!important;transform:translateY(-6px) scale(.99)!important;transition:opacity .15s ease,transform .15s ease!important;pointer-events:none}
 .edit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .edit-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -972,6 +995,12 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
   #admInvPromoSel,#admInvVisSel,#admSearch{max-width:none!important;width:100%!important}
   .sol-sel-row{flex-direction:column;align-items:stretch;gap:8px}
   .sol-select{width:100%}
+  .sol-step{padding:0 2px}
+  .sol-step-dot{width:22px;height:22px;font-size:.66rem}
+  .sol-step:not(:last-child)::after{top:11px;left:calc(50% + 12px);right:calc(-50% + 12px)}
+  .sol-step-lbl{font-size:.65rem}
+  .sol-unit-foot{flex-direction:column;align-items:stretch}
+  .sol-unit-foot .btn{justify-content:center;width:100%}
   .qr-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .qr-card{padding:11px 9px}
   .qr-card svg{max-width:112px}
@@ -1531,19 +1560,38 @@ function updateSheetSyncBadge() {
     : `${ICO('check')} Sincronizar pendientes`;
 }
 
-let LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '', promoSheets: [] };
+let LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '', promoSheets: [], emailEnabled: false, remainingEmailQuota: null };
+
+function updateMailQuotaBadge() {
+  const badge = $('mailQuotaBadge');
+  if (!badge) return;
+  const info = LAST_APPS_SCRIPT_CHECK;
+  if (info.version !== null && info.version < 4.6) {
+    badge.textContent = 'Actualiza Apps Script a v4.6 para activar envíos automáticos';
+    badge.style.color = 'var(--warn-tx)';
+  } else if (typeof info.remainingEmailQuota === 'number' && info.remainingEmailQuota >= 0) {
+    badge.textContent = `${info.remainingEmailQuota} correos disponibles hoy`;
+    badge.style.color = info.remainingEmailQuota > 5 ? 'var(--ok-tx)' : 'var(--warn-tx)';
+  } else if (info.version >= 4.6) {
+    badge.textContent = 'Apps Script v4.6 listo';
+    badge.style.color = 'var(--ok-tx)';
+  }
+}
 
 async function checkAppsScriptVersion(force = false) {
   const url = String(getCfg().appsScriptUrl || '').trim();
   if (!url) return { ok: false, version: 0, configured: false };
   if (!force && LAST_APPS_SCRIPT_CHECK.url === url && Date.now() - LAST_APPS_SCRIPT_CHECK.checkedAt < 300000) {
+    updateMailQuotaBadge();
     return {
       ok: true,
       version: LAST_APPS_SCRIPT_CHECK.version,
       configured: true,
       mainSheet: LAST_APPS_SCRIPT_CHECK.mainSheet,
       archiveSheet: LAST_APPS_SCRIPT_CHECK.archiveSheet,
-      promoSheets: LAST_APPS_SCRIPT_CHECK.promoSheets || []
+      promoSheets: LAST_APPS_SCRIPT_CHECK.promoSheets || [],
+      emailEnabled: Boolean(LAST_APPS_SCRIPT_CHECK.emailEnabled),
+      remainingEmailQuota: LAST_APPS_SCRIPT_CHECK.remainingEmailQuota
     };
   }
   try {
@@ -1556,14 +1604,18 @@ async function checkAppsScriptVersion(force = false) {
     }
     const ver = Number(data.version || (data.ok ? 1 : 0));
     const pSheets = Array.isArray(data.promoSheets) ? data.promoSheets : (data.mainSheet ? [data.mainSheet] : []);
+    const remQuota = typeof data.remainingEmailQuota === 'number' ? data.remainingEmailQuota : null;
     LAST_APPS_SCRIPT_CHECK = {
       url,
       version: ver,
       checkedAt: Date.now(),
       mainSheet: data.mainSheet || pSheets[0] || '',
       archiveSheet: data.archiveSheet || '',
-      promoSheets: pSheets
+      promoSheets: pSheets,
+      emailEnabled: Boolean(data.emailEnabled || ver >= 4.6),
+      remainingEmailQuota: remQuota
     };
+    updateMailQuotaBadge();
     return {
       ok: Boolean(data.ok),
       version: ver,
@@ -1571,7 +1623,9 @@ async function checkAppsScriptVersion(force = false) {
       status: data.status || '',
       mainSheet: data.mainSheet || pSheets[0] || '',
       archiveSheet: data.archiveSheet || '',
-      promoSheets: pSheets
+      promoSheets: pSheets,
+      emailEnabled: Boolean(data.emailEnabled || ver >= 4.6),
+      remainingEmailQuota: remQuota
     };
   } catch {
     return { ok: false, version: null, configured: true };
@@ -1585,28 +1639,28 @@ async function renderScriptVersionBanner(hostId) {
   const currentHost = $(hostId);
   if (!currentHost || !info.configured) return;
 
-  if (info.version !== null && info.version < 4.5) {
+  if (info.version !== null && info.version < 4.6) {
     const curUrl = getCfg().appsScriptUrl || '';
-    const isSecUpgradeOnly = info.version >= 4.4;
+    const isEmailUpgradeOnly = info.version >= 4.5;
     currentHost.innerHTML = `
       <div class="panel" style="margin-bottom:14px;padding:14px 16px;background:var(--warn-bg);border-color:rgba(245,158,11,.5)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:260px">
-            <b style="color:var(--warn-tx);font-size:.92rem">${isSecUpgradeOnly
-              ? `Actualización de seguridad recomendada de Google Apps Script (v${esc(info.version)} → nueva v4.5)`
-              : `Actualización disponible de Google Apps Script (versión activa: v${esc(info.version)} → nueva v4.5)`}</b>
+            <b style="color:var(--warn-tx);font-size:.92rem">${isEmailUpgradeOnly
+              ? `Actualización disponible de Google Apps Script (v${esc(info.version)} → nueva v4.6 · Emails automáticos)`
+              : `Actualización recomendada de Google Apps Script (versión activa: v${esc(info.version)} → nueva v4.6)`}</b>
             <div style="font-size:.82rem;color:var(--tx);margin-top:5px;line-height:1.5">
-              ${isSecUpgradeOnly
-                ? 'La versión <b>v4.5</b> verifica criptográficamente tu sesión de administrador de Firebase antes de permitir editar, archivar o borrar hojas/filas del Excel, y limita los envíos públicos a solo insertar candidaturas nuevas en «En revisión»:'
-                : 'Actualiza a <b>v4.5</b> para activar <b>autenticación segura de administrador (Firebase Token)</b>, creación/renombrado/borrado automático de hojas por promoción, columna <b>«Promoción»</b> en Archivo y <b>colores de Estado</b>:'}
+              ${isEmailUpgradeOnly
+                ? 'La versión <b>v4.6</b> mantiene toda la seguridad de v4.5 y añade el <b>envío automático de correos HTML corporativos</b> al candidato cuando cambias su estado (Aprobado con botón a Rentger, Vendido o Rechazada):'
+                : 'Actualiza a <b>v4.6</b> para activar <b>autenticación segura de administrador (Firebase Token)</b>, <b>emails automáticos por cambio de estado</b>, creación/borrado de hojas por promoción y colores de Estado:'}
               <ol style="margin:6px 0 0 18px;padding:0">
-                <li>Pulsa <b>Copiar Apps Script v4.5</b> y pégalo entero en <b>Extensiones → Apps Script</b> (sustituyendo el código anterior).</li>
-                <li>Pulsa <b>Implementar → Administrar implementaciones → Editar (lápiz) → Versión: Nueva versión → Implementar</b>.</li>
+                <li>Pulsa <b>Copiar Apps Script v4.6</b> y pégalo entero en <b>Extensiones → Apps Script</b> (sustituyendo el código anterior).</li>
+                <li>Pulsa <b>Implementar → Administrar implementaciones → Editar (lápiz) → Versión: Nueva versión → Implementar</b> y acepta el permiso de envío de correo una sola vez.</li>
                 <li>Si creaste una <i>Nueva implementación</i> con otra URL <code>/exec</code>, pégala aquí abajo y pulsa <b>Guardar URL</b>.</li>
               </ol>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
-              <button type="button" class="btn sm" id="${esc(hostId)}CopyBtn">${ICO('file')} Copiar Apps Script v4.5</button>
+              <button type="button" class="btn sm" id="${esc(hostId)}CopyBtn">${ICO('file')} Copiar Apps Script v4.6</button>
               <button type="button" class="btn g sm" id="${esc(hostId)}RecheckBtn">Comprobar ahora</button>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
@@ -1623,7 +1677,7 @@ async function renderScriptVersionBanner(hostId) {
     if (copyBtn) {
       copyBtn.onclick = () => copyTextToClipboard(
         APPS_SCRIPT_TEMPLATE,
-        'Apps Script v4.5 copiado: pégalo en Apps Script y publica «Nueva versión»',
+        'Apps Script v4.6 copiado: pégalo en Apps Script y publica «Nueva versión»',
         'No se pudo copiar automáticamente'
       );
     }
@@ -1632,9 +1686,9 @@ async function renderScriptVersionBanner(hostId) {
         recheckBtn.disabled = true;
         recheckBtn.textContent = 'Comprobando…';
         const next = await checkAppsScriptVersion(true);
-        if (next.version >= 4.5) {
+        if (next.version >= 4.6) {
           renderScriptVersionBanner(hostId);
-          notify(`Apps Script v${next.version} seguro conectado (${(next.promoSheets || []).join(', ') || 'Promociones'} + ${next.archiveSheet || 'Archivo'})`);
+          notify(`Apps Script v${next.version} seguro + emails automáticos conectados`);
         } else {
           recheckBtn.disabled = false;
           recheckBtn.textContent = 'Comprobar ahora';
@@ -1653,7 +1707,7 @@ async function renderScriptVersionBanner(hostId) {
         }
         saveUrlBtn.disabled = true;
         saveUrlBtn.textContent = 'Guardando…';
-        LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '', promoSheets: [] };
+        LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '', promoSheets: [], emailEnabled: false, remainingEmailQuota: null };
         const savedOk = await cloudSaveConfig({ ...getCfg(), appsScriptUrl: nextUrl });
         if (!savedOk) {
           saveUrlBtn.disabled = false;
@@ -1661,23 +1715,26 @@ async function renderScriptVersionBanner(hostId) {
           return;
         }
         const next = await checkAppsScriptVersion(true);
-        if (next.version >= 4.5) {
+        if (next.version >= 4.6) {
           renderScriptVersionBanner(hostId);
-          notify(`URL guardada y verificada: Apps Script v${next.version} seguro activo`);
+          notify(`URL guardada y verificada: Apps Script v${next.version} con emails automáticos activo`);
         } else {
           saveUrlBtn.disabled = false;
           saveUrlBtn.textContent = 'Guardar URL';
           notify(next.invalidResponse
             ? 'URL guardada, pero Apps Script devolvió error/login. Configura Acceso: «Cualquier usuario».'
-            : `URL guardada, pero responde v${next.version || 1}. Publica una «Nueva versión» con el código v4.5.`);
+            : `URL guardada, pero responde v${next.version || 1}. Publica una «Nueva versión» con el código v4.6.`);
         }
       };
     }
-  } else if (info.version >= 4.5 && hostId === 'cfgScriptBanner') {
+  } else if (info.version >= 4.6 && hostId === 'cfgScriptBanner') {
     const pList = (info.promoSheets || []).length ? info.promoSheets.join(', ') : (info.mainSheet || 'Por promoción');
+    const qInfo = typeof info.remainingEmailQuota === 'number' && info.remainingEmailQuota >= 0
+      ? ` · Emails automáticos: <b>${info.remainingEmailQuota} disp. hoy</b>`
+      : ' · Emails automáticos activos';
     currentHost.innerHTML = `
       <div class="panel" style="margin-bottom:14px;padding:11px 14px;background:var(--ok-bg);border-color:rgba(16,185,129,.35);color:var(--ok-tx);font-size:.84rem">
-        <b>Apps Script v${esc(info.version)} conectado y protegido</b> · Hojas: <b>${esc(pList)}</b> · Archivo: <b>${esc(info.archiveSheet || 'Archivo')}</b> (verificación Firebase Admin Token + gestión automática de hojas)
+        <b>Apps Script v${esc(info.version)} conectado y protegido</b> · Hojas: <b>${esc(pList)}</b> · Archivo: <b>${esc(info.archiveSheet || 'Archivo')}</b>${qInfo}
       </div>`;
   } else if (info.invalidResponse) {
     currentHost.innerHTML = `
@@ -1711,10 +1768,15 @@ async function postToAppsScript(url, body) {
           checkedAt: Date.now(),
           mainSheet: data.mainSheet || LAST_APPS_SCRIPT_CHECK.mainSheet || '',
           archiveSheet: data.archiveSheet || LAST_APPS_SCRIPT_CHECK.archiveSheet || '',
-          promoSheets: Array.isArray(data.promoSheets) ? data.promoSheets : (LAST_APPS_SCRIPT_CHECK.promoSheets || [])
+          promoSheets: Array.isArray(data.promoSheets) ? data.promoSheets : (LAST_APPS_SCRIPT_CHECK.promoSheets || []),
+          emailEnabled: Boolean(data.emailEnabled || data.version >= 4.6 || LAST_APPS_SCRIPT_CHECK.emailEnabled),
+          remainingEmailQuota: typeof data.remainingQuota === 'number'
+            ? data.remainingQuota
+            : (typeof data.remainingEmailQuota === 'number' ? data.remainingEmailQuota : LAST_APPS_SCRIPT_CHECK.remainingEmailQuota)
         };
+        updateMailQuotaBadge();
       } else if (data && data.ok) {
-        LAST_APPS_SCRIPT_CHECK = { url, version: 1, checkedAt: Date.now(), mainSheet: '', archiveSheet: '', promoSheets: [] };
+        LAST_APPS_SCRIPT_CHECK = { url, version: 1, checkedAt: Date.now(), mainSheet: '', archiveSheet: '', promoSheets: [], emailEnabled: false, remainingEmailQuota: null };
       }
       if (data && data.error === 'admin_auth_required') {
         notify('Google Sheets rechazó la operación: inicia sesión con un correo de administrador verificado.');
@@ -2004,10 +2066,84 @@ async function flushSheetQueue() {
   }
 }
 
-const APPS_SCRIPT_TEMPLATE = `// DELTACOR PROPERTIES · Google Sheets Sync v4.5 (Seguro)
+const AUTO_EMAIL_PREF_KEY = 'inv-auto-email-v1';
+
+function getAutoEmailEnabled() {
+  try {
+    return localStorage.getItem(AUTO_EMAIL_PREF_KEY) !== '0';
+  } catch {
+    return true;
+  }
+}
+
+function setAutoEmailEnabled(enabled) {
+  safeSetItem(localStorage, AUTO_EMAIL_PREF_KEY, enabled ? '1' : '0');
+}
+
+async function sendStatusChangeEmail(sol, { ref = '', status = '', prop = null, notifyResult = true } = {}) {
+  const url = String(getCfg().appsScriptUrl || '').trim();
+  if (!url || !isVerifiedAdmin() || !sol || !sol.email) {
+    return { ok: false, skipped: true };
+  }
+  const cleanEmail = String(sol.email || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail)) {
+    return { ok: false, skipped: true, error: 'invalid_email' };
+  }
+  const st = normSolStatus(status || getSolOverallStatus(sol));
+  const unitRef = String(ref || (Array.isArray(sol.selecciones) ? sol.selecciones.map(x => x.ref).join(', ') : '')).trim();
+  const unitInfo = prop
+    ? `${Number(prop.h)} hab · ${floorFullLabel(prop.pl)} · ${eur(prop.r)}/mes`
+    : '';
+  const promoName = (prop ? getPromoById(prop.promoId || 'cadmia')?.name : '') || getSolPromoLabel(sol);
+  const rentgerUrl = (prop?.rentgerUrl && isSafeHttpUrl(prop.rentgerUrl)) ? prop.rentgerUrl : '';
+  const rawBase = String(getCfg().baseUrl || (location.origin + location.pathname)).trim().replace(/\/+$/, '');
+  const portalUrl = isSafeHttpUrl(rawBase) ? `${rawBase}/#mi-solicitud` : '';
+  const rawReplyTo = String(SITE_CONTENT?.officeEmail || '').trim();
+  const replyTo = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(rawReplyTo) ? rawReplyTo : '';
+
+  const res = await trackBgOp(postToAppsScript(url, {
+    action: 'send_status_email',
+    to: cleanEmail,
+    candidateName: String(sol.nombre || 'Solicitante').trim().slice(0, 120),
+    solId: String(sol.id || '').trim().slice(0, 40),
+    status: st,
+    unitRef: unitRef.slice(0, 120),
+    unitInfo: unitInfo.slice(0, 140),
+    promoName: String(promoName || 'Deltacor Properties').trim().slice(0, 120),
+    rentgerUrl,
+    portalUrl,
+    replyTo
+  }));
+
+  if (res.ok && (res.data?.sent || res.opaque)) {
+    if (notifyResult) {
+      notify(res.opaque
+        ? `Aviso de estado («${st}») enviado a ${cleanEmail}`
+        : `Correo de aviso («${st}») enviado automáticamente a ${cleanEmail}`);
+    }
+    return { ok: true, sent: true, opaque: Boolean(res.opaque), remainingQuota: res.data?.remainingQuota };
+  }
+
+  const errCode = String(res.error || res.data?.error || '');
+  const needsV46 = errCode.startsWith('unknown_action') || (res.data && Number(res.data.version || 0) < 4.6);
+  if (notifyResult) {
+    if (needsV46) {
+      notify('Estado actualizado. Para enviar correos automáticos, actualiza Apps Script a v4.6 («Nueva versión»).');
+    } else if (errCode === 'mail_permission_required') {
+      notify('Estado actualizado, pero falta autorizar el permiso de correo en Google Apps Script (v4.6).');
+    } else if (errCode === 'mail_quota_exceeded') {
+      notify('Estado actualizado, pero se alcanzó el límite diario de correos de Gmail hoy.');
+    } else if (errCode !== 'admin_auth_required') {
+      notify(`Estado actualizado, pero no se pudo enviar el correo automático (${errCode || 'revisa Apps Script v4.6'}).`);
+    }
+  }
+  return { ok: false, needsV46, error: errCode };
+}
+
+const APPS_SCRIPT_TEMPLATE = `// DELTACOR PROPERTIES · Google Sheets Sync & Emails v4.6 (Seguro)
 // Verificación criptográfica Firebase Admin Token en todas las acciones de gestión + inserción pública estricta (append-only, Estado forzado «En revisión»)
-// + Una hoja por promoción (creación automática con estilo/autofiltro clonado antes de «Archivo» + renombrado + borrado) + colores de Estado
-var SCRIPT_VERSION = 4.5;
+// + Envío automático de correos HTML corporativos por cambio de estado (solo admin verificado) + una hoja por promoción + Archivo
+var SCRIPT_VERSION = 4.6;
 var FIREBASE_PROJECT_ID = 'invencor-a1477';
 var FIREBASE_API_KEY = 'AIzaSyAl7NBWnMGu5sTDTs4drdh7SsfxRCozpIg';
 // Hashes SHA-256 de administradores iniciales (también se aceptan admins activos en Firestore /admins/{email})
@@ -2548,20 +2684,171 @@ function resolveTargetSheetNames_(ss, data, archiveName) {
   return out;
 }
 
+function escHtml_(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function isSafeHttpsUrl_(u) {
+  var s = String(u || '').trim();
+  return /^https:\\/\\/[^\\s"'<>]+$/i.test(s) && s.length <= 500;
+}
+
+function getRemainingMailQuota_() {
+  try {
+    if (typeof MailApp === 'undefined' || !MailApp.getRemainingDailyQuota) return -1;
+    return Number(MailApp.getRemainingDailyQuota());
+  } catch (e) {
+    return -1;
+  }
+}
+
+function sendStatusEmail_(data) {
+  var to = String(data.to || '').trim().toLowerCase();
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(to) || to.length > 180) {
+    return { ok: false, version: SCRIPT_VERSION, action: 'send_status_email', error: 'invalid_email' };
+  }
+  var rawSt = String(data.status || 'En revisión').trim();
+  var st = (rawSt === 'Aprobado' || rawSt === 'Vendido' || rawSt === 'Rechazada' || rawSt === 'En revisión') ? rawSt : 'En revisión';
+  var name = String(data.candidateName || 'Solicitante').trim().slice(0, 120);
+  var solId = String(data.solId || '').trim().slice(0, 40);
+  var unitRef = String(data.unitRef || '').trim().slice(0, 120);
+  var unitInfo = String(data.unitInfo || '').trim().slice(0, 140);
+  var promoName = String(data.promoName || 'Deltacor Properties').trim().slice(0, 120);
+  var rentgerUrl = isSafeHttpsUrl_(data.rentgerUrl) ? String(data.rentgerUrl).trim() : '';
+  var portalUrl = isSafeHttpsUrl_(data.portalUrl) ? String(data.portalUrl).trim() : '';
+  var replyTo = String(data.replyTo || '').trim().toLowerCase();
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(replyTo) || replyTo.length > 180) replyTo = '';
+
+  var badgeBg = '#fef3c7', badgeTx = '#92400e', accent = '#f59e0b';
+  var subject = 'Deltacor Properties · Tu solicitud ' + (solId ? solId + ' ' : '') + 'está En revisión';
+  var headline = 'Tu solicitud está en revisión';
+  var intro = 'Nuestro equipo de gestión patrimonial está estudiando tu candidatura' + (unitRef ? ' para ' + unitRef : '') + '. Te avisaremos por correo en cuanto haya novedades.';
+  var ctaLabel = '';
+  var ctaUrl = '';
+
+  if (st === 'Aprobado') {
+    badgeBg = '#dcfce7'; badgeTx = '#166534'; accent = '#6da625';
+    subject = '¡Enhorabuena! Solicitud pre-aprobada · ' + (unitRef || promoName) + ' (Deltacor Properties)';
+    headline = '¡Tu candidatura ha sido pre-aprobada!';
+    intro = rentgerUrl
+      ? 'Tu perfil cumple los requisitos para ' + (unitRef || 'la vivienda solicitada') + '. El siguiente paso es subir tu documentación de forma segura en Rentger usando el botón de abajo.'
+      : 'Tu perfil ha sido pre-aprobado para ' + (unitRef || 'la vivienda solicitada') + '. En breve nuestro equipo se pondrá en contacto contigo con los pasos para formalizar la documentación.';
+    if (rentgerUrl) {
+      ctaLabel = 'Subir documentación en Rentger →';
+      ctaUrl = rentgerUrl;
+    }
+  } else if (st === 'Vendido') {
+    badgeBg = '#dcfce7'; badgeTx = '#166534'; accent = '#6da625';
+    subject = 'Operación cerrada · ' + (unitRef || promoName) + ' (Deltacor Properties)';
+    headline = 'Operación formalizada';
+    intro = 'Te confirmamos que tu solicitud' + (unitRef ? ' para ' + unitRef : '') + ' figura ya como cerrada en nuestro sistema. ¡Gracias por confiar en Deltacor Properties!';
+  } else if (st === 'Rechazada') {
+    badgeBg = '#fee2e2'; badgeTx = '#991b1b'; accent = '#64748b';
+    subject = 'Actualización de tu solicitud · ' + (solId || promoName) + ' (Deltacor Properties)';
+    headline = 'Actualización sobre tu candidatura';
+    intro = 'Gracias por tu interés en ' + promoName + '. En esta ocasión la candidatura' + (unitRef ? ' (' + unitRef + ')' : '') + ' no ha podido ser seleccionada para esta unidad. Puedes consultar otras viviendas disponibles en nuestra web cuando desees.';
+  }
+
+  var safeName = escHtml_(name);
+  var safeSolId = escHtml_(solId);
+  var safePromo = escHtml_(promoName);
+  var safeUnit = escHtml_(unitRef);
+  var safeInfo = escHtml_(unitInfo);
+  var safeSt = escHtml_(st);
+  var safeHeadline = escHtml_(headline);
+  var safeIntro = escHtml_(intro);
+
+  var rowsHtml = '';
+  if (safeSolId) rowsHtml += '<tr><td style="padding:8px 0;color:#5c6876;font-size:13px;border-bottom:1px solid #e6ebf0">Referencia solicitud</td><td style="padding:8px 0;color:#1e293b;font-size:13px;font-weight:700;text-align:right;border-bottom:1px solid #e6ebf0">' + safeSolId + '</td></tr>';
+  rowsHtml += '<tr><td style="padding:8px 0;color:#5c6876;font-size:13px;border-bottom:1px solid #e6ebf0">Promoción</td><td style="padding:8px 0;color:#1e293b;font-size:13px;font-weight:700;text-align:right;border-bottom:1px solid #e6ebf0">' + safePromo + '</td></tr>';
+  if (safeUnit) rowsHtml += '<tr><td style="padding:8px 0;color:#5c6876;font-size:13px;border-bottom:1px solid #e6ebf0">Vivienda</td><td style="padding:8px 0;color:#1e293b;font-size:13px;font-weight:700;text-align:right;border-bottom:1px solid #e6ebf0">' + safeUnit + (safeInfo ? ' · ' + safeInfo : '') + '</td></tr>';
+  rowsHtml += '<tr><td style="padding:8px 0;color:#5c6876;font-size:13px">Estado actual</td><td style="padding:8px 0;text-align:right"><span style="display:inline-block;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:700;background:' + badgeBg + ';color:' + badgeTx + '">' + safeSt + '</span></td></tr>';
+
+  var btnsHtml = '';
+  if (ctaUrl && ctaLabel) {
+    btnsHtml += '<a href="' + escHtml_(ctaUrl) + '" style="display:inline-block;background:#6da625;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 20px;border-radius:6px;margin:0 8px 10px 0">' + escHtml_(ctaLabel) + '</a>';
+  }
+  if (portalUrl) {
+    btnsHtml += '<a href="' + escHtml_(portalUrl) + '" style="display:inline-block;background:#2b3844;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 20px;border-radius:6px;margin:0 0 10px 0">Ver estado en Mi solicitud</a>';
+  }
+
+  var htmlBody = ''
+    + '<div style="margin:0;padding:24px 12px;background:#f4f6f9;font-family:Helvetica,Arial,sans-serif;color:#1e293b">'
+    + '<div style="max-width:580px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0">'
+    + '<div style="background:#2b3844;padding:20px 24px;border-bottom:4px solid ' + accent + '">'
+    + '<div style="color:#ffffff;font-size:18px;font-weight:800;letter-spacing:.02em">DELTACOR <span style="color:#8cd136">PROPERTIES</span></div>'
+    + '<div style="color:#cbd5e1;font-size:12px;margin-top:3px">Gestión directa de alquiler · Obra nueva</div>'
+    + '</div>'
+    + '<div style="padding:24px">'
+    + '<p style="margin:0 0 12px;font-size:15px">Hola <b>' + safeName + '</b>,</p>'
+    + '<h2 style="margin:0 0 10px;font-size:19px;color:#2b3844">' + safeHeadline + '</h2>'
+    + '<p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#475569">' + safeIntro + '</p>'
+    + '<table style="width:100%;border-collapse:collapse;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:20px"><tbody><tr><td style="padding:12px 16px"><table style="width:100%;border-collapse:collapse">' + rowsHtml + '</table></td></tr></tbody></table>'
+    + (btnsHtml ? '<div style="margin:18px 0 8px">' + btnsHtml + '</div>' : '')
+    + '<p style="margin:18px 0 0;font-size:12px;line-height:1.5;color:#64748b">Puedes consultar en cualquier momento el seguimiento actualizado desde tu área privada <b>Mi solicitud</b>.' + (replyTo ? ' Si tienes alguna duda, responde directamente a este correo (' + escHtml_(replyTo) + ').' : '') + '</p>'
+    + '</div>'
+    + '<div style="background:#f8fafc;padding:14px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b">Deltacor Properties S.L. · Mensaje automático de seguimiento de candidatura.</div>'
+    + '</div></div>';
+
+  var textBody = 'Hola ' + name + ',\\n\\n'
+    + headline + '\\n'
+    + intro + '\\n\\n'
+    + (solId ? 'Referencia: ' + solId + '\\n' : '')
+    + 'Promoción: ' + promoName + '\\n'
+    + (unitRef ? 'Vivienda: ' + unitRef + (unitInfo ? ' (' + unitInfo + ')' : '') + '\\n' : '')
+    + 'Estado actual: ' + st + '\\n\\n'
+    + (ctaUrl ? ctaLabel + ': ' + ctaUrl + '\\n' : '')
+    + (portalUrl ? 'Ver estado en directo: ' + portalUrl + '\\n' : '')
+    + '\\nDeltacor Properties S.L.';
+
+  try {
+    var quotaBefore = getRemainingMailQuota_();
+    if (quotaBefore === 0) {
+      return { ok: false, version: SCRIPT_VERSION, action: 'send_status_email', error: 'mail_quota_exceeded', remainingQuota: 0 };
+    }
+    var mailOpts = {
+      to: to,
+      subject: subject,
+      body: textBody,
+      htmlBody: htmlBody,
+      name: 'Deltacor Properties'
+    };
+    if (replyTo) mailOpts.replyTo = replyTo;
+    MailApp.sendEmail(mailOpts);
+    var quotaAfter = getRemainingMailQuota_();
+    return { ok: true, version: SCRIPT_VERSION, action: 'send_status_email', sent: true, to: to, status: st, remainingQuota: quotaAfter };
+  } catch (err) {
+    var msg = String(err && err.message || err);
+    var lower = msg.toLowerCase();
+    var errCode = (lower.indexOf('permission') !== -1 || lower.indexOf('authorization') !== -1 || lower.indexOf('permiso') !== -1)
+      ? 'mail_permission_required'
+      : (lower.indexOf('limit') !== -1 || lower.indexOf('quota') !== -1 ? 'mail_quota_exceeded' : msg);
+    return { ok: false, version: SCRIPT_VERSION, action: 'send_status_email', error: errCode };
+  }
+}
+
 function doGet() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var promoSheets = getPromoSheets_(ss, 'Archivo').map(function(s) { return s.getName(); });
     var archSheet = findSheetByNameInsensitive_(ss, 'Archivo');
+    var remQuota = getRemainingMailQuota_();
     return jsonOut_({
       ok: true,
       version: SCRIPT_VERSION,
-      revision: '4.5',
+      revision: '4.6',
       authRequired: true,
+      emailEnabled: true,
+      remainingEmailQuota: remQuota,
       mainSheet: promoSheets[0] || '',
       promoSheets: promoSheets,
       archiveSheet: archSheet ? archSheet.getName() : '',
-      status: 'DELTACOR Sheets sync v4.5 seguro activo (Firebase Admin Token + inserción pública protegida + gestión de hojas)'
+      status: 'DELTACOR Sheets sync & Emails v4.6 seguro activo (Firebase Admin Token + emails automáticos + gestión de hojas)'
     });
   } catch (err) {
     return jsonOut_({ ok: false, version: SCRIPT_VERSION, error: String(err && err.message || err) });
@@ -2584,7 +2871,7 @@ function doPost(e) {
     var archStatusCol = getStatusColIndex_(archiveHeaders);
     var action = String(data.action || 'upsert');
 
-    // Todas las operaciones de gestión requieren token de administrador verificado en Firebase
+    // Todas las operaciones de gestión y envío de correo requieren token de administrador verificado en Firebase
     var adminOnlyActions = {
       ensure_promo_sheet: true,
       delete_promo_sheet: true,
@@ -2593,11 +2880,17 @@ function doPost(e) {
       restore: true,
       sync_archive: true,
       sync_all: true,
-      upsert_batch: true
+      upsert_batch: true,
+      send_status_email: true
     };
     var auth = verifyAdminToken_(data.idToken);
     if (adminOnlyActions[action] && !auth.ok) {
       return jsonOut_({ ok: false, version: SCRIPT_VERSION, action: action, error: 'admin_auth_required' });
+    }
+
+    // 00. Envío automático de email HTML corporativo al candidato (solo admin verificado)
+    if (action === 'send_status_email') {
+      return jsonOut_(sendStatusEmail_(data));
     }
 
     // 0. Crear o renombrar hoja de promoción inmediatamente desde la web (clona estilo/filtros y la coloca antes de Archivo)
@@ -7466,6 +7759,29 @@ function renderSolicitudCards(email, opts = {}) {
       ? 'No encontramos ninguna candidatura que coincida con ese correo y código de verificación. Revisa tu referencia (SOL-...) o los últimos 4 caracteres de tu DNI/NIE.'
       : 'No encontramos candidaturas registradas con ese correo electrónico.'} <a href="#contacto" style="color:var(--b1);font-weight:700">Enviar candidatura →</a></p></div>`;
   }
+  const buildSolProgressHtml = st => {
+    if (st === 'Rechazada') {
+      return `
+        <div class="sol-stepper" role="list" aria-label="Progreso de solicitud: No seleccionada">
+          <div class="sol-step done" role="listitem"><span class="sol-step-dot">✓</span><span class="sol-step-lbl">Recibida</span></div>
+          <div class="sol-step done rej-prev" role="listitem"><span class="sol-step-dot">✓</span><span class="sol-step-lbl">Revisada</span></div>
+          <div class="sol-step rej" role="listitem" aria-current="step"><span class="sol-step-dot">✕</span><span class="sol-step-lbl">No seleccionada</span></div>
+        </div>`;
+    }
+    const isRev = st === 'En revisión';
+    const isOk = st === 'Aprobado';
+    const isSold = st === 'Vendido';
+    const s2 = isRev ? 'cur is-rev' : 'done';
+    const s3 = isSold ? 'done' : isOk ? 'cur is-ok' : 'todo';
+    const s4 = isSold ? 'done cur' : 'todo';
+    return `
+      <div class="sol-stepper" role="list" aria-label="Progreso de solicitud: ${esc(st)}">
+        <div class="sol-step done" role="listitem"><span class="sol-step-dot">✓</span><span class="sol-step-lbl">Recibida</span></div>
+        <div class="sol-step ${s2}" role="listitem" ${isRev ? 'aria-current="step"' : ''}><span class="sol-step-dot">${isRev ? '2' : '✓'}</span><span class="sol-step-lbl">En revisión</span></div>
+        <div class="sol-step ${s3}" role="listitem" ${isOk ? 'aria-current="step"' : ''}><span class="sol-step-dot">${isSold ? '✓' : '3'}</span><span class="sol-step-lbl">Pre-aprobada</span></div>
+        <div class="sol-step ${s4}" role="listitem" ${isSold ? 'aria-current="step"' : ''}><span class="sol-step-dot">${isSold ? '✓' : '4'}</span><span class="sol-step-lbl">Cerrada</span></div>
+      </div>`;
+  };
   return found.map(s => `
     <div class="panel" style="background:var(--card2);margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px">
@@ -7474,25 +7790,36 @@ function renderSolicitudCards(email, opts = {}) {
       </div>
       ${(Array.isArray(s.selecciones) ? s.selecciones : []).map(item => {
         const prop = V.find(v => v.ref === item.ref);
+        const promo = prop ? getPromoById(prop.promoId || 'cadmia') : null;
         const st = normSolStatus(item.estado);
         const badgeClass = st === 'Aprobado' || st === 'Vendido' ? 'D' : st === 'Rechazada' ? 'A' : 'R';
         const safeRentger = prop?.rentgerUrl && isSafeHttpUrl(prop.rentgerUrl) ? prop.rentgerUrl : '';
         return `
-        <div style="padding:12px;border-radius:6px;background:var(--card);border:1px solid var(--line);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-          <div>
-            <b>${esc(item.ref)}</b> ${prop ? `<span class="m">(${Number(prop.h)} hab · ${floorFullLabel(prop.pl)} · ${eur(prop.r)}/mes)</span>` : ''}
-            <div style="margin-top:4px"><span class="st ${badgeClass}">${esc(st)}</span></div>
+        <div class="sol-unit-card" data-sol-status="${esc(st)}">
+          <div class="sol-unit-top">
+            <div>
+              <a href="#ficha/${encodeURIComponent(item.ref)}" style="font-weight:800;color:var(--tx);text-decoration:none">${esc(item.ref)}</a>
+              ${promo ? `<span class="m" style="font-size:.76rem"> · ${esc(promo.name)}</span>` : ''}
+              ${prop ? `<div class="m" style="font-size:.78rem;margin-top:2px">${Number(prop.h)} hab · ${floorFullLabel(prop.pl)} · ${eur(prop.r)}/mes</div>` : ''}
+            </div>
+            <span class="st ${badgeClass}">${esc(st)}</span>
           </div>
-          <div>
-            ${st === 'Aprobado'
-              ? (safeRentger
-                ? `<a class="btn ok sm" href="${esc(safeRentger)}" target="_blank" rel="noopener noreferrer">${ICO('file')} Subir documentación en Rentger →</a>`
-                : `<span style="color:var(--ok-tx);font-weight:700;font-size:.84rem">${ICO('check')} Pre-aprobado · Te enviaremos el enlace de documentación</span>`)
-              : st === 'Vendido'
-              ? `<span style="color:var(--ok-tx);font-weight:700;font-size:.84rem">${ICO('check')} Operación cerrada</span>`
+          ${buildSolProgressHtml(st)}
+          <div class="sol-unit-foot">
+            <div style="flex:1;min-width:180px">
+              ${st === 'Aprobado'
+                ? `<span style="color:var(--ok-tx);font-weight:700;font-size:.83rem">${ICO('check')} ${safeRentger ? '¡Pre-aprobado! Sube tu documentación para continuar.' : 'Pre-aprobado · Te enviaremos el enlace de documentación por correo.'}</span>`
+                : st === 'Vendido'
+                ? `<span style="color:var(--ok-tx);font-weight:700;font-size:.83rem">${ICO('check')} Operación cerrada · ¡Gracias por confiar en Deltacor Properties!</span>`
+                : st === 'Rechazada'
+                ? `<span class="m" style="font-size:.82rem">Candidatura no seleccionada para esta unidad. Puedes consultar otras viviendas libres.</span>`
+                : `<span class="m" style="font-size:.82rem">Nuestro equipo está revisando tu perfil. Te avisaremos por correo al cambiar de estado.</span>`}
+            </div>
+            ${st === 'Aprobado' && safeRentger
+              ? `<a class="btn ok sm" href="${esc(safeRentger)}" target="_blank" rel="noopener noreferrer">${ICO('file')} Subir documentación en Rentger →</a>`
               : st === 'Rechazada'
-              ? `<span class="m">Candidatura no seleccionada para esta unidad.</span>`
-              : `<span class="m">Nuestro equipo está revisando tu perfil.</span>`}
+              ? `<a class="btn g sm" href="#viviendas">Ver otras viviendas →</a>`
+              : `<a class="btn g sm" href="#ficha/${encodeURIComponent(item.ref)}">Ver vivienda</a>`}
           </div>
         </div>`;
       }).join('')}
@@ -8340,12 +8667,12 @@ function openPromoEditorModal(existingPromo = null, onSaved = null) {
         enqueueSheetOp('ensure_promo_sheet', cleanNew, renamed ? { oldName: cleanPrev } : {}, sheetRes => {
           if (!sheetRes || sheetRes.skipped) return;
           if (sheetRes.outdatedScript) {
-            notify('Promoción guardada, pero actualiza Google Apps Script a v4.5 («Nueva versión») para crear/renombrar/borrar hojas por promoción automáticamente.');
+            notify('Promoción guardada, pero actualiza Google Apps Script a v4.6 («Nueva versión») para crear/renombrar/borrar hojas por promoción automáticamente.');
           } else if (sheetRes.ok) {
             if (sheetRes.data?.renamed) {
               notify(`Pestaña de Excel renombrada automáticamente a «${cleanNew}»`);
             } else if (renamed && sheetRes.data && Number(sheetRes.data.version || 0) < 4.3) {
-              notify(`Hoja «${cleanNew}» creada en Excel (actualiza Apps Script a v4.5 para renombrado, borrado y autofiltros)`);
+              notify(`Hoja «${cleanNew}» creada en Excel (actualiza Apps Script a v4.6 para renombrado, borrado y emails automáticos)`);
             } else if (isNew || sheetRes.data?.created) {
               notify(`Hoja «${cleanNew}» creada automáticamente en Google Sheets`);
             }
@@ -8452,7 +8779,7 @@ function openDeletePromoModal(promo, onDeleted = null) {
       enqueueSheetOp('delete_promo_sheet', cleanSheetToDelete, {}, sheetRes => {
         if (!sheetRes || sheetRes.skipped) return;
         if (sheetRes.outdatedScript) {
-          notify('Promoción borrada en la web. Actualiza Google Apps Script a v4.5 («Nueva versión») para borrar automáticamente su pestaña del Excel.');
+          notify('Promoción borrada en la web. Actualiza Google Apps Script a v4.6 («Nueva versión») para borrar automáticamente su pestaña del Excel.');
         } else if (sheetRes.ok) {
           if (sheetRes.data?.deleted) {
             notify(`Pestaña «${cleanSheetToDelete}» eliminada automáticamente de Google Sheets`);
@@ -9537,6 +9864,14 @@ function renderAdmin(subTab) {
           <a class="btn g sm" href="#admin/config">Integraciones →</a>
         </div>
       </div>
+      ${hasLiveSync ? `
+      <div class="auto-mail-bar">
+        <label class="auto-mail-toggle">
+          <input type="checkbox" id="autoEmailToggle" ${getAutoEmailEnabled() ? 'checked' : ''}>
+          <span>Avisar automáticamente por email al candidato al cambiar de estado (Apps Script v4.6)</span>
+        </label>
+        <span class="m" id="mailQuotaBadge" style="font-size:.76rem;font-weight:700"></span>
+      </div>` : ''}
     </div>
 
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px">
@@ -9672,8 +10007,9 @@ function renderAdmin(subTab) {
 
           <div class="cand-quick-acts">
             <span class="m" style="font-size:.76rem;font-weight:700;margin-right:2px">Contacto rápido:</span>
+            ${hasLiveSync && s.email ? `<button type="button" class="btn sm" data-send-status-mail="${esc(s.id)}">${ICO('mail')} Enviar aviso email</button>` : ''}
             ${waNum ? `<a class="btn ok sm" target="_blank" rel="noopener noreferrer" href="https://wa.me/${waNum}?text=${encodeURIComponent(replyMsg)}">WhatsApp rápido</a>` : ''}
-            ${s.email ? `<a class="btn g sm" href="mailto:${esc(s.email)}?subject=${encodeURIComponent(mailSubj)}&body=${encodeURIComponent(replyMsg)}">${ICO('mail')} Email rápido</a>` : ''}
+            ${s.email ? `<a class="btn g sm" href="mailto:${esc(s.email)}?subject=${encodeURIComponent(mailSubj)}&body=${encodeURIComponent(replyMsg)}">${ICO('mail')} Email manual</a>` : ''}
             <button type="button" class="btn g sm" data-copy-reply="${esc(s.id)}">Copiar mensaje</button>
           </div>
         </div>`;
@@ -9681,6 +10017,16 @@ function renderAdmin(subTab) {
     };
 
     renderCandCards();
+    if ($('autoEmailToggle')) {
+      $('autoEmailToggle').onchange = e => {
+        const on = Boolean(e.target.checked);
+        setAutoEmailEnabled(on);
+        notify(on
+          ? 'Avisos automáticos por email activados al cambiar de estado'
+          : 'Avisos automáticos por email pausados (solo se enviarán si los activas manualmente)');
+      };
+      updateMailQuotaBadge();
+    }
     let candSearchTimer = null;
     if ($('candFilterQ')) {
       $('candFilterQ').oninput = () => {
@@ -9713,6 +10059,11 @@ function renderAdmin(subTab) {
             <input type="checkbox" id="soldMarkUnit" checked>
             <span>Marcar también la vivienda ${esc(sel.ref)} como Alquilada en el inventario</span>
           </label>` : ''}
+        ${hasLiveSync && sol.email ? `
+          <label class="confirm-check">
+            <input type="checkbox" id="soldSendEmailChk" ${getAutoEmailEnabled() ? 'checked' : ''}>
+            <span>Enviar correo automático de operación cerrada a <b>${esc(sol.email)}</b></span>
+          </label>` : ''}
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
           <button type="button" class="btn g sm" id="soldCancelBtn">Cancelar</button>
           <button type="button" class="btn ok sm" id="soldConfirmBtn">Confirmar Vendido y Archivar</button>
@@ -9734,6 +10085,7 @@ function renderAdmin(subTab) {
       $('soldConfirmBtn').onclick = () => {
         soldConfirmed = true;
         const markUnit = Boolean($('soldMarkUnit')?.checked && prop);
+        const shouldSendMail = Boolean($('soldSendEmailChk')?.checked);
         const soldPromo = prop ? getPromoById(prop.promoId || 'cadmia') : null;
         sol.selecciones[selIdx].estado = 'Vendido';
         sol.archived = true;
@@ -9756,11 +10108,14 @@ function renderAdmin(subTab) {
         trackBgOp(cloudSaveSol(sol));
         enqueueSheetOp('archive', sol, {}, sheetRes => {
           if (sheetRes?.outdatedScript) {
-            notify('Movida a Archivo en la web, pero actualiza Apps Script a v4.5 («Nueva versión») para usar hojas por promoción, Estado antes del Teléfono y Promoción en Archivo.');
+            notify('Movida a Archivo en la web, pero actualiza Apps Script a v4.6 («Nueva versión») para usar hojas por promoción y emails automáticos.');
           } else if (sheetRes && !sheetRes.ok) {
             notify(`Movida a Archivo en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
           }
         });
+        if (shouldSendMail) {
+          sendStatusChangeEmail(sol, { ref: sel.ref, status: 'Vendido', prop });
+        }
       };
     };
 
@@ -9769,6 +10124,7 @@ function renderAdmin(subTab) {
       dlg.oncancel = null;
       dlg.classList.remove('wide');
       const refsList = (sol.selecciones || []).map(x => x.ref).join(', ');
+      const firstProp = (sol.selecciones || []).map(x => V.find(v => v.ref === x.ref)).find(Boolean) || null;
       dlg.innerHTML = `
         <h3>Rechazar candidatura</h3>
         <p class="m" style="margin-top:6px">Esta acción retirará la candidatura de la web y de la hoja principal de Google Sheets.</p>
@@ -9781,6 +10137,11 @@ function renderAdmin(subTab) {
           <input type="checkbox" id="rejArchiveOpt">
           <span>Guardar una copia en la pestaña <b>Archivo</b> (y en la hoja <b>Archivo</b> de Excel) de manera opcional</span>
         </label>
+        ${hasLiveSync && sol.email ? `
+          <label class="confirm-check">
+            <input type="checkbox" id="rejSendEmailChk" ${getAutoEmailEnabled() ? 'checked' : ''}>
+            <span>Enviar correo educado de aviso a <b>${esc(sol.email)}</b></span>
+          </label>` : ''}
         <label class="confirm-check" style="background:var(--bad-bg);color:var(--bad-tx);padding:9px 10px;border-radius:4px;border:1px solid rgba(239,68,68,.3)">
           <input type="checkbox" id="rejVerifyChk">
           <span>Verificación: confirmo que deseo rechazar esta candidatura y eliminarla de Candidaturas y del Excel principal.</span>
@@ -9800,6 +10161,7 @@ function renderAdmin(subTab) {
       confirmBtn.onclick = () => {
         if (!verifyChk.checked) return;
         const keepInArchive = Boolean(archOpt.checked);
+        const shouldSendMail = Boolean($('rejSendEmailChk')?.checked);
         SHEET_PENDING_QUEUE.delete(sol.id);
 
         if (keepInArchive) {
@@ -9826,7 +10188,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudSaveSol(sol));
           enqueueSheetOp('archive', sol, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Guardada en Archivo en la web, pero actualiza Apps Script a v4.5 («Nueva versión») para moverla en Excel.');
+              notify('Guardada en Archivo en la web, pero actualiza Apps Script a v4.6 («Nueva versión») para moverla en Excel.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Guardada en Archivo en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -9835,11 +10197,14 @@ function renderAdmin(subTab) {
           trackBgOp(cloudDeleteSol(sol.id, sol));
           enqueueSheetOp('delete', sol.id, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Eliminada de la web, pero actualiza Apps Script a v4.5 («Nueva versión») para borrar filas por promoción.');
+              notify('Eliminada de la web, pero actualiza Apps Script a v4.6 («Nueva versión») para borrar filas por promoción.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Eliminada de la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
           });
+        }
+        if (shouldSendMail) {
+          sendStatusChangeEmail(sol, { ref: refsList, status: 'Rechazada', prop: firstProp });
         }
       };
     };
@@ -9856,6 +10221,7 @@ function renderAdmin(subTab) {
           openSoldModal(sol, selIdx, e.target, prevSt);
           return;
         }
+        if (newSt === prevSt) return;
 
         sol.selecciones[selIdx].estado = newSt;
         e.target.dataset.prev = newSt;
@@ -9869,10 +10235,36 @@ function renderAdmin(subTab) {
         notify(newSt === 'Aprobado'
           ? 'Marcada como Aprobado (verde): el botón de Rentger ya es visible para el usuario'
           : 'Marcada En revisión (amarillo)');
+
+        if (hasLiveSync && getAutoEmailEnabled() && sol.email) {
+          const selUnit = sol.selecciones[selIdx];
+          const prop = V.find(v => v.ref === selUnit.ref) || null;
+          sendStatusChangeEmail(sol, { ref: selUnit.ref, status: newSt, prop });
+        }
       }
     };
 
-    body.onclick = e => {
+    body.onclick = async e => {
+      const sendMailBtn = e.target.closest('[data-send-status-mail]');
+      if (sendMailBtn) {
+        if (sendMailBtn.disabled) return;
+        const sol = SOLS.find(x => x.id === sendMailBtn.dataset.sendStatusMail);
+        if (!sol) return;
+        const sels = Array.isArray(sol.selecciones) ? sol.selecciones : [];
+        const focusSel = sels.find(x => normSolStatus(x.estado) === 'Aprobado') || sels[0] || null;
+        const prop = focusSel ? (V.find(v => v.ref === focusSel.ref) || null) : null;
+        const prevHtml = sendMailBtn.innerHTML;
+        sendMailBtn.disabled = true;
+        sendMailBtn.textContent = 'Enviando…';
+        await sendStatusChangeEmail(sol, {
+          ref: focusSel ? focusSel.ref : '',
+          status: focusSel ? normSolStatus(focusSel.estado) : getSolOverallStatus(sol),
+          prop
+        });
+        sendMailBtn.disabled = false;
+        sendMailBtn.innerHTML = prevHtml;
+        return;
+      }
       const copyBtn = e.target.closest('[data-copy-reply]');
       if (copyBtn) {
         const sol = SOLS.find(x => x.id === copyBtn.dataset.copyReply);
@@ -9950,7 +10342,7 @@ function renderAdmin(subTab) {
         btn.textContent = 'Reconstruir hojas';
         updateSheetSyncBadge();
         notify(res.outdatedScript
-          ? 'Actualiza Google Apps Script a v4.5 («Nueva versión») para reconstruir las hojas por promoción con Estado antes del Teléfono.'
+          ? 'Actualiza Google Apps Script a v4.6 («Nueva versión») para reconstruir las hojas por promoción y activar emails automáticos.'
           : res.ok
             ? `Hojas por promoción reconstruidas (${activeNow.length} candidaturas activas en ${res.sheetsCount || 1} hoja${res.sheetsCount === 1 ? '' : 's'})`
             : 'No se pudo reconstruir Google Sheets. Revisa la URL de conexión.');
@@ -10063,10 +10455,10 @@ function renderAdmin(subTab) {
           btn.disabled = false;
           btn.innerHTML = `${ICO('check')} Sincronizar hoja Archivo`;
           notify(res.outdatedScript
-            ? 'Actualiza Google Apps Script a v4.5 e implementa una «Nueva versión».'
+            ? 'Actualiza Google Apps Script a v4.6 e implementa una «Nueva versión».'
             : res.ok
               ? `Hoja «Archivo» sincronizada en Google Sheets (${archNow.length} registros con Estado en color y columna Promoción)`
-              : `No se pudo sincronizar la hoja Archivo: ${res.error || 'revisa la URL de Apps Script v4.5'}`);
+              : `No se pudo sincronizar la hoja Archivo: ${res.error || 'revisa la URL de Apps Script v4.6'}`);
         };
       }
       if (hasLiveSync) renderScriptVersionBanner('archScriptBanner');
@@ -10101,6 +10493,11 @@ function renderAdmin(subTab) {
         dlg.innerHTML = `
           <h3>Restaurar candidatura</h3>
           <p class="m" style="margin-top:6px">Se devolverá a <b>${esc(sol.nombre)}</b> a la pestaña <b>Candidaturas</b> en estado <i>En revisión</i> y se moverá de nuevo a la hoja principal de Google Sheets.</p>
+          ${hasLiveSync && sol.email ? `
+            <label class="confirm-check">
+              <input type="checkbox" id="restSendEmailChk">
+              <span>Avisar por correo a <b>${esc(sol.email)}</b> de que su solicitud vuelve a «En revisión»</span>
+            </label>` : ''}
           <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
             <button type="button" class="btn g sm" id="restCancelBtn">Cancelar</button>
             <button type="button" class="btn sm" id="restConfirmBtn">Confirmar restauración</button>
@@ -10108,6 +10505,7 @@ function renderAdmin(subTab) {
         safeShowModal(dlg);
         $('restCancelBtn').onclick = () => dlg.close();
         $('restConfirmBtn').onclick = () => {
+          const shouldSendMail = Boolean($('restSendEmailChk')?.checked);
           sol.archived = false;
           delete sol.archivePromo;
           delete sol.archiveReason;
@@ -10123,11 +10521,16 @@ function renderAdmin(subTab) {
           trackBgOp(cloudSaveSol(sol));
           enqueueSheetOp('restore', sol, {}, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Restaurada en la web, pero actualiza Apps Script a v4.5 («Nueva versión») para moverla a su hoja de promoción.');
+              notify('Restaurada en la web, pero actualiza Apps Script a v4.6 («Nueva versión») para moverla a su hoja de promoción.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Restaurada en la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
           });
+          if (shouldSendMail) {
+            const firstRef = (sol.selecciones && sol.selecciones[0]?.ref) || '';
+            const firstProp = firstRef ? (V.find(v => v.ref === firstRef) || null) : null;
+            sendStatusChangeEmail(sol, { ref: firstRef, status: 'En revisión', prop: firstProp });
+          }
         };
         return;
       }
@@ -10165,7 +10568,7 @@ function renderAdmin(subTab) {
           trackBgOp(cloudDeleteSol(sol.id, sol));
           enqueueSheetOp('delete', sol.id, { sheetName: ARCHIVE_SHEET_NAME }, sheetRes => {
             if (sheetRes?.outdatedScript) {
-              notify('Eliminada de la web, pero actualiza Apps Script a v4.5 («Nueva versión») para borrarla del Excel.');
+              notify('Eliminada de la web, pero actualiza Apps Script a v4.6 («Nueva versión») para borrarla del Excel.');
             } else if (sheetRes && !sheetRes.ok) {
               notify(`Eliminada de la web, pero falló Excel: ${sheetRes.error || 'revisa Apps Script'}`);
             }
@@ -10869,13 +11272,13 @@ function renderAdmin(subTab) {
           <input id="cfgUrl" type="url" value="${esc(c.baseUrl)}" required>
         </label>
         <details open style="margin:12px 0 16px;padding:10px 14px;box-shadow:none;background:var(--card2)">
-          <summary style="font-size:.82rem;color:var(--mut)">Sincronización segura con Google Apps Script v4.5 (Firebase Admin Token + auto-hoja por promoción + borrado + Archivo)</summary>
+          <summary style="font-size:.82rem;color:var(--mut)">Sincronización segura con Google Apps Script v4.6 (Firebase Admin Token + emails automáticos + hojas por promoción + Archivo)</summary>
           <div style="margin-top:12px">
             <label>URL de Apps Script (debe acabar en /exec)
               <input id="cfgSheets" type="url" value="${esc(c.appsScriptUrl)}" placeholder="https://script.google.com/macros/s/XXXXX/exec">
             </label>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v4.5 (Seguro)</button>
+              <button type="button" class="btn g sm" id="copyAppsScriptBtn">${ICO('file')} Copiar Apps Script v4.6 (Seguro + Emails)</button>
               <button type="button" class="btn g sm" id="testAppsScriptBtn">Comprobar versión</button>
             </div>
           </div>
@@ -10891,7 +11294,7 @@ function renderAdmin(subTab) {
 
     $('copyAppsScriptBtn').onclick = () => copyTextToClipboard(
       APPS_SCRIPT_TEMPLATE,
-      'Apps Script v4.5 copiado: pégalo en Apps Script y publica una «Nueva versión»',
+      'Apps Script v4.6 copiado: pégalo en Apps Script, publica «Nueva versión» y acepta el permiso de correo',
       'No se pudo copiar automáticamente'
     );
 
@@ -10903,10 +11306,15 @@ function renderAdmin(subTab) {
       btn.disabled = false;
       btn.textContent = 'Comprobar versión';
       renderScriptVersionBanner('cfgScriptBanner');
-      if (info.version >= 4.5) {
-        notify(`Conectado a Apps Script v${info.version} seguro (${(info.promoSheets || []).join(', ') || 'Promociones'} + ${info.archiveSheet || 'Archivo'})`);
+      if (info.version >= 4.6) {
+        const qMsg = typeof info.remainingEmailQuota === 'number' && info.remainingEmailQuota >= 0
+          ? ` · ${info.remainingEmailQuota} correos disp. hoy`
+          : '';
+        notify(`Conectado a Apps Script v${info.version} seguro + emails automáticos${qMsg}`);
+      } else if (info.version >= 4.5) {
+        notify(`Conectado a Apps Script v${info.version} seguro. Actualiza a v4.6 para activar los emails automáticos por cambio de estado.`);
       } else if (info.version >= 4.4) {
-        notify(`Conectado a Apps Script v${info.version}. Actualiza a v4.5 para proteger las acciones admin con Firebase Token.`);
+        notify(`Conectado a Apps Script v${info.version}. Actualiza a v4.6 para activar Firebase Token y emails automáticos.`);
       } else if (info.version) {
         notify(`Tu enlace sigue en v${info.version}. En Apps Script pulsa Implementar → Administrar implementaciones → Editar → Nueva versión.`);
       } else {
@@ -10938,7 +11346,7 @@ function renderAdmin(subTab) {
       if (btn?.disabled) return;
       const prevTxt = btn ? btn.textContent : '';
       if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
-      LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '', promoSheets: [] };
+      LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '', promoSheets: [], emailEnabled: false, remainingEmailQuota: null };
       const ok = await cloudSaveConfig({
         ...getCfg(),
         baseUrl,
