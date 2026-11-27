@@ -1487,13 +1487,13 @@ function solToArchiveRow(s) {
   ];
 }
 
-const SHEET_SYNC_CACHE_KEY = 'inv-sheets-synced-v4';
+const SHEET_SYNC_CACHE_KEY = 'inv-sheets-synced-v5';
 const SHEET_BATCH_SIZE = 100;
 const SHEET_PENDING_QUEUE = new Map();
 let sheetFlushTimer = null;
 
 function solSyncHash(s) {
-  return JSON.stringify({ sheets: getSolSheetNames(s), row: solToSheetRow(s) });
+  return sha256Hex(JSON.stringify({ sheets: getSolSheetNames(s), row: solToSheetRow(s) }));
 }
 
 function getSyncedSheetHashes() {
@@ -1621,14 +1621,11 @@ async function renderScriptVersionBanner(hostId) {
     const saveUrlBtn = $(`${hostId}SaveUrlBtn`);
     const urlInput = $(`${hostId}UrlInput`);
     if (copyBtn) {
-      copyBtn.onclick = async () => {
-        try {
-          await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-          notify('Apps Script v4.5 copiado: pégalo en Apps Script y publica «Nueva versión»');
-        } catch {
-          notify('No se pudo copiar automáticamente');
-        }
-      };
+      copyBtn.onclick = () => copyTextToClipboard(
+        APPS_SCRIPT_TEMPLATE,
+        'Apps Script v4.5 copiado: pégalo en Apps Script y publica «Nueva versión»',
+        'No se pudo copiar automáticamente'
+      );
     }
     if (recheckBtn) {
       recheckBtn.onclick = async () => {
@@ -1650,14 +1647,19 @@ async function renderScriptVersionBanner(hostId) {
     if (saveUrlBtn && urlInput) {
       saveUrlBtn.onclick = async () => {
         const nextUrl = urlInput.value.trim();
-        if (!nextUrl.startsWith('https://script.google.com/')) {
+        if (!isSafeHttpUrl(nextUrl, ['script.google.com'])) {
           notify('Pega una URL válida de Google Apps Script (https://script.google.com/macros/s/.../exec)');
           return;
         }
         saveUrlBtn.disabled = true;
         saveUrlBtn.textContent = 'Guardando…';
         LAST_APPS_SCRIPT_CHECK = { url: '', version: null, checkedAt: 0, mainSheet: '', archiveSheet: '', promoSheets: [] };
-        await cloudSaveConfig({ ...getCfg(), appsScriptUrl: nextUrl });
+        const savedOk = await cloudSaveConfig({ ...getCfg(), appsScriptUrl: nextUrl });
+        if (!savedOk) {
+          saveUrlBtn.disabled = false;
+          saveUrlBtn.textContent = 'Guardar URL';
+          return;
+        }
         const next = await checkAppsScriptVersion(true);
         if (next.version >= 4.5) {
           renderScriptVersionBanner(hostId);
@@ -3224,6 +3226,7 @@ $('ckReject').onclick = () => { safeSetItem(localStorage, 'inv-ck', 'essential')
   try {
     localStorage.removeItem('inv-role-cache');
     localStorage.removeItem('inv-sols');
+    localStorage.removeItem('inv-sheets-synced-v4');
     sessionStorage.removeItem('inv-session');
   } catch {}
 })();
@@ -3243,6 +3246,8 @@ function clearSensitiveSessionState({ preserveGuestReceipts = false } = {}) {
   try {
     localStorage.removeItem('inv-sols');
     localStorage.removeItem('inv-role-cache');
+    localStorage.removeItem('inv-sheets-synced-v4');
+    localStorage.removeItem(SHEET_SYNC_CACHE_KEY);
     sessionStorage.removeItem('inv-session');
     if (!preserveGuestReceipts) {
       sessionStorage.removeItem('dc-my-receipts-v1');
@@ -3469,11 +3474,12 @@ async function signInWithGoogle(onSuccess) {
     const provider = new GoogleAuthProvider();
     const res = await signInWithPopup(fbAuth, provider);
     const em = (res.user.email || '').toLowerCase();
-    const emailVerified = res.user.emailVerified !== false;
+    const emailVerified = res.user.emailVerified === true;
     const role = emailVerified ? await resolveUserRoleFast(em, true) : 'candidate';
     const user = { uid: res.user.uid, email: em, name: res.user.displayName || em.split('@')[0], role, emailVerified, isFirebase: true };
     AUTH_INITIALIZED = true;
     setSession(user);
+    if (window.__syncFloatingChatUser) window.__syncFloatingChatUser();
     if (emailVerified) triggerBackgroundSync();
     if (onSuccess) onSuccess(user);
   } catch (err) {
@@ -4834,9 +4840,13 @@ function updateUserHeader() {
     logoutBtn.onclick = async () => {
       try { await signOut(fbAuth); } catch (_) {}
       setSession(null);
+      if (window.__syncFloatingChatUser) window.__syncFloatingChatUser();
       notify('Sesión cerrada');
       if (location.hash.startsWith('#admin')) location.hash = 'inicio';
-      else route({ silent: true });
+      else {
+        route({ silent: true });
+        refreshAllPropertyViews();
+      }
     };
   }
 }
@@ -4873,7 +4883,7 @@ function openAuthModal(defaultEmail = '') {
         </button>
       </div>
     `;
-    if (!$('dlg').open) $('dlg').showModal();
+    safeShowModal($('dlg'));
 
     $('toggleAuthMode').onclick = () => { isSignup = !isSignup; draw(); };
 
@@ -4902,7 +4912,7 @@ function openAuthModal(defaultEmail = '') {
         notify(isAdm
           ? `Bienvenido, ${user.name}. Desplegable de administración activado.`
           : `Bienvenido, ${user.name}`);
-        if (location.hash === '#mi-solicitud' || location.hash.startsWith('#admin')) route({ silent: true });
+        if (location.hash === '#mi-solicitud' || location.hash.startsWith('#admin') || location.hash.startsWith('#ficha')) route({ silent: true });
         else refreshAllPropertyViews();
         if (isAdm) {
           requestAnimationFrame(() => {
@@ -4946,7 +4956,7 @@ function openAuthModal(defaultEmail = '') {
       notify(isAdm
         ? `Bienvenido, ${res.user.name}. Desplegable de administración activado.`
         : `Bienvenido, ${res.user.name}`);
-      if (location.hash === '#mi-solicitud' || location.hash.startsWith('#admin')) route({ silent: true });
+      if (location.hash === '#mi-solicitud' || location.hash.startsWith('#admin') || location.hash.startsWith('#ficha')) route({ silent: true });
       else refreshAllPropertyViews();
       if (isAdm) {
         requestAnimationFrame(() => {
@@ -6366,7 +6376,7 @@ function renderApp() {
         return `
           <div style="margin-bottom:10px">
             <div class="alz-sim-row"><span>Renta mensual</span><b>${eur(cur.r)} / mes</b></div>
-            <div class="alz-sim-row"><span>Fianza legal (1 mes IVIMA)</span><b>${eur(fianza)}</b></div>
+            <div class="alz-sim-row"><span>Fianza legal (1 mes · AVS Madrid)</span><b>${eur(fianza)}</b></div>
             <div class="alz-sim-row"><span>Garantía adicional (1 mes)</span><b>${eur(garantia)}</b></div>
             <div class="alz-sim-row"><span>Total estimado a la firma</span><b style="color:var(--b1)">${eur(entrada)}</b></div>
             <div class="alz-sim-row"><span>Ingresos mínimos (regla 3x)</span><b>${eur(cur.r * 3)} / mes</b></div>
@@ -6598,7 +6608,7 @@ function renderApp() {
             ${renderInspectorBody()}
             <div class="alz-insp-actions">
               <a class="btn g sm full" href="#ficha/${curRefUri}">Ver ficha completa</a>
-              <button type="button" class="btn g sm btn-cmp ${inCmp ? 'on' : ''}" data-cmp="${esc(cur.ref)}">${ICO('columns')} ${inCmp ? 'En comparador' : 'Comparar'}</button>
+              <button type="button" class="btn g sm btn-cmp ${inCmp ? 'on' : ''}" data-cmp="${esc(cur.ref)}" aria-pressed="${inCmp}">${ICO('columns')}<span class="cmp-lbl"> ${inCmp ? 'En comparador' : 'Comparar'}</span></button>
               <button type="button" class="btn g sm btn-fav ${FAVS.includes(cur.ref) ? 'on' : ''}" data-fav="${esc(cur.ref)}" aria-pressed="${FAVS.includes(cur.ref)}" title="${FAVS.includes(cur.ref) ? 'Quitar de favoritas' : 'Guardar en favoritas'}">${ICO('heart')}<span class="fav-lbl">${FAVS.includes(cur.ref) ? ' Guardada' : ' Favorita'}</span></button>
               ${isAdmin ? `
                 <button type="button" class="btn g sm" id="alzEditUnitBtn">${ICO('edit')} Editar ${esc(cur.ref)}</button>
@@ -7046,6 +7056,16 @@ function renderApp() {
     draw();
   };
 
+  window.syncCmpUi = () => {
+    document.querySelectorAll('[data-cmp]').forEach(el => {
+      const active = CMP.includes(el.dataset.cmp);
+      el.classList.toggle('on', active);
+      el.setAttribute('aria-pressed', String(active));
+      const lbl = el.querySelector('.cmp-lbl');
+      if (lbl) lbl.textContent = active ? ' En comparador' : ' Comparar';
+    });
+  };
+
   window.renderCompareBar = () => {
     const bar = $('compareBar');
     if (!bar) return;
@@ -7069,7 +7089,7 @@ function renderApp() {
     $('openCmpModalBtn').onclick = openCompareModal;
     $('clearCmpBtn').onclick = () => {
       CMP = [];
-      document.querySelectorAll('[data-cmp]').forEach(el => el.classList.remove('on'));
+      syncCmpUi();
       renderCompareBar();
       if (location.hash === '#viviendas') renderCatalog();
       if (!location.hash || location.hash === '#inicio') refreshInicio();
@@ -8986,8 +9006,17 @@ function openDeleteUnitModal(unit, onDeleted = null) {
   $('delUnitConfirmBtn').onclick = () => {
     if (!$('delUnitVerifyChk').checked) return;
     V = V.filter(x => x.ref !== unit.ref);
+    SEL = SEL.filter(r => r !== unit.ref);
+    CMP = CMP.filter(r => r !== unit.ref);
+    if (FAVS.includes(unit.ref)) {
+      FAVS = FAVS.filter(r => r !== unit.ref);
+      saveFavs();
+    }
     dlg.close();
     trackBgOp(cloudDeleteUnit(unit.ref, unit));
+    if (window.syncFavUi) syncFavUi();
+    if (window.syncCmpUi) syncCmpUi();
+    if (window.renderCompareBar) renderCompareBar();
     refreshAllPropertyViews();
     if (typeof onDeleted === 'function') onDeleted(unit);
     notify(`Vivienda ${unit.ref} eliminada del inventario`);
@@ -8997,6 +9026,10 @@ function openDeleteUnitModal(unit, onDeleted = null) {
 /* ==========================================================================
    VISTAS DE ADMINISTRACIÓN (Solo accesibles si isVerifiedAdmin())
    ========================================================================== */
+const ALLOWED_ADMIN_TABS = new Set([
+  'promociones', 'inventario', 'candidatos', 'archivo', 'qrs', 'blog', 'web', 'usuarios', 'config'
+]);
+
 function renderAdmin(subTab) {
   if (!isVerifiedAdmin()) {
     if (!AUTH_INITIALIZED) {
@@ -9014,7 +9047,8 @@ function renderAdmin(subTab) {
     return;
   }
 
-  if (subTab) adminTab = subTab;
+  if (subTab) adminTab = ALLOWED_ADMIN_TABS.has(subTab) ? subTab : 'promociones';
+  else if (!ALLOWED_ADMIN_TABS.has(adminTab)) adminTab = 'promociones';
   const sec = $('v-admin');
   const activeWebUnits = V.filter(v => v.active !== false).length;
   const hiddenWebUnits = V.length - activeWebUnits;
@@ -9292,10 +9326,10 @@ function renderAdmin(subTab) {
             <div class="m" style="font-size:.74rem">${esc(v.portal)} · ${v.pl === 0 ? 'Bajo' : 'P' + v.pl} · ${esc(v.ori || 'Sur')} · CEE ${esc(v.cee || 'A')}</div>
           </td>
           <td>
-            ${v.h} hab · ${v.b} baño${v.b > 1 ? 's' : ''} · ${v.m2} m²
+            ${Number(v.h)} hab · ${Number(v.b)} baño${Number(v.b) > 1 ? 's' : ''} · ${Number(v.m2)} m²
             ${extras ? `<div class="m" style="font-size:.73rem">${extras}</div>` : ''}
           </td>
-          <td><input type="number" value="${v.r}" data-rent="${esc(v.ref)}" style="width:88px;margin:0;padding:5px 8px"> €</td>
+          <td><input type="number" value="${Number(v.r)}" data-rent="${esc(v.ref)}" style="width:88px;margin:0;padding:5px 8px"> €</td>
           <td>
             <select data-st="${esc(v.ref)}" style="width:142px;margin:0;padding:5px 8px">
               <option value="D" ${v.st === 'D' ? 'selected' : ''}>Disponible</option>
@@ -9318,7 +9352,11 @@ function renderAdmin(subTab) {
       }).join('') : `<tr><td colspan="7" class="m" style="text-align:center;padding:22px">No hay viviendas que coincidan con los filtros seleccionados.</td></tr>`;
     };
     drawRows();
-    $('admSearch').oninput = drawRows;
+    let admSearchTimer = null;
+    $('admSearch').oninput = () => {
+      clearTimeout(admSearchTimer);
+      admSearchTimer = setTimeout(drawRows, 120);
+    };
     $('admInvPromoSel').onchange = () => { adminInvPromo = $('admInvPromoSel').value; drawRows(); };
     $('admInvVisSel').onchange = () => { adminInvVis = $('admInvVisSel').value; drawRows(); };
 
@@ -9454,7 +9492,6 @@ function renderAdmin(subTab) {
 
   /* TAB 2: CANDIDATURAS ACTIVAS Y CRUCE DE SOLVENCIA */
   if (adminTab === 'candidatos') {
-    const avail = V.filter(isUnitBookable);
     const c = getCfg();
     const safeSheetHref = isSafeHttpUrl(c.googleSheetUrl, ['docs.google.com']) ? c.googleSheetUrl : '';
     const hasSheetLink = Boolean(safeSheetHref);
@@ -9565,6 +9602,7 @@ function renderAdmin(subTab) {
     const renderCandCards = () => {
       const host = $('candCardsList');
       if (!host) return;
+      const avail = V.filter(isUnitBookable);
       const { total, items } = getFilteredActiveSols();
       if ($('candFilterCount')) {
         $('candFilterCount').textContent = total
@@ -9865,9 +9903,18 @@ function renderAdmin(subTab) {
           notify('Pega un enlace válido de Google Sheets (https://docs.google.com/spreadsheets/...)');
           return;
         }
-        await cloudSaveConfig({ ...getCfg(), googleSheetUrl: url });
-        notify('Enlace de Google Sheets guardado');
-        renderAdmin('candidatos');
+        const btn = $('saveQuickSheetBtn');
+        if (btn.disabled) return;
+        btn.disabled = true;
+        btn.textContent = 'Guardando…';
+        const ok = await cloudSaveConfig({ ...getCfg(), googleSheetUrl: url });
+        if (ok) {
+          notify('Enlace de Google Sheets guardado');
+          renderAdmin('candidatos');
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Guardar enlace';
+        }
       };
     }
 
@@ -9911,15 +9958,14 @@ function renderAdmin(subTab) {
     }
 
     if ($('copySheetsBtn')) {
-      $('copySheetsBtn').onclick = async () => {
+      $('copySheetsBtn').onclick = () => {
         const cleanCell = v => sanitizeSheetCell(String(v ?? '').replace(/[\t\r\n]+/g, ' '));
         const tsv = [SHEET_HEADERS.join('\t'), ...getActiveSols().map(s => solToSheetRow(s).map(cleanCell).join('\t'))].join('\n');
-        try {
-          await navigator.clipboard.writeText(tsv);
-          notify('Tabla copiada: abre tu Google Sheets y pulsa Ctrl+V en la celda A1');
-        } catch (_) {
-          notify('No se pudo copiar automáticamente; revisa permisos del portapapeles');
-        }
+        copyTextToClipboard(
+          tsv,
+          'Tabla copiada: abre tu Google Sheets y pulsa Ctrl+V en la celda A1',
+          'No se pudo copiar automáticamente; revisa permisos del portapapeles'
+        );
       };
     }
 
@@ -10379,13 +10425,29 @@ function renderAdmin(subTab) {
       const delBtn = e.target.closest('[data-del-blog]');
       if (delBtn) {
         const id = Number(delBtn.dataset.delBlog);
-        if (id) {
-          BLOG = BLOG.filter(x => Number(x.id) !== id);
-          if (Number(editingBlogId) === id) editingBlogId = null;
-          trackBgOp(cloudDeleteBlog(id));
-          renderBlogList();
-          drawBlogAdmin();
-          notify('Artículo eliminado');
+        const post = BLOG.find(x => Number(x.id) === id);
+        if (id && post) {
+          const dlg = $('dlg');
+          dlg.oncancel = null;
+          dlg.classList.remove('wide');
+          dlg.innerHTML = `
+            <h3>Eliminar artículo</h3>
+            <p class="m" style="margin-top:6px">Se eliminará definitivamente <b>${esc(post.t || 'este artículo')}</b> de la web y de Firestore.</p>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+              <button type="button" class="btn g sm" id="delBlogCancelBtn">Cancelar</button>
+              <button type="button" class="btn bad sm" id="delBlogConfirmBtn">Eliminar artículo</button>
+            </div>`;
+          safeShowModal(dlg);
+          $('delBlogCancelBtn').onclick = () => dlg.close();
+          $('delBlogConfirmBtn').onclick = () => {
+            dlg.close();
+            BLOG = BLOG.filter(x => Number(x.id) !== id);
+            if (Number(editingBlogId) === id) editingBlogId = null;
+            trackBgOp(cloudDeleteBlog(id));
+            renderBlogList();
+            drawBlogAdmin();
+            notify('Artículo eliminado');
+          };
         }
       }
     };
@@ -10423,19 +10485,47 @@ function renderAdmin(subTab) {
 
     $('newAdminForm').onsubmit = async e => {
       e.preventDefault();
-      if (await cloudAddAdmin($('aEmail').value, $('aName').value)) {
+      const btn = $('newAdminForm').querySelector('button[type="submit"]');
+      if (btn?.disabled) return;
+      const prevTxt = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
+      const ok = await cloudAddAdmin($('aEmail').value, $('aName').value);
+      if (ok) {
         renderAdmin('usuarios');
         notify('Administrador añadido a Firestore');
+      } else if (btn) {
+        btn.disabled = false;
+        btn.textContent = prevTxt;
       }
     };
 
-    body.onclick = async e => {
+    body.onclick = e => {
       const delBtn = e.target.closest('[data-del-admin]');
       const em = delBtn?.dataset.delAdmin;
-      if (em && await cloudRemoveAdmin(em)) {
-        renderAdmin('usuarios');
-        notify('Permiso de administrador revocado');
-      }
+      if (!em) return;
+      const dlg = $('dlg');
+      dlg.oncancel = null;
+      dlg.classList.remove('wide');
+      dlg.innerHTML = `
+        <h3>Revocar permiso de administrador</h3>
+        <p class="m" style="margin-top:6px">Se retirará el acceso de administración a <b>${esc(em)}</b> en Firestore.</p>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+          <button type="button" class="btn g sm" id="revAdmCancelBtn">Cancelar</button>
+          <button type="button" class="btn bad sm" id="revAdmConfirmBtn">Confirmar revocación</button>
+        </div>`;
+      safeShowModal(dlg);
+      $('revAdmCancelBtn').onclick = () => dlg.close();
+      $('revAdmConfirmBtn').onclick = async () => {
+        const cBtn = $('revAdmConfirmBtn');
+        cBtn.disabled = true;
+        cBtn.textContent = 'Revocando…';
+        const ok = await cloudRemoveAdmin(em);
+        dlg.close();
+        if (ok) {
+          renderAdmin('usuarios');
+          notify('Permiso de administrador revocado');
+        }
+      };
     };
   }
 
@@ -10799,14 +10889,11 @@ function renderAdmin(subTab) {
 
     renderScriptVersionBanner('cfgScriptBanner');
 
-    $('copyAppsScriptBtn').onclick = async () => {
-      try {
-        await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
-        notify('Apps Script v4.5 copiado: pégalo en Apps Script y publica una «Nueva versión»');
-      } catch (_) {
-        notify('No se pudo copiar automáticamente');
-      }
-    };
+    $('copyAppsScriptBtn').onclick = () => copyTextToClipboard(
+      APPS_SCRIPT_TEMPLATE,
+      'Apps Script v4.5 copiado: pégalo en Apps Script y publica una «Nueva versión»',
+      'No se pudo copiar automáticamente'
+    );
 
     $('testAppsScriptBtn').onclick = async () => {
       const btn = $('testAppsScriptBtn');
@@ -10934,7 +11021,7 @@ function route(opts = {}) {
   if (routeName !== 'contacto' && $('mainFormContainer')) $('mainFormContainer').innerHTML = '';
   if (routeName !== 'admin' && $('v-admin')) $('v-admin').innerHTML = '';
   if (routeName !== 'viviendas' && $('gr')) $('gr').innerHTML = '';
-  if (routeName !== 'alzado' && $('buildingExplorer')) $('buildingExplorer').innerHTML = '';
+  if (routeName !== 'alzado' && $('alzadoApp')) $('alzadoApp').innerHTML = '';
 
   if (!silent && !isInitialBoot && (!sameRouteKey || !sameView)) {
     scrollTo({ top: 0 });
@@ -10964,6 +11051,7 @@ function route(opts = {}) {
   LAST_ROUTE_NAME = routeName;
   LAST_ROUTE_KEY = routeKey;
   syncFavUi();
+  if (window.syncCmpUi) syncCmpUi();
   renderCompareBar();
 }
 
@@ -10999,7 +11087,8 @@ document.addEventListener('click', e => {
       if (CMP.length >= 3) { notify('Puedes comparar un máximo de 3 viviendas a la vez'); return; }
       CMP.push(ref);
     }
-    cmpBtn.classList.toggle('on', CMP.includes(ref));
+    if (window.syncCmpUi) syncCmpUi();
+    else cmpBtn.classList.toggle('on', CMP.includes(ref));
     renderCompareBar();
   }
 });
@@ -11032,15 +11121,26 @@ const CALC_QUICK_ACTIONS = [
   { label: 'Comparar pisos libres de 2, 3 y 4 hab.', query: 'Comparar pisos disponibles por habitaciones' }
 ];
 
+function stripEsThousands(str) {
+  let prev;
+  let out = String(str || '');
+  do {
+    prev = out;
+    out = out.replace(/(\d)\.(\d{3})(?=\D|$)/g, '$1$2');
+  } while (out !== prev);
+  return out;
+}
+
 /* Evaluador aritmético seguro (sin eval / Function) con límite de profundidad */
 function safeEvalMath(raw) {
   const src = String(raw || '');
   if (src.length > 140) return null;
-  let cleaned = src
-    .replace(/€/g, '')
-    .replace(/×/g, '*')
-    .replace(/÷/g, '/')
-    .replace(/(\d)\.(\d{3})(?=\D|$)/g, '$1$2')
+  let cleaned = stripEsThousands(
+    src
+      .replace(/€/g, '')
+      .replace(/×/g, '*')
+      .replace(/÷/g, '/')
+  )
     .replace(/,/g, '.')
     .trim();
 
@@ -11117,14 +11217,14 @@ function safeEvalMath(raw) {
 }
 
 function extractCalcAmounts(text) {
-  const normalized = String(text || '')
-    .replace(/\bref[-\s]?\d{1,3}\b/gi, ' ')
-    .replace(/\b(?:12|14)\s*pagas?\b/gi, ' ')
-    .replace(/\b[234]\s*(?:hab(?:itaciones)?|dorm(?:itorios)?)\b/gi, ' ')
-    .replace(/\b(?:entre|para)\s*\d+\s*(?:personas?|inquilinos?|titulares?|compa[nñ]eros?)?\b/gi, ' ')
-    .replace(/\b\d+\s*(?:personas?|inquilinos?|titulares?|meses)\b/gi, ' ')
-    .replace(/(\d)\.(\d{3})(?=\D|$)/g, '$1$2')
-    .replace(/(\d),(\d{1,2})(?=\D|$)/g, '$1.$2');
+  const normalized = stripEsThousands(
+    String(text || '')
+      .replace(/\bref[-\s]?\d{1,3}\b/gi, ' ')
+      .replace(/\b(?:12|14)\s*pagas?\b/gi, ' ')
+      .replace(/\b[1-9]\s*(?:hab(?:itaciones)?|dorm(?:itorios)?|cuartos?)\b/gi, ' ')
+      .replace(/\b(?:entre|para)\s*\d+\s*(?:personas?|inquilinos?|titulares?|compa[nñ]eros?)?\b/gi, ' ')
+      .replace(/\b\d+\s*(?:personas?|inquilinos?|titulares?|meses)\b/gi, ' ')
+  ).replace(/(\d),(\d{1,2})(?=\D|$)/g, '$1.$2');
   const matches = normalized.match(/\d+(?:\.\d+)?/g) || [];
   return matches.map(Number).filter(n => Number.isFinite(n) && n > 0);
 }
@@ -11423,15 +11523,33 @@ function initFloatingChat() {
       };
     }
 
-    // 2. Referencia concreta (REF-01 .. REF-999) y habitaciones solicitadas
-    const refMatch = q.match(/\bREF[-\s]?(\d{1,3})\b/i);
-    const refRawNum = refMatch ? String(Number(refMatch[1])) : '';
-    const refPadded = refRawNum ? `REF-${refRawNum.padStart(2, '0')}` : '';
-    const refExact = refRawNum ? `REF-${refRawNum}` : '';
-    const foundUnit = refMatch
-      ? V.find(v => (v.ref === refPadded || v.ref === refExact) && (isUnitPublic(v) || isVerifiedAdmin()))
-      : null;
-    const habMatch = low.match(/\b([234])\s*(?:hab(?:itaciones)?|dorm(?:itorios)?|cuartos?)\b/);
+    // 2. Referencia concreta (REF-XX o referencias personalizadas de cualquier promoción) y habitaciones
+    const visibleUnits = V.filter(v => isUnitPublic(v) || isVerifiedAdmin());
+    const qUpper = q.toUpperCase();
+    let foundUnit = null;
+    let qForAmounts = q;
+    const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const byRefLen = [...visibleUnits].sort((a, b) => String(b.ref || '').length - String(a.ref || '').length);
+    for (const u of byRefLen) {
+      const refKey = String(u.ref || '').trim().toUpperCase();
+      if (!refKey) continue;
+      const re = new RegExp(`(^|[^A-Z0-9])${escRe(refKey)}($|[^A-Z0-9])`, 'i');
+      if (re.test(qUpper)) {
+        foundUnit = u;
+        qForAmounts = q.replace(new RegExp(escRe(refKey), 'ig'), ' ');
+        break;
+      }
+    }
+    if (!foundUnit) {
+      const refMatch = q.match(/\bREF[-\s]?(\d{1,3})\b/i);
+      if (refMatch) {
+        const refRawNum = String(Number(refMatch[1]));
+        const refPadded = `REF-${refRawNum.padStart(2, '0')}`;
+        const refExact = `REF-${refRawNum}`;
+        foundUnit = visibleUnits.find(v => v.ref === refPadded || v.ref === refExact) || null;
+      }
+    }
+    const habMatch = low.match(/\b([1-9])\s*(?:hab(?:itaciones)?|dorm(?:itorios)?|cuartos?)\b/);
     const targetH = habMatch ? Number(habMatch[1]) : 0;
     const has14Pagas = /\b14\s*pagas?\b/.test(low);
     const isAnnual = /\b(anual|anuales|al ano|al año|por ano|por año)\b/.test(low);
@@ -11440,7 +11558,7 @@ function initFloatingChat() {
     const splitMatch = low.match(/(?:entre|para|dividir\s+entre|compartir\s+entre)\s*(\d+)\b/);
     if (splitMatch || /\b(dividir|compartir|por persona|compañer|companer)\b/.test(low)) {
       const people = Math.min(8, Math.max(2, Number(splitMatch ? splitMatch[1] : 2)));
-      const nums = extractCalcAmounts(q);
+      const nums = extractCalcAmounts(qForAmounts);
       const rentNums = nums.filter(n => n >= 400);
       const extraNums = nums.filter(n => n >= 20 && n < 400);
       const targetUnit = foundUnit || activeUnit || availUnits[0];
@@ -11467,7 +11585,7 @@ function initFloatingChat() {
     }
 
     // 4. Comparación directa ingresos vs alquiler concreto (ej: "gano 3000 y el piso cuesta 1050")
-    const allNums = extractCalcAmounts(q);
+    const allNums = extractCalcAmounts(qForAmounts);
     if (!foundUnit && allNums.length >= 2 && /\b(sobra|queda|esfuerzo|cuesta|piso de|alquiler de|renta de)\b/.test(low)) {
       const sorted = [...allNums].sort((a, b) => b - a);
       const incomeRaw = sorted[0];
@@ -11500,7 +11618,7 @@ function initFloatingChat() {
     // 5. Ficha o simulación de una referencia concreta (REF-XX o vivienda activa)
     if (foundUnit || (activeUnit && /\b(esta vivienda|este piso|ficha|encaj|solvencia|entrada|fianza|gano|cobro|sueldo|ingres)\b/.test(low))) {
       const unit = foundUnit || activeUnit;
-      const nums = extractCalcAmounts(q).filter(n => n >= 500);
+      const nums = extractCalcAmounts(qForAmounts).filter(n => n >= 500);
       let income = nums.length ? nums.reduce((a, b) => a + b, 0) : lastCalcIncome;
       if (nums.length) {
         if (has14Pagas) income = Math.round((income * 14) / 12);
@@ -11538,7 +11656,7 @@ function initFloatingChat() {
 
     // 6. Gastos de entrada, fianza, garantía o coste anual
     if (/\b(entrada|fianza|garantia|firma|inicial|deposito|desembolso)\b/.test(low)) {
-      const nums = extractCalcAmounts(q).filter(n => n >= 400);
+      const nums = extractCalcAmounts(qForAmounts).filter(n => n >= 400);
       const unitForEntry = !nums.length ? (activeUnit || availUnits[0]) : null;
       const rent = nums[0] || (unitForEntry ? unitForEntry.r : 1100);
       const total = rent * 3;
@@ -11560,10 +11678,11 @@ function initFloatingChat() {
 
     // 7. Comparativa de viviendas disponibles por habitaciones (cuando no se indica salario)
     if ((targetH || /\b(habitacion|dormitorio|precio|barat|disponible|catalogo|compar)\b/.test(low)) && !allNums.some(n => n >= 600)) {
-      const groups = targetH ? [targetH] : [2, 3, 4];
+      const dynGroups = [...new Set(availUnits.map(v => Number(v.h)).filter(n => n > 0))].sort((a, b) => a - b);
+      const groups = targetH ? [targetH] : (dynGroups.length ? dynGroups : [2, 3, 4]);
       const rows = [];
       groups.forEach(h => {
-        const list = availUnits.filter(v => v.h === h);
+        const list = availUnits.filter(v => Number(v.h) === h);
         if (list.length) {
           const minR = list[0].r;
           const maxR = list[list.length - 1].r;
@@ -11577,7 +11696,7 @@ function initFloatingChat() {
           rows.push({ label: `${h} hab.`, value: 'Sin unidades libres ahora' });
         }
       });
-      const sample = (targetH ? availUnits.filter(v => v.h === targetH) : availUnits)
+      const sample = (targetH ? availUnits.filter(v => Number(v.h) === targetH) : availUnits)
         .slice(0, 4)
         .map(u => ({ ref: u.ref, h: u.h, m2: u.m2, r: u.r }));
       return {
