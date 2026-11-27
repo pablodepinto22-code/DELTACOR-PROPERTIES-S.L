@@ -1,7 +1,9 @@
+import crypto from 'crypto';
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import zlib from 'zlib';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -216,10 +218,11 @@ app.get('/:rootAsset', (req, res, next) => {
   return res.sendFile(filePath);
 });
 
-// Cached index.html loader (avoids synchronous disk reads on every request)
+// Cached index.html loader + per-origin Brotli/Gzip/ETag cache (avoids disk reads & re-compression)
 let cachedHtml = '';
 let cachedMtimeMs = 0;
 let lastStatCheck = 0;
+const originPayloadCache = new Map();
 
 function getIndexHtml() {
   const now = Date.now();
@@ -229,9 +232,38 @@ function getIndexHtml() {
     if (!cachedHtml || stat.mtimeMs !== cachedMtimeMs) {
       cachedHtml = fs.readFileSync(INDEX_PATH, 'utf8');
       cachedMtimeMs = stat.mtimeMs;
+      originPayloadCache.clear();
     }
   }
   return cachedHtml;
+}
+
+function getCompressedIndexPayload(activeOrigin) {
+  const baseHtml = getIndexHtml();
+  const key = activeOrigin || '__default__';
+  const hit = originPayloadCache.get(key);
+  if (hit) return hit;
+
+  let html = baseHtml;
+  if (activeOrigin) {
+    const headEnd = html.indexOf('</head>');
+    if (headEnd !== -1) {
+      const head = html.slice(0, headEnd).split(DEFAULT_PUBLIC_ORIGIN).join(`${activeOrigin}/`);
+      html = head + html.slice(headEnd);
+    }
+  }
+  const raw = Buffer.from(html, 'utf8');
+  const etag = `"${crypto.createHash('sha1').update(raw).digest('base64url')}"`;
+  const br = zlib.brotliCompressSync(raw, {
+    params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 }
+  });
+  const gzip = zlib.gzipSync(raw, { level: 6 });
+  const entry = { raw, br, gzip, etag };
+  if (originPayloadCache.size >= 8) {
+    originPayloadCache.delete(originPayloadCache.keys().next().value);
+  }
+  originPayloadCache.set(key, entry);
+  return entry;
 }
 
 const sendIndexWithDynamicOg = (req, res) => {
@@ -242,15 +274,8 @@ const sendIndexWithDynamicOg = (req, res) => {
   }
 
   try {
-    let html = getIndexHtml();
     const activeOrigin = getValidOrigin(req);
-    if (activeOrigin) {
-      const headEnd = html.indexOf('</head>');
-      if (headEnd !== -1) {
-        const head = html.slice(0, headEnd).split(DEFAULT_PUBLIC_ORIGIN).join(`${activeOrigin}/`);
-        html = head + html.slice(headEnd);
-      }
-    }
+    const payload = getCompressedIndexPayload(activeOrigin);
     const rawProto = String(req.get('x-forwarded-proto') || req.protocol || 'http')
       .split(',')[0]
       .trim()
@@ -260,7 +285,23 @@ const sendIndexWithDynamicOg = (req, res) => {
     res.setHeader('Content-Security-Policy', buildCspHeader(isHttps));
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
-    return res.send(html);
+    res.setHeader('Vary', 'Accept-Encoding');
+    res.setHeader('ETag', payload.etag);
+
+    if (req.get('if-none-match') === payload.etag) {
+      return res.status(304).end();
+    }
+
+    const ae = String(req.get('accept-encoding') || '');
+    if (ae.includes('br')) {
+      res.setHeader('Content-Encoding', 'br');
+      return res.send(payload.br);
+    }
+    if (ae.includes('gzip')) {
+      res.setHeader('Content-Encoding', 'gzip');
+      return res.send(payload.gzip);
+    }
+    return res.send(payload.raw);
   } catch {
     return res.status(500).type('text/plain').send('Internal Server Error');
   }
