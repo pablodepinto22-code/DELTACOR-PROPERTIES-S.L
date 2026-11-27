@@ -302,6 +302,10 @@ h1 em{color:var(--b1);font-style:normal}
 .st.C{background:var(--con-bg);color:var(--con-tx)}
 .st.OFF{background:var(--off-bg);color:var(--off-tx)}
 .st.NEW{background:#6da625;color:#ffffff}
+.st.U{background:#e0f2fe;color:#0369a1;border:1px solid rgba(3,105,161,.2)}
+:root[data-theme="dark"] .st.U{background:#12334b;color:#7dd3fc;border-color:rgba(125,211,252,.28)}
+.st.NAVE{background:#ede9fe;color:#5b21b6;border:1px solid rgba(91,33,182,.2)}
+:root[data-theme="dark"] .st.NAVE{background:#2d1f4d;color:#c4b5fd;border-color:rgba(196,181,253,.28)}
 .st.FEAT{background:#2b3844;color:#a8e05a;border:1px solid rgba(168,224,90,.45)}
 .card-feats{display:flex;flex-wrap:wrap;gap:5px}
 .card-feats span{background:var(--card2);border:1px solid var(--line);font-size:.74rem;font-weight:600;padding:2px 8px;border-radius:3px;color:var(--mut)}
@@ -590,23 +594,35 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .chat-fab:focus-visible,.chat-close:focus-visible,.chat-quick-btn:focus-visible,.chat-link-btn:focus-visible{outline:2px solid var(--b2);outline-offset:2px}
 .chat-fab svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .chat-fab .chat-fab-lbl{white-space:nowrap}
-.chat-fab.has-cmp{bottom:76px}
+.chat-fab.has-cmp{bottom:calc(28px + var(--cmp-h,48px))}
 .chat-fab.has-cookie{bottom:calc(30px + var(--ck-h,84px))}
-.chat-fab.has-cmp.has-cookie{bottom:calc(88px + var(--ck-h,84px))}
+.chat-fab.has-cmp.has-cookie{bottom:calc(40px + var(--cmp-h,48px) + var(--ck-h,84px))}
 
 .wa-fab{position:fixed;right:20px;bottom:76px;z-index:88;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:9px 16px;border:1px solid #1d8a4e;border-radius:var(--radius);background:#1f9d55;color:#fff;font:600 .84rem 'Plus Jakarta Sans',sans-serif;text-decoration:none;box-shadow:var(--shadow-lg);transition:transform .16s cubic-bezier(0.16,1,0.3,1),background .16s,border-color .16s,opacity .16s}
 .wa-fab:hover{background:#187d43;border-color:#187d43;transform:translateY(-2px);color:#fff}
 .wa-fab[hidden]{display:none}
 .wa-fab svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-.wa-fab.has-cmp{bottom:132px}
+.wa-fab.has-cmp{bottom:calc(84px + var(--cmp-h,48px))}
 .wa-fab.has-cookie{bottom:calc(86px + var(--ck-h,84px))}
-.wa-fab.has-cmp.has-cookie{bottom:calc(144px + var(--ck-h,84px))}
+.wa-fab.has-cmp.has-cookie{bottom:calc(96px + var(--cmp-h,48px) + var(--ck-h,84px))}
+
+.ig-fab{position:fixed;right:20px;bottom:76px;z-index:88;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:9px 16px;border:1px solid transparent;border-radius:var(--radius);background:linear-gradient(135deg,#833ab4 0%,#d62976 55%,#f56040 100%);color:#fff;font:600 .84rem 'Plus Jakarta Sans',sans-serif;text-decoration:none;box-shadow:var(--shadow-lg);transition:transform .16s cubic-bezier(0.16,1,0.3,1),filter .16s,opacity .16s}
+.ig-fab:hover{filter:brightness(1.07);transform:translateY(-2px);color:#fff}
+.ig-fab[hidden]{display:none}
+.ig-fab svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.ig-fab.has-wa{bottom:132px}
+.ig-fab.has-cmp{bottom:calc(84px + var(--cmp-h,48px))}
+.ig-fab.has-wa.has-cmp{bottom:calc(140px + var(--cmp-h,48px))}
+.ig-fab.has-cookie{bottom:calc(86px + var(--ck-h,84px))}
+.ig-fab.has-wa.has-cookie{bottom:calc(142px + var(--ck-h,84px))}
+.ig-fab.has-cmp.has-cookie{bottom:calc(96px + var(--cmp-h,48px) + var(--ck-h,84px))}
+.ig-fab.has-wa.has-cmp.has-cookie{bottom:calc(152px + var(--cmp-h,48px) + var(--ck-h,84px))}
 
 .chat-panel{position:fixed;right:20px;bottom:78px;z-index:89;width:min(380px,calc(100vw - 24px));max-height:min(580px,calc(100vh - 104px));background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateY(10px) scale(.98);pointer-events:none;transition:opacity .18s cubic-bezier(0.16,1,0.3,1),transform .18s cubic-bezier(0.16,1,0.3,1)}
 .chat-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
-.chat-panel.has-cmp{bottom:134px}
+.chat-panel.has-cmp{bottom:calc(86px + var(--cmp-h,48px))}
 .chat-panel.has-cookie{bottom:calc(88px + var(--ck-h,84px))}
-.chat-panel.has-cmp.has-cookie{bottom:calc(146px + var(--ck-h,84px))}
+.chat-panel.has-cmp.has-cookie{bottom:calc(98px + var(--cmp-h,48px) + var(--ck-h,84px))}
 .chat-panel[hidden]{display:none}
 
 .chat-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--tx);color:var(--bg);border-bottom:1px solid var(--line)}
@@ -1086,18 +1102,23 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
   }
   .chat-backdrop.open{opacity:1;pointer-events:auto}
   .chat-fab{right:14px;bottom:calc(68px + env(safe-area-inset-bottom,0px));min-height:46px;border-radius:99px;box-shadow:0 8px 24px rgba(15,23,42,.26)}
-  .chat-fab.has-cmp{bottom:calc(126px + env(safe-area-inset-bottom,0px))}
+  .chat-fab.has-cmp{bottom:calc(74px + var(--cmp-h,54px) + env(safe-area-inset-bottom,0px))}
   .chat-fab.has-cookie,.chat-fab.has-cmp.has-cookie{opacity:0;pointer-events:none;visibility:hidden;transform:translateY(12px)}
   .wa-fab{right:14px;bottom:calc(124px + env(safe-area-inset-bottom,0px));min-height:44px;border-radius:99px;box-shadow:0 8px 24px rgba(15,23,42,.24)}
-  .wa-fab.has-cmp{bottom:calc(182px + env(safe-area-inset-bottom,0px))}
+  .wa-fab.has-cmp{bottom:calc(132px + var(--cmp-h,54px) + env(safe-area-inset-bottom,0px))}
   .wa-fab.has-cookie,.wa-fab.has-cmp.has-cookie{opacity:0;pointer-events:none;visibility:hidden;transform:translateY(12px)}
+  .ig-fab{right:14px;bottom:calc(124px + env(safe-area-inset-bottom,0px));min-height:44px;border-radius:99px;box-shadow:0 8px 24px rgba(15,23,42,.24)}
+  .ig-fab.has-wa{bottom:calc(180px + env(safe-area-inset-bottom,0px))}
+  .ig-fab.has-cmp{bottom:calc(132px + var(--cmp-h,54px) + env(safe-area-inset-bottom,0px))}
+  .ig-fab.has-wa.has-cmp{bottom:calc(188px + var(--cmp-h,54px) + env(safe-area-inset-bottom,0px))}
+  .ig-fab.has-cookie,.ig-fab.has-cmp.has-cookie,.ig-fab.has-wa.has-cookie,.ig-fab.has-wa.has-cmp.has-cookie{opacity:0;pointer-events:none;visibility:hidden;transform:translateY(12px)}
   .chat-panel{
     top:calc(58px + env(safe-area-inset-top,0px));
     right:10px;left:10px;
     bottom:calc(64px + env(safe-area-inset-bottom,0px));
     width:auto;max-height:none;border-radius:14px;
   }
-  .chat-panel.has-cmp{bottom:calc(122px + env(safe-area-inset-bottom,0px))}
+  .chat-panel.has-cmp{bottom:calc(72px + var(--cmp-h,54px) + env(safe-area-inset-bottom,0px))}
   .calc-sim{padding:9px 12px;gap:6px}
   .calc-sim-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
   .calc-sim-grid input,.calc-sim-grid select{padding:6px 8px;min-height:38px;font-size:15px}
@@ -1128,6 +1149,8 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
   .chat-fab .chat-fab-lbl{display:none}
   .wa-fab{width:48px;height:48px;padding:0;justify-content:center;border-radius:14px}
   .wa-fab .wa-fab-lbl{display:none}
+  .ig-fab{width:48px;height:48px;padding:0;justify-content:center;border-radius:14px}
+  .ig-fab .ig-fab-lbl{display:none}
   .chat-id-fields{grid-template-columns:1fr}
 }
 
@@ -1144,7 +1167,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 }
 
 @media(prefers-reduced-motion:reduce){
-  .chat-fab,.wa-fab,.chat-panel,.chat-backdrop,.mob-tab{transition:none}
+  .chat-fab,.wa-fab,.ig-fab,.chat-panel,.chat-backdrop,.mob-tab{transition:none}
 }
 </style>
 <script>try{var t=localStorage.getItem('inv-theme');if(t!=='dark'&&t!=='light')t=matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(_){}</script>
@@ -1224,6 +1247,12 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 </nav>
 
 <dialog id="dlg"></dialog>
+
+<!-- Floating Direct Instagram CTA -->
+<a class="ig-fab" id="igFab" href="https://www.instagram.com/deltacor.properties?knvt=a2lycWp6Y2NqbWt0" target="_blank" rel="noopener noreferrer" aria-label="Seguir a Deltacor Properties en Instagram">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+  <span class="ig-fab-lbl">Instagram</span>
+</a>
 
 <!-- Floating Direct WhatsApp CTA (shown automatically when WhatsApp number is configured in Admin > Web) -->
 <a class="wa-fab" id="waFab" href="#" target="_blank" rel="noopener noreferrer" hidden aria-label="Escribir por WhatsApp a Deltacor Properties">
@@ -3767,8 +3796,15 @@ const syncCookieOffset = () => {
   const ckH = visible ? Math.ceil(ck.getBoundingClientRect().height || ck.offsetHeight || 0) : 0;
   if (ckH > 0) document.documentElement.style.setProperty('--ck-h', `${ckH}px`);
   else document.documentElement.style.removeProperty('--ck-h');
+  const cmp = $('compareBar');
+  const cmpVis = Boolean(cmp && !cmp.hidden);
+  const cmpH = cmpVis ? Math.ceil(cmp.getBoundingClientRect().height || cmp.offsetHeight || 0) : 0;
+  if (cmpH > 0) document.documentElement.style.setProperty('--cmp-h', `${cmpH}px`);
+  else document.documentElement.style.removeProperty('--cmp-h');
   $('chatFab')?.classList.toggle('has-cookie', visible);
   $('waFab')?.classList.toggle('has-cookie', visible);
+  $('igFab')?.classList.toggle('has-cookie', visible);
+  $('igFab')?.classList.toggle('has-wa', Boolean($('waFab') && !$('waFab').hidden));
   $('chatPanel')?.classList.toggle('has-cookie', visible);
   $('compareBar')?.classList.toggle('has-cookie', visible);
 };
@@ -3776,7 +3812,8 @@ const syncCookieOffset = () => {
   let ckResizeRaf = 0;
   window.addEventListener('resize', () => {
     const ck = $('cookieBar');
-    if (!ck || ck.hidden || ckResizeRaf) return;
+    const cmp = $('compareBar');
+    if (((!ck || ck.hidden) && (!cmp || cmp.hidden)) || ckResizeRaf) return;
     ckResizeRaf = requestAnimationFrame(() => { ckResizeRaf = 0; syncCookieOffset(); });
   }, { passive: true });
 }
@@ -4237,9 +4274,9 @@ const DEFAULT_PROMOS = [
 function normalizePromo(p) {
   if (!p || typeof p !== 'object') return null;
   const id = String(p.id || '').trim() || ('promo-' + Date.now());
-  const st = ['nueva', 'activa', 'construccion', 'oculta'].includes(p.status) ? p.status : (p.isNew ? 'nueva' : 'activa');
+  const st = ['nueva', 'activa', 'usada', 'construccion', 'oculta'].includes(p.status) ? p.status : (p.isNew ? 'nueva' : 'activa');
   const feat = p.isFeatured !== undefined ? Boolean(p.isFeatured) : (p.featured !== undefined ? Boolean(p.featured) : (id === 'cadmia'));
-  const isNewVal = p.isNew !== undefined ? Boolean(p.isNew) : (st === 'nueva');
+  const isNewVal = st === 'usada' ? false : (p.isNew !== undefined ? Boolean(p.isNew) : (st === 'nueva'));
   const ordRaw = Number(p.order);
   const order = Number.isFinite(ordRaw) && ordRaw > 0 ? ordRaw : (id === 'cadmia' ? 1 : 99);
   return {
@@ -4250,9 +4287,9 @@ function normalizePromo(p) {
     isNew: isNewVal,
     isFeatured: feat,
     visible: p.visible !== false && st !== 'oculta',
-    badge: String(p.badge || (st === 'nueva' || isNewVal ? 'NUEVA · OBRA NUEVA' : st === 'construccion' ? 'EN CONSTRUCCIÓN' : 'EN COMERCIALIZACIÓN')).trim(),
-    delivery: String(p.delivery || (st === 'construccion' ? 'Próximamente · En construcción' : 'Obra nueva · Alquiler directo')).trim(),
-    portalsLabel: String(p.portalsLabel || 'Obra nueva · CEE A').trim(),
+    badge: String(p.badge || (st === 'nueva' || isNewVal ? 'NUEVA · OBRA NUEVA' : st === 'usada' ? 'USADAS' : st === 'construccion' ? 'EN CONSTRUCCIÓN' : 'EN COMERCIALIZACIÓN')).trim(),
+    delivery: String(p.delivery || (st === 'construccion' ? 'Próximamente · En construcción' : st === 'usada' ? 'Usadas · Alquiler directo' : 'Obra nueva · Alquiler directo')).trim(),
+    portalsLabel: String(p.portalsLabel || (st === 'usada' ? 'Inmuebles usados' : 'Obra nueva · CEE A')).trim(),
     summary: String(p.summary || '').trim(),
     description: String(p.description || '').trim(),
     coverUrl: p.coverUrl && isSafeImageSrc(p.coverUrl) ? String(p.coverUrl).trim() : '',
@@ -4315,6 +4352,7 @@ function getPromoStatusMeta(p) {
   const st = p?.status || 'activa';
   if (st === 'oculta' || p?.visible === false) return { label: 'Oculta en web', cls: 'OFF' };
   if (st === 'construccion') return { label: 'En construcción', cls: 'C' };
+  if (st === 'usada') return { label: 'Usadas', cls: 'U' };
   if (st === 'nueva' || p?.isNew) return { label: 'NUEVA · Obra nueva', cls: 'NEW' };
   return { label: 'En comercialización', cls: 'D' };
 }
@@ -4426,11 +4464,28 @@ function migrateLegacyUnit(u) {
   return {
     ...u,
     promoId: String(u.promoId || 'cadmia').trim() || 'cadmia',
+    tipoInmueble: String(u.tipoInmueble || 'piso').toLowerCase() === 'nave' ? 'nave' : 'piso',
     active: u.active !== false,
     nombre: migrateLegacyPromoText(u.nombre || ''),
     desc: migrateLegacyPromoText(u.desc || '')
   };
 }
+
+const isNaveUnit = v => String(v?.tipoInmueble || 'piso').toLowerCase() === 'nave';
+const unitRoomsShort = v => {
+  if (isNaveUnit(v)) return Number(v?.h) > 0 ? `Nave · ${Number(v.h)} est.` : 'Nave';
+  return `${Number(v?.h) || 0} hab.`;
+};
+const unitDistLabel = v => {
+  const h = Number(v?.h) || 0;
+  const b = Number(v?.b) || 0;
+  if (isNaveUnit(v)) {
+    const parts = [h > 0 ? `${h} despacho${h > 1 ? 's' : ''}` : 'Nave diáfana'];
+    if (b > 0) parts.push(`${b} aseo${b > 1 ? 's' : ''}`);
+    return parts.join(' · ');
+  }
+  return `${h} hab · ${b} baño${b > 1 ? 's' : ''}`;
+};
 
 function mergeSiteContent(raw) {
   const src = raw && typeof raw === 'object' ? raw : {};
@@ -5816,7 +5871,7 @@ function openWaitlistModal(unit) {
         <label>Email de aviso *<input id="wlEmail" type="email" required maxlength="160" value="${esc(preEmail)}" placeholder="tu@email.com"></label>
       </div>
       <label>Teléfono (opcional, para aviso rápido)<input id="wlPhone" type="tel" maxlength="24" value="${esc(prePhone)}" placeholder="600 000 000"></label>
-      <label class="ck" style="margin-top:8px"><input type="checkbox" id="wlSimilar" checked><span>Avísame también si queda libre otra vivienda similar (${Number(unit.h)} hab. en ${esc(promo.name)})</span></label>
+      <label class="ck" style="margin-top:8px"><input type="checkbox" id="wlSimilar" checked><span>Avísame también si queda libre ${isNaveUnit(unit) ? 'otra nave similar' : 'otra vivienda similar'} (${esc(unitRoomsShort(unit))} en ${esc(promo.name)})</span></label>
       <label class="ck" style="margin-top:6px"><input type="checkbox" id="wlRgpd" required><span>Acepto recibir este aviso puntual de disponibilidad conforme a la <a href="#privacidad" data-close-dlg style="color:var(--b1)">Política de Privacidad</a>.</span></label>
       <div id="wlErr" class="m" style="color:var(--bad-tx);margin-top:6px" hidden></div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap">
@@ -5872,7 +5927,7 @@ function openWaitlistModal(unit) {
       email,
       replyto: email,
       telefono: phone || 'No indicado',
-      vivienda_solicitada: `${unit.ref} · ${promo.name} · ${unit.portal}, ${floorFullLabel(unit.pl)} · ${unit.h} hab. · ${eur(unit.r)}/mes (Estado actual: ${stLabel(safeSt)})`,
+      vivienda_solicitada: `${unit.ref} · ${promo.name} · ${unit.portal}, ${floorFullLabel(unit.pl)} · ${unitRoomsShort(unit)} · ${eur(unit.r)}/mes (Estado actual: ${stLabel(safeSt)})`,
       avisar_similares: similar ? 'Sí, avisar también de viviendas similares disponibles' : 'Solo esta referencia exacta',
       origen: 'Lista de espera · Deltacor Properties'
     });
@@ -5910,6 +5965,24 @@ function buildPlanSvg(v) {
     </div>`;
   }
   const m2 = Number(v.m2) || 75;
+  if (isNaveUnit(v)) {
+    const h = Number(v.h) || 0;
+    const b = Number(v.b) || 0;
+    const naveLabel = String(v.planSuiteLabel || 'NAVE DIÁFANA').trim().toUpperCase();
+    const zoneLabel = String(v.planLeftLabel || (v.tr ? 'OFICINA / ALMACÉN' : (v.t ? 'PATIO / MUELLE' : 'ACCESO RODADO'))).trim().toUpperCase();
+    const auxLine = [h > 0 ? `${h} DESPACHO${h > 1 ? 'S' : ''}` : 'ESPACIO DIÁFANO', b > 0 ? `${b} ASEO${b > 1 ? 'S' : ''}` : ''].filter(Boolean).join(' · ');
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:100%">
+      <svg viewBox="0 0 420 220" style="width:100%;max-width:410px;background:#ffffff;border:1px solid #cbd5e1;border-radius:4px;padding:10px">
+        <rect x="14" y="14" width="392" height="192" fill="#f7f9f5" stroke="#2b3844" stroke-width="3"/>
+        <line x1="14" y1="152" x2="406" y2="152" stroke="#2b3844" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <text x="210" y="76" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="800" fill="#6da625">${esc(naveLabel)}</text>
+        <text x="210" y="96" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#5e6b75">${esc(auxLine)} · Orientación ${esc(v.ori || 'Sur')}</text>
+        <text x="210" y="114" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#5e6b75">Superficie construida: ${esc(m2)} m² · ${esc(v.ref || '')}</text>
+        <text x="210" y="182" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#2b3844">${esc(zoneLabel)}${v.g ? ' · PARKING / CARGA' : ''}</text>
+      </svg>
+      ${v.planNote ? `<div class="m" style="font-size:.78rem;text-align:center">${esc(v.planNote)}</div>` : ''}
+    </div>`;
+  }
   const h = Number(v.h) || 2;
   const b = Number(v.b) || 1;
   const salonM2 = Number(v.planSalonM2) > 0 ? Number(v.planSalonM2) : Math.round(m2 * 0.34);
@@ -5945,11 +6018,16 @@ const propertyCard = v => {
   const photos = getUnitPhotos(v);
   const cover = photos[0];
   const pr = getPromoById(v.promoId);
+  const isNave = isNaveUnit(v);
   const canBook = isUnitBookable(v);
   const isFav = FAVS.includes(v.ref);
   const safeRef = esc(v.ref);
   const safeRefUri = encodeURIComponent(v.ref);
   const safeSt = ['D', 'R', 'A', 'C'].includes(v.st) ? v.st : 'D';
+  const promoInlineTag = pr.status === 'usada'
+    ? ' <span class="st U" style="font-size:.6rem;padding:1px 6px;margin-left:4px;vertical-align:middle">USADA</span>'
+    : (pr.isNew ? ' <span class="st NEW" style="font-size:.6rem;padding:1px 6px;margin-left:4px;vertical-align:middle">NUEVA</span>' : '');
+  const naveTag = isNave ? ' <span class="st NAVE" style="font-size:.6rem;padding:1px 6px;margin-left:4px;vertical-align:middle">NAVE</span>' : '';
   return `
 <article class="card">
   <div class="card-media">
@@ -5962,20 +6040,20 @@ const propertyCard = v => {
     </div>
     <div class="card-media-bot">
       <span>${floorFullLabel(v.pl)} · Orientación ${esc(v.ori)}</span>
-      <span>${photos.length} fotos · CEE ${esc(v.cee || 'A')}</span>
+      <span>${photos.length} foto${photos.length === 1 ? '' : 's'} · CEE ${esc(v.cee || 'A')}</span>
     </div>
   </div>
   <div class="card-body">
     <div>
-      <div class="card-title">${esc(v.nombre || (v.h + ' Habitaciones'))}</div>
-      <div class="card-sub">${esc(pr.name)}${pr.isNew ? ' <span class="st NEW" style="font-size:.6rem;padding:1px 6px;margin-left:4px;vertical-align:middle">NUEVA</span>' : ''} · ${Number(v.h) || 0} dorm. · ${Number(v.m2) || 0} m²</div>
+      <div class="card-title">${esc(v.nombre || (isNave ? `Nave · ${Number(v.m2) || 0} m²` : (v.h + ' Habitaciones')))}</div>
+      <div class="card-sub">${esc(pr.name)}${promoInlineTag}${naveTag} · ${isNave ? (Number(v.h) > 0 ? `${Number(v.h)} desp.` : 'Diáfana') : `${Number(v.h) || 0} dorm.`} · ${Number(v.m2) || 0} m²</div>
     </div>
     <div class="card-feats">
       <span>${ICO('ruler')} ${Number(v.m2) || 0} m²</span>
-      <span>${ICO('bath')} ${Number(v.b) || 1} baño${Number(v.b) > 1 ? 's' : ''}</span>
-      ${v.t ? `<span>${ICO('sun')} Terraza</span>` : ''}
-      ${v.g ? `<span>${ICO('car')} Garaje</span>` : ''}
-      ${v.tr ? `<span>${ICO('box')} Trastero</span>` : ''}
+      ${Number(v.b) > 0 ? `<span>${ICO('bath')} ${Number(v.b)} ${isNave ? (Number(v.b) > 1 ? 'aseos' : 'aseo') : (Number(v.b) > 1 ? 'baños' : 'baño')}</span>` : ''}
+      ${v.t ? `<span>${ICO('sun')} ${isNave ? 'Patio/Muelle' : 'Terraza'}</span>` : ''}
+      ${v.g ? `<span>${ICO('car')} ${isNave ? 'Parking/Carga' : 'Garaje'}</span>` : ''}
+      ${v.tr ? `<span>${ICO('box')} ${isNave ? 'Oficina/Almacén' : 'Trastero'}</span>` : ''}
     </div>
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:auto;padding-top:6px;border-top:1px solid var(--line)">
       <span class="price">${eur(v.r)}<small class="m">/mes</small></span>
@@ -6006,16 +6084,17 @@ function renderUniqueForm(preselectedRef = null) {
   return `
   <form id="fm" novalidate>
     <input type="text" name="website_url" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <label>1. Habitaciones deseadas (puedes marcar varias)</label>
+    <label>1. Tipología deseada (puedes marcar varias)</label>
     <div class="chips" id="roomFilterChecks">
       ${[2, 3, 4].map(n => `<label class="ck" style="margin:0;background:var(--card2);border:1px solid var(--line);padding:6px 14px;border-radius:4px"><input type="checkbox" name="hab" value="${n}"> ${n} hab.</label>`).join('')}
+      ${avail.some(isNaveUnit) ? `<label class="ck" style="margin:0;background:var(--card2);border:1px solid var(--line);padding:6px 14px;border-radius:4px"><input type="checkbox" name="hab" value="nave"> Nave</label>` : ''}
     </div>
 
     <label>2. Viviendas de interés (añade todas las que desees; las reservadas se ocultan automáticamente)
       <input id="pick" list="dl" maxlength="40" autocomplete="off" placeholder="Escribe REF-01 o selecciona del desplegable…">
     </label>
     <datalist id="dl">
-      ${avail.map(v => `<option value="${esc(v.ref)}">${esc(v.ref)} · ${esc(getPromoById(v.promoId).name)} · ${Number(v.h)} hab · ${floorFullLabel(v.pl)} · ${Number(v.m2)} m² · ${eur(v.r)}/mes</option>`).join('')}
+      ${avail.map(v => `<option value="${esc(v.ref)}">${esc(v.ref)} · ${esc(getPromoById(v.promoId).name)} · ${esc(unitRoomsShort(v))} · ${floorFullLabel(v.pl)} · ${Number(v.m2)} m² · ${eur(v.r)}/mes</option>`).join('')}
     </datalist>
     <div class="tags" id="tg"></div>
 
@@ -6125,7 +6204,7 @@ function bindUniqueForm(hostRoot = document) {
       ? SEL.map(r => {
           const v = V.find(x => x.ref === r);
           const sr = esc(r);
-          return `<span>${sr}${v ? ` (${Number(v.h)}h · ${eur(v.r)})` : ''}<button type="button" data-x="${sr}" aria-label="Quitar ${sr}">✕</button></span>`;
+          return `<span>${sr}${v ? ` (${isNaveUnit(v) ? 'Nave' : `${Number(v.h)}h`} · ${eur(v.r)})` : ''}<button type="button" data-x="${sr}" aria-label="Quitar ${sr}">✕</button></span>`;
         }).join('')
       : '<span style="background:var(--card2);color:var(--mut);border:1px dashed var(--line)">Ninguna vivienda seleccionada todavía</span>';
     updateLiveSolvency();
@@ -6151,9 +6230,13 @@ function bindUniqueForm(hostRoot = document) {
   };
 
   elRooms.onchange = () => {
-    const checkedRooms = [...fm.querySelectorAll('input[name="hab"]:checked')].map(c => Number(c.value));
-    const filtered = checkedRooms.length ? avail.filter(v => checkedRooms.includes(v.h)) : avail;
-    elDl.innerHTML = filtered.map(v => `<option value="${esc(v.ref)}">${esc(v.ref)} · ${esc(getPromoById(v.promoId).name)} · ${Number(v.h)} hab · ${floorFullLabel(v.pl)} · ${Number(v.m2)} m² · ${eur(v.r)}/mes</option>`).join('');
+    const checkedVals = [...fm.querySelectorAll('input[name="hab"]:checked')].map(c => c.value);
+    const checkedRooms = checkedVals.filter(v => v !== 'nave').map(Number);
+    const wantNave = checkedVals.includes('nave');
+    const filtered = checkedVals.length
+      ? avail.filter(v => (wantNave && isNaveUnit(v)) || (!isNaveUnit(v) && checkedRooms.includes(Number(v.h))))
+      : avail;
+    elDl.innerHTML = filtered.map(v => `<option value="${esc(v.ref)}">${esc(v.ref)} · ${esc(getPromoById(v.promoId).name)} · ${esc(unitRoomsShort(v))} · ${floorFullLabel(v.pl)} · ${Number(v.m2)} m² · ${eur(v.r)}/mes</option>`).join('');
   };
 
   elTg.onclick = e => {
@@ -6466,6 +6549,7 @@ function renderApp() {
         <button type="button" class="chip" data-h="2">2 habitaciones</button>
         <button type="button" class="chip" data-h="3">3 habitaciones</button>
         <button type="button" class="chip" data-h="4">4 habitaciones</button>
+        <button type="button" class="chip" data-kind="nave" id="naveFilterChip" hidden>${ICO('building')} Naves</button>
         <button type="button" class="chip" data-x="t">${ICO('sun')} Con terraza</button>
         <button type="button" class="chip" data-x="g">${ICO('car')} Con garaje</button>
         <button type="button" class="chip" data-x="tr">${ICO('box')} Con trastero</button>
@@ -6694,7 +6778,7 @@ function renderApp() {
           </div>
           <div class="promo-card-bot">
             <h3>${esc(p.name)}</h3>
-            <small>${esc(p.delivery || (p.status === 'construccion' ? 'En construcción · Próximamente' : 'Alquiler obra nueva'))}${p.portalsLabel ? ` · ${esc(p.portalsLabel)}` : ''}</small>
+            <small>${esc(p.delivery || (p.status === 'construccion' ? 'En construcción · Próximamente' : p.status === 'usada' ? 'Usadas · Alquiler directo' : 'Alquiler obra nueva'))}${p.portalsLabel ? ` · ${esc(p.portalsLabel)}` : ''}</small>
           </div>
         </div>
         <div class="promo-card-body">
@@ -7029,16 +7113,23 @@ function renderApp() {
     const hasCustomPlan = Boolean(cur.customPlanUrl && isSafeImageSrc(cur.customPlanUrl));
     const salonM2Show = Number(cur.planSalonM2) > 0 ? Number(cur.planSalonM2) : Math.round(cur.m2 * 0.34);
 
+    const curIsNave = isNaveUnit(cur);
     const renderInspectorBody = () => {
       if (alzadoInspTab === 'plan') {
-        return `
-          <div style="text-align:center;margin-bottom:10px">${buildPlanSvg(cur)}</div>
-          <div class="alz-spec-mini">
+        const planSpecs = curIsNave
+          ? `
+            <div><small>Zona diáfana aprox.</small><b>${Math.round(cur.m2 * 0.78)} m²</b></div>
+            <div><small>Oficina / Despachos</small><b>${Number(cur.h) > 0 ? `${Number(cur.h)} despacho${Number(cur.h) > 1 ? 's' : ''}` : 'Espacio diáfano'}</b></div>
+            <div><small>Aseos / Vestuarios</small><b>${Number(cur.b) > 0 ? `${Number(cur.b)} aseo${Number(cur.b) > 1 ? 's' : ''}` : 'A consultar'}</b></div>
+            <div><small>${cur.t ? 'Patio / Muelle' : 'Superficie total'}</small><b>${cur.t ? 'Exterior ' + esc(cur.ori) : Number(cur.m2) + ' m² construidos'}</b></div>`
+          : `
             <div><small>Salón-comedor aprox.</small><b>${salonM2Show} m²</b></div>
             <div><small>Dormitorio suite</small><b>${Math.round(cur.m2 * 0.17)} m²</b></div>
             <div><small>Cocina y zona día</small><b>${Math.round(cur.m2 * 0.14)} m²</b></div>
-            <div><small>${cur.t ? 'Terraza privada' : 'Distribución total'}</small><b>${cur.t ? 'Exterior ' + esc(cur.ori) : Number(cur.m2) + ' m² construidos'}</b></div>
-          </div>
+            <div><small>${cur.t ? 'Terraza privada' : 'Distribución total'}</small><b>${cur.t ? 'Exterior ' + esc(cur.ori) : Number(cur.m2) + ' m² construidos'}</b></div>`;
+        return `
+          <div style="text-align:center;margin-bottom:10px">${buildPlanSvg(cur)}</div>
+          <div class="alz-spec-mini">${planSpecs}</div>
           <p class="m" style="font-size:.77rem">${cur.planNote ? esc(cur.planNote) : `${hasCustomPlan ? 'Plano técnico de' : 'Plano esquemático orientativo de'} <b>${esc(cur.nombre)}</b>. Solicita el dossier acotado en tu visita o candidatura.`}</p>`;
       }
       if (alzadoInspTab === 'sim') {
@@ -7055,14 +7146,17 @@ function renderApp() {
           </label>
           <div id="alzRatioBox" class="alz-ratio-box ${incNum > 0 ? ratioCls : ''}">${ratioMsg}</div>`;
       }
+      const curExtras = curIsNave
+        ? [cur.t ? 'Patio/Muelle' : '', cur.g ? 'Parking/Carga' : '', cur.tr ? 'Oficina/Almacén' : ''].filter(Boolean).join(' · ')
+        : [cur.t ? 'Terraza' : '', cur.g ? 'Garaje' : '', cur.tr ? 'Trastero' : ''].filter(Boolean).join(' · ');
       return `
         <div class="alz-spec-mini">
           <div><small>Promoción</small><b>${esc(curPromo.name)}</b></div>
           <div><small>Superficie</small><b>${Number(cur.m2)} m² (${priceM2} €/m²)</b></div>
-          <div><small>Distribución</small><b>${Number(cur.h)} dorm. · ${Number(cur.b)} baño${Number(cur.b) > 1 ? 's' : ''}</b></div>
+          <div><small>${curIsNave ? 'Tipo / Distribución' : 'Distribución'}</small><b>${esc(unitDistLabel(cur))}</b></div>
           <div><small>Ubicación</small><b>${esc(cur.portal)} · ${floorFullLabel(cur.pl)}</b></div>
           <div><small>Orientación</small><b>${esc(cur.ori)} · CEE ${esc(cur.cee || 'A')}</b></div>
-          <div><small>Equipamiento</small><b>${[cur.t ? 'Terraza' : '', cur.g ? 'Garaje' : '', cur.tr ? 'Trastero' : ''].filter(Boolean).join(' · ') || 'Sin extras'}</b></div>
+          <div><small>Equipamiento</small><b>${curExtras || 'Sin extras'}</b></div>
         </div>
         <p class="m" style="font-size:.82rem;line-height:1.55">${esc(cur.desc)}</p>`;
     };
@@ -7181,16 +7275,17 @@ function renderApp() {
                           const match = unitMatchesAlzado(v);
                           const sel = v.ref === cur.ref;
                           const isOff = v.active === false;
+                          const vNave = isNaveUnit(v);
                           return `
-                          <button type="button" class="alz-unit ${alzadoColorClass(v)} ${sel ? 'sel' : ''} ${match ? '' : 'dim'} ${isOff ? 'is-off' : ''}" data-alz-ref="${esc(v.ref)}" title="${esc(v.ref)} · ${esc(v.nombre)} · ${Number(v.m2)} m² · ${eur(v.r)}/mes (${stLabel(v.st)})${isOff ? ' · Oculta en web' : ''}${v.t ? ' · Terraza' : ''}${v.g ? ' · Garaje' : ''}${v.tr ? ' · Trastero' : ''}">
+                          <button type="button" class="alz-unit ${alzadoColorClass(v)} ${sel ? 'sel' : ''} ${match ? '' : 'dim'} ${isOff ? 'is-off' : ''}" data-alz-ref="${esc(v.ref)}" title="${esc(v.ref)} · ${esc(v.nombre)} · ${Number(v.m2)} m² · ${eur(v.r)}/mes (${stLabel(v.st)})${isOff ? ' · Oculta en web' : ''}${v.t ? (vNave ? ' · Patio/Muelle' : ' · Terraza') : ''}${v.g ? (vNave ? ' · Parking/Carga' : ' · Garaje') : ''}${v.tr ? (vNave ? ' · Oficina/Almacén' : ' · Trastero') : ''}">
                             <div class="alz-unit-top">
                               <b>${esc(v.ref)}</b>
-                              <span style="font-size:.63rem;font-weight:800;color:var(--mut)">${isOff ? 'OFF' : `${Number(v.h)}D`}</span>
+                              <span style="font-size:.63rem;font-weight:800;color:var(--mut)">${isOff ? 'OFF' : (vNave ? 'NAVE' : `${Number(v.h)}D`)}</span>
                             </div>
                             <div class="alz-unit-mid">${Number(v.m2)} m² · ${esc(v.ori)}</div>
                             <div class="alz-unit-bot">
                               <span>${eur(v.r)}</span>
-                              <span class="alz-badges">${v.t ? '<i class="b-t" title="Terraza">T</i>' : ''}${v.g ? '<i class="b-g" title="Garaje">G</i>' : ''}${v.tr ? '<i class="b-tr" title="Trastero">Tr</i>' : ''}</span>
+                              <span class="alz-badges">${v.t ? `<i class="b-t" title="${vNave ? 'Patio / Muelle' : 'Terraza'}">${vNave ? 'P' : 'T'}</i>` : ''}${v.g ? `<i class="b-g" title="${vNave ? 'Parking / Carga' : 'Garaje'}">${vNave ? 'C' : 'G'}</i>` : ''}${v.tr ? `<i class="b-tr" title="${vNave ? 'Oficina / Almacén' : 'Trastero'}">${vNave ? 'Of' : 'Tr'}</i>` : ''}</span>
                             </div>
                           </button>`;
                         }).join('')}
@@ -7229,7 +7324,7 @@ function renderApp() {
                     const maxR = Math.max(...flAll.map(v => v.r));
                     const avgM2 = Math.round(flAll.reduce((a, b) => a + b.m2, 0) / flAll.length);
                     const avgPm2 = (flAll.reduce((a, b) => a + (b.m2 > 0 ? b.r / b.m2 : 0), 0) / flAll.length).toFixed(1);
-                    const rooms = [...new Set(flAll.map(v => v.h + 'D'))].sort((a, b) => parseInt(a, 10) - parseInt(b, 10)).join(' · ');
+                    const rooms = [...new Set(flAll.map(v => isNaveUnit(v) ? 'Nave' : `${Number(v.h)}D`))].sort((a, b) => (parseInt(a, 10) || 99) - (parseInt(b, 10) || 99)).join(' · ');
                     const isAttic = fl === maxFloor && maxFloor >= 4 && flAll.some(u => /ático|atico/i.test(u.nombre || '') || fl >= 6);
                     return `
                     <tr class="${alzadoFilters.fl === fl ? 'on' : ''}" data-alz-fl="${fl}">
@@ -7256,8 +7351,8 @@ function renderApp() {
             </div>
             <div class="alz-insp-bot">
               <div>
-                <b>${esc(cur.nombre)}</b>
-                <small>${esc(curPromo.name)} · ${Number(cur.h)} dorm. · ${Number(cur.m2)} m² · ${esc(cur.ori)}</small>
+                <b>${esc(cur.nombre)}${curIsNave ? ' <span class="st NAVE" style="font-size:.6rem;padding:1px 6px;vertical-align:middle">NAVE</span>' : ''}</b>
+                <small>${esc(curPromo.name)} · ${esc(unitDistLabel(cur))} · ${Number(cur.m2)} m² · ${esc(cur.ori)}</small>
               </div>
               <span class="ref-badge">${photos.length} foto${photos.length === 1 ? '' : 's'}</span>
             </div>
@@ -7532,6 +7627,16 @@ function renderApp() {
         $('waFab').hidden = true;
       }
     }
+    if ($('igFab')) {
+      if (igHref) {
+        $('igFab').href = igHref;
+        $('igFab').hidden = false;
+      } else {
+        $('igFab').hidden = true;
+      }
+      $('igFab').classList.toggle('has-wa', Boolean(waHref));
+    }
+    syncCookieOffset();
     if ($('oficinaWaWrap')) {
       const socialBtns = [];
       if (waHref) socialBtns.push(`<a class="btn ok sm" href="${esc(waHref)}" target="_blank" rel="noopener noreferrer">${ICO('whatsapp')} Escribir por WhatsApp</a>`);
@@ -8000,14 +8105,16 @@ function renderApp() {
       bar.hidden = true;
       $('chatFab')?.classList.remove('has-cmp');
       $('waFab')?.classList.remove('has-cmp');
+      $('igFab')?.classList.remove('has-cmp');
       $('chatPanel')?.classList.remove('has-cmp');
+      syncCookieOffset();
       return;
     }
     bar.hidden = false;
     $('chatFab')?.classList.add('has-cmp');
     $('waFab')?.classList.add('has-cmp');
+    $('igFab')?.classList.add('has-cmp');
     $('chatPanel')?.classList.add('has-cmp');
-    syncCookieOffset();
     bar.innerHTML = `
       <span style="font-size:.82rem;font-weight:700">${ICO('columns')} Comparador (${CMP.length}/3):</span>
       <div class="cmp-chips">${CMP.map(r => `<span>${esc(r)}</span>`).join('')}</div>
@@ -8015,6 +8122,7 @@ function renderApp() {
         <button type="button" class="btn sm" id="openCmpModalBtn">Comparar</button>
         <button type="button" class="btn g sm" id="clearCmpBtn" style="color:var(--tx)">Limpiar</button>
       </div>`;
+    syncCookieOffset();
     $('openCmpModalBtn').onclick = openCompareModal;
     $('clearCmpBtn').onclick = () => {
       CMP = [];
@@ -8029,13 +8137,16 @@ function renderApp() {
     const availIds = items.filter(isUnitBookable).map(v => v.ref);
     const rows = [
       ['Promoción', v => esc(getPromoById(v.promoId).name)],
+      ['Tipo', v => isNaveUnit(v) ? '<span class="st NAVE">Nave</span>' : 'Vivienda'],
       ['Estado', v => { const s = ['D', 'R', 'A', 'C'].includes(v.st) ? v.st : 'D'; return `<span class="st ${s}">${stLabel(s)}</span>`; }],
       ['Ubicación', v => `${esc(v.portal)} · ${floorFullLabel(v.pl)}`],
-      ['Habitaciones / Baños', v => `${Number(v.h)} hab · ${Number(v.b)} baño${Number(v.b) > 1 ? 's' : ''}`],
+      ['Distribución', v => esc(unitDistLabel(v))],
       ['Superficie', v => `${Number(v.m2)} m²`],
       ['Orientación', v => esc(v.ori)],
-      ['Terraza', v => v.t ? 'Sí' : 'No'],
-      ['Garaje / Trastero', v => `${v.g ? 'Garaje sí' : 'Sin garaje'} · ${v.tr ? 'Trastero sí' : 'Sin trastero'}`],
+      ['Terraza / Patio', v => v.t ? (isNaveUnit(v) ? 'Patio / Muelle' : 'Sí') : 'No'],
+      ['Garaje / Extras', v => isNaveUnit(v)
+        ? `${v.g ? 'Parking/Carga sí' : 'Sin parking'} · ${v.tr ? 'Oficina/Almacén sí' : 'Sin oficina'}`
+        : `${v.g ? 'Garaje sí' : 'Sin garaje'} · ${v.tr ? 'Trastero sí' : 'Sin trastero'}`],
       ['Renta mensual', v => `<b style="color:var(--b1)">${eur(v.r)}/mes</b>`],
       ['Fianza legal (1 mes)', v => eur(v.r)],
       ['Solvencia mínima (3x)', v => `<b>${eur(v.r * 3)}/mes</b>`]
@@ -8076,7 +8187,7 @@ function renderApp() {
     }
   };
 
-  const F = { h: 0, t: false, g: false, tr: false, onlyD: false, onlyFav: false, maxPrice: null, sort: 'avail' };
+  const F = { h: 0, kind: 'ALL', t: false, g: false, tr: false, onlyD: false, onlyFav: false, maxPrice: null, sort: 'avail' };
   window.renderCatalog = () => {
     const pubPromos = getPublicPromos();
     if (activeCatalogPromo !== 'ALL' && !pubPromos.some(p => p.id === activeCatalogPromo)) {
@@ -8091,6 +8202,15 @@ function renderApp() {
         saveFavs();
       }
     }
+    const hasPubNaves = allPubUnits.some(isNaveUnit);
+    if ($('naveFilterChip')) {
+      $('naveFilterChip').hidden = !hasPubNaves;
+      if (!hasPubNaves && F.kind === 'nave') {
+        F.kind = 'ALL';
+        $('naveFilterChip').classList.remove('on');
+        $('ch')?.querySelector('[data-h="0"]')?.classList.add('on');
+      }
+    }
     if ($('favCountChip')) $('favCountChip').textContent = String(FAVS.length);
     if ($('fSort')) $('fSort').value = F.sort;
 
@@ -8100,7 +8220,7 @@ function renderApp() {
         <button type="button" class="chip ${activeCatalogPromo === 'ALL' ? 'on' : ''}" data-cat-promo="ALL">Todas las promociones</button>
         ${pubPromos.map(p => `<button type="button" class="chip ${activeCatalogPromo === p.id ? 'on' : ''}" data-cat-promo="${esc(p.id)}">
             ${esc(p.name)}
-            ${p.isNew ? '<span class="new-tag-inline">NUEVA</span>' : ''}
+            ${p.status === 'usada' ? '<span class="st U" style="font-size:.58rem;padding:1px 5px;margin-left:4px">USADAS</span>' : (p.isNew ? '<span class="new-tag-inline">NUEVA</span>' : '')}
           </button>`).join('')}`;
       sw.onclick = e => {
         const b = e.target.closest('[data-cat-promo]');
@@ -8152,7 +8272,8 @@ function renderApp() {
       $('catAdvCount').style.display = advCount > 0 ? 'inline-flex' : 'none';
     }
     const res = baseUnits.filter(v =>
-      (!F.h || Number(v.h) === F.h) &&
+      (F.kind === 'ALL' || (F.kind === 'nave' && isNaveUnit(v))) &&
+      (!F.h || (!isNaveUnit(v) && Number(v.h) === F.h)) &&
       (!F.t || v.t) &&
       (!F.g || v.g) &&
       (!F.tr || v.tr) &&
@@ -8160,7 +8281,7 @@ function renderApp() {
       (!F.onlyFav || FAVS.includes(v.ref)) &&
       (plFilter === null || Number(v.pl) === plFilter) &&
       Number(v.r) <= mx &&
-      (String(v.ref || '').toUpperCase().includes(q) || String(v.portal || '').toUpperCase().includes(q) || String(v.nombre || '').toUpperCase().includes(q) || getPromoById(v.promoId).name.toUpperCase().includes(q))
+      (String(v.ref || '').toUpperCase().includes(q) || String(v.portal || '').toUpperCase().includes(q) || String(v.nombre || '').toUpperCase().includes(q) || (isNaveUnit(v) ? 'NAVE INDUSTRIAL' : 'PISO VIVIENDA').includes(q) || getPromoById(v.promoId).name.toUpperCase().includes(q))
     );
 
     const cmpRef = (a, b) => String(a.ref || '').localeCompare(String(b.ref || ''), 'es', { numeric: true });
@@ -8246,7 +8367,18 @@ function renderApp() {
     const b = e.target.closest('.chip'); if (!b) return;
     if (b.dataset.h !== undefined) {
       F.h = Number(b.dataset.h);
-      [...$('ch').children].forEach(c => { if (c.dataset.h !== undefined) c.classList.toggle('on', c === b); });
+      F.kind = 'ALL';
+      [...$('ch').children].forEach(c => {
+        if (c.dataset.h !== undefined) c.classList.toggle('on', c === b);
+        if (c.dataset.kind !== undefined) c.classList.remove('on');
+      });
+    } else if (b.dataset.kind !== undefined) {
+      F.kind = F.kind === b.dataset.kind ? 'ALL' : b.dataset.kind;
+      if (F.kind !== 'ALL') F.h = 0;
+      [...$('ch').children].forEach(c => {
+        if (c.dataset.kind !== undefined) c.classList.toggle('on', F.kind === c.dataset.kind);
+        if (c.dataset.h !== undefined) c.classList.toggle('on', F.kind === 'ALL' && Number(c.dataset.h) === F.h);
+      });
     } else {
       const k = b.dataset.x; F[k] = !F[k]; b.classList.toggle('on', F[k]);
     }
@@ -8736,14 +8868,15 @@ function renderFicha(ref) {
     return;
   }
 
-  document.title = `${v.ref} · ${v.nombre || (v.h + ' hab.')} · ${promo.name} | Deltacor Properties`;
+  const isNave = isNaveUnit(v);
+  document.title = `${v.ref} · ${v.nombre || unitRoomsShort(v)} · ${promo.name} | Deltacor Properties`;
 
   STATS.views[v.ref] = (STATS.views[v.ref] || 0) + 1;
   saveStats();
 
   const photos = getUnitPhotos(v);
   const shareUrl = getCfg().baseUrl + '?qr=1&ref=' + safeRefUri + '#ficha/' + safeRefUri;
-  const waText = encodeURIComponent(`Deltacor Properties · ${promo.name} (${v.ref} · ${v.nombre || v.h + ' hab'}): ${v.m2} m², ${eur(v.r)}/mes -> ${shareUrl}`);
+  const waText = encodeURIComponent(`Deltacor Properties · ${promo.name} (${v.ref} · ${v.nombre || unitRoomsShort(v)}): ${v.m2} m², ${eur(v.r)}/mes -> ${shareUrl}`);
 
   const planSvg = buildPlanSvg(v);
   const isFav = FAVS.includes(v.ref);
@@ -8754,7 +8887,7 @@ function renderFicha(ref) {
     <a class="btn g sm" href="#viviendas">← Volver al listado</a>
     <div class="ficha-share-row">
       ${isAdmin ? `<button type="button" class="vis-toggle ${v.active !== false ? 'is-on' : 'is-off'}" id="fichaToggleActBtn">${v.active !== false ? 'Activa en web' : 'Oculta en web'}</button>` : ''}
-      ${isAdmin ? `<button type="button" class="btn sm" id="fichaEditUnitBtn">${ICO('edit')} Editar vivienda</button>` : ''}
+      ${isAdmin ? `<button type="button" class="btn sm" id="fichaEditUnitBtn">${ICO('edit')} Editar ${isNave ? 'nave' : 'vivienda'}</button>` : ''}
       <a class="btn g sm" target="_blank" rel="noopener noreferrer" href="https://wa.me/?text=${waText}">WhatsApp</a>
       <a class="btn g sm" href="mailto:?subject=${encodeURIComponent(`Deltacor Properties · ${promo.name} · ${v.ref}`)}&body=${waText}">Email</a>
       <button type="button" class="btn g sm" id="copyFichaLink">Copiar enlace</button>
@@ -8763,7 +8896,7 @@ function renderFicha(ref) {
 
   ${!unitPublic ? `
   <div class="panel" style="margin-top:14px;border-style:dashed;background:var(--card2);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-    <span class="m" style="font-size:.84rem"><b>Aviso:</b> Esta vivienda está actualmente <b>desactivada / oculta</b> en el catálogo público (por ejemplo, por encontrarse ocupada o en construcción).</span>
+    <span class="m" style="font-size:.84rem"><b>Aviso:</b> ${isNave ? 'Esta nave' : 'Esta vivienda'} está actualmente <b>desactivada / oculta</b> en el catálogo público (por ejemplo, por encontrarse ocupada o en construcción).</span>
     ${isAdmin ? `<span class="st OFF">Solo visible para administración</span>` : ''}
   </div>` : ''}
 
@@ -8805,10 +8938,11 @@ function renderFicha(ref) {
         <div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
             <span class="tag" style="margin:0">${esc(promo.name.toUpperCase())}</span>
-            ${promo.isNew ? '<span class="st NEW">NUEVA · OBRA NUEVA</span>' : ''}
+            ${promo.status === 'usada' ? '<span class="st U">USADAS</span>' : (promo.isNew ? '<span class="st NEW">NUEVA · OBRA NUEVA</span>' : '')}
+            ${isNave ? '<span class="st NAVE">NAVE</span>' : ''}
             <span class="m" style="font-size:.76rem;font-weight:700">${esc(v.portal)} · ${floorFullLabel(v.pl)}</span>
           </div>
-          <h2 style="font-size:1.72rem">${safeRef} · ${esc(v.nombre || (v.h + ' Habitaciones'))}</h2>
+          <h2 style="font-size:1.72rem">${safeRef} · ${esc(v.nombre || (isNave ? `Nave · ${Number(v.m2)} m²` : (v.h + ' Habitaciones')))}</h2>
         </div>
         <div class="ficha-price-col">
           <div class="price" style="font-size:1.7rem">${eur(rentVal)}<small class="m">/mes</small></div>
@@ -8821,11 +8955,11 @@ function renderFicha(ref) {
       <div class="specs-grid">
         <div class="spec-box"><small>Promoción</small><b>${esc(promo.name)}</b></div>
         <div class="spec-box"><small>Superficie</small><b>${Number(v.m2)} m²</b></div>
-        <div class="spec-box"><small>Distribución</small><b>${Number(v.h)} hab · ${Number(v.b)} baño${Number(v.b) > 1 ? 's' : ''}</b></div>
-        <div class="spec-box"><small>Planta / Ascensor</small><b>${floorFullLabel(v.pl)} · Sí</b></div>
+        <div class="spec-box"><small>${isNave ? 'Tipo / Distribución' : 'Distribución'}</small><b>${esc(unitDistLabel(v))}</b></div>
+        <div class="spec-box"><small>${isNave ? 'Planta / Acceso' : 'Planta / Ascensor'}</small><b>${isNave ? (Number(v.pl) === 0 ? 'Planta baja · Acceso rodado' : floorFullLabel(v.pl)) : `${floorFullLabel(v.pl)} · Sí`}</b></div>
         <div class="spec-box"><small>Orientación</small><b>${esc(v.ori)}</b></div>
-        <div class="spec-box"><small>Terraza</small><b>${v.t ? 'Sí, incluida' : 'No'}</b></div>
-        <div class="spec-box"><small>Garaje y Trastero</small><b>${v.g ? 'Garaje sí' : 'Sin garaje'} · ${v.tr ? 'Trastero sí' : 'Sin trastero'}</b></div>
+        <div class="spec-box"><small>${isNave ? 'Patio / Muelle' : 'Terraza'}</small><b>${v.t ? (isNave ? 'Sí, incluido' : 'Sí, incluida') : 'No'}</b></div>
+        <div class="spec-box"><small>${isNave ? 'Parking y Oficina' : 'Garaje y Trastero'}</small><b>${isNave ? `${v.g ? 'Parking sí' : 'Sin parking'} · ${v.tr ? 'Oficina sí' : 'Sin oficina'}` : `${v.g ? 'Garaje sí' : 'Sin garaje'} · ${v.tr ? 'Trastero sí' : 'Sin trastero'}`}</b></div>
         <div class="spec-box"><small>Ingresos mínimos</small><b>${eur(rentVal * 3)}/mes</b></div>
       </div>
 
@@ -8833,10 +8967,10 @@ function renderFicha(ref) {
         <button type="button" class="btn g sm btn-fav ${isFav ? 'on' : ''}" data-fav="${safeRef}" aria-pressed="${isFav}" title="${isFav ? 'Quitar de favoritas' : 'Guardar en favoritas'}">${ICO('heart')}<span class="fav-lbl">${isFav ? ' Guardada' : ' Favorita'}</span></button>
         <button type="button" class="btn g sm" id="dlCeeBtn">${ICO('file')} Certificado Energético (${esc(v.cee || 'A')})</button>
         ${bookable
-          ? `<button type="button" class="btn sm" id="scrollToFormBtn">Solicitar vivienda ↓</button>`
+          ? `<button type="button" class="btn sm" id="scrollToFormBtn">Solicitar ${isNave ? 'nave' : 'vivienda'} ↓</button>`
           : unitPublic
             ? `<button type="button" class="btn sm" data-waitlist="${safeRef}">${ICO('bell')} Avísame si queda libre</button><span class="st ${safeSt}">${stLabel(safeSt)}</span>`
-            : `<span class="st ${safeSt}">Vivienda oculta en web</span>`}
+            : `<span class="st ${safeSt}">${isNave ? 'Nave' : 'Vivienda'} oculta en web</span>`}
       </div>
 
       <div class="unit-qr-box">
@@ -8884,8 +9018,8 @@ function renderFicha(ref) {
 
   <div class="panel" style="margin-top:24px" id="ficha-form-anchor">
     <div style="margin-bottom:14px">
-      <h3>Solicitar ${bookable ? `la vivienda ${safeRef}` : 'otras viviendas disponibles'}</h3>
-      <p class="m">${bookable ? `Hemos pre-marcado automáticamente <b>${safeRef}</b> en tu candidatura. Puedes añadir todas las demás referencias que te interesen.` : `La vivienda ${safeRef} no admite nuevas solicitudes actualmente, pero puedes elegir cualquier otra unidad disponible en el selector o apuntarte a la lista de espera arriba.`}</p>
+      <h3>Solicitar ${bookable ? `${isNave ? 'la nave' : 'la vivienda'} ${safeRef}` : 'otras unidades disponibles'}</h3>
+      <p class="m">${bookable ? `Hemos pre-marcado automáticamente <b>${safeRef}</b> en tu candidatura. Puedes añadir todas las demás referencias que te interesen.` : `${isNave ? 'La nave' : 'La vivienda'} ${safeRef} no admite nuevas solicitudes actualmente, pero puedes elegir cualquier otra unidad disponible en el selector o apuntarte a la lista de espera arriba.`}</p>
     </div>
     ${renderUniqueForm(bookable ? v.ref : null)}
   </div>
@@ -8950,7 +9084,7 @@ function renderFicha(ref) {
       $('galCaption').textContent = v.planNote
         ? `Plano Técnico · ${v.ref} — ${v.planNote}`
         : `${hasCustomPlan ? 'Plano Técnico Oficial' : 'Plano Arquitectónico Orientativo'} · ${v.ref} (${v.m2} m²)`;
-      $('galFile').textContent = hasCustomPlan ? `plano_${v.ref.toLowerCase()}_personalizado` : `plano_${v.ref.toLowerCase()}_${v.h}hab.svg`;
+      $('galFile').textContent = hasCustomPlan ? `plano_${v.ref.toLowerCase()}_personalizado` : `plano_${v.ref.toLowerCase()}_${isNave ? 'nave' : `${v.h}hab`}.svg`;
     } else {
       currentSlide = Number(s);
       const ph = photos[currentSlide] || photos[0];
@@ -8969,7 +9103,7 @@ function renderFicha(ref) {
       $('dlg').classList.add('wide');
       $('dlg').innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px">
-          <h3>Plano Técnico · ${safeRef} (${Number(v.h)} Hab · ${Number(v.m2)} m²)</h3>
+          <h3>Plano Técnico · ${safeRef} (${isNave ? 'Nave' : `${Number(v.h)} Hab`} · ${Number(v.m2)} m²)</h3>
           <button type="button" class="icon-btn" data-close-dlg aria-label="Cerrar">✕</button>
         </div>
         <div style="margin:14px 0;text-align:center">${planSvg}</div>
@@ -9018,8 +9152,9 @@ function renderFicha(ref) {
     };
   }
   if ($('scrollToFormBtn')) $('scrollToFormBtn').onclick = () => $('ficha-form-anchor')?.scrollIntoView({ behavior: 'smooth' });
-  $('dlUnitQrPng').onclick = () => downloadQrPng(shareUrl, `QR_${v.ref}_Deltacor`, `DELTACOR · ${v.ref}`, `${promo.name.toUpperCase()} · ${v.h} HAB · ${eur(v.r)}/MES`);
-  $('dlUnitQrSvg').onclick = () => downloadQrSvg(shareUrl, `QR_${v.ref}_Deltacor`, `DELTACOR · ${v.ref}`, `${promo.name.toUpperCase()} · ${v.h} HAB · ${eur(v.r)}/MES`);
+  const qrKindLbl = isNave ? 'NAVE' : `${v.h} HAB`;
+  $('dlUnitQrPng').onclick = () => downloadQrPng(shareUrl, `QR_${v.ref}_Deltacor`, `DELTACOR · ${v.ref}`, `${promo.name.toUpperCase()} · ${qrKindLbl} · ${eur(v.r)}/MES`);
+  $('dlUnitQrSvg').onclick = () => downloadQrSvg(shareUrl, `QR_${v.ref}_Deltacor`, `DELTACOR · ${v.ref}`, `${promo.name.toUpperCase()} · ${qrKindLbl} · ${eur(v.r)}/MES`);
 
   $('dlCeeBtn').onclick = () => {
     $('dlg').classList.remove('wide');
@@ -9075,6 +9210,7 @@ function openPromoEditorModal(existingPromo = null, onSaved = null) {
           <select id="peStatus">
             <option value="nueva" ${curStatus === 'nueva' ? 'selected' : ''}>Nueva · Obra nueva</option>
             <option value="activa" ${curStatus === 'activa' ? 'selected' : ''}>En comercialización</option>
+            <option value="usada" ${curStatus === 'usada' ? 'selected' : ''}>Usadas</option>
             <option value="construccion" ${curStatus === 'construccion' ? 'selected' : ''}>En construcción / Próximamente</option>
             <option value="oculta" ${curStatus === 'oculta' ? 'selected' : ''}>Oculta / Desactivada</option>
           </select>
@@ -9147,10 +9283,13 @@ function openPromoEditorModal(existingPromo = null, onSaved = null) {
     if (st === 'oculta') $('peVisible').checked = false;
     else $('peVisible').checked = true;
     if (st === 'nueva') $('peIsNew').checked = true;
+    else if (st === 'usada') $('peIsNew').checked = false;
   };
   $('peIsNew').onchange = () => {
     if (!$('peIsNew').checked && $('peStatus').value === 'nueva') {
       $('peStatus').value = 'activa';
+    } else if ($('peIsNew').checked && $('peStatus').value === 'usada') {
+      $('peStatus').value = 'nueva';
     }
   };
 
@@ -9206,11 +9345,11 @@ function openPromoEditorModal(existingPromo = null, onSaved = null) {
     const status = $('peStatus').value;
     const delivery = $('peDelivery').value.trim();
     const portalsLabel = $('pePortals').value.trim();
-    const isNewLaunch = $('peIsNew').checked;
+    const isNewLaunch = status === 'usada' ? false : $('peIsNew').checked;
     const isFeatured = Boolean($('peFeatured')?.checked);
     const visible = status === 'oculta' ? false : $('peVisible').checked;
     const rawSummary = $('peSummary').value.trim();
-    const summary = rawSummary || `Promoción residencial de obra nueva en ${location}.`;
+    const summary = rawSummary || (status === 'usada' ? `Inmuebles usados en alquiler directo en ${location}.` : `Promoción residencial de obra nueva en ${location}.`);
     const description = $('peDesc').value.trim();
     const urlInput = $('peCoverUrl').value.trim();
     const finalCover = urlInput ? urlInput : coverUrl;
@@ -9463,6 +9602,7 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
   dlg.classList.add('wide');
 
   const curPromoId = existingUnit?.promoId || defaultPromoId || (adminInvPromo !== 'ALL' ? adminInvPromo : (PROMOS[0]?.id || 'cadmia'));
+  const curTipo = existingUnit && isNaveUnit(existingUnit) ? 'nave' : 'piso';
   const curOri = existingUnit?.ori || 'Sur';
   const curSt = existingUnit?.st || 'D';
   const curCee = existingUnit?.cee || 'A';
@@ -9473,8 +9613,8 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
   dlg.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
       <div>
-        <h3>${isNew ? 'Añadir nueva vivienda' : `Editar vivienda · ${esc(existingUnit.ref)}`}</h3>
-        <p class="m" style="margin-top:2px">${isNew ? 'Asigna la promoción, completa los datos y decide si ya está activa en la web o desactivada por construcción/ocupación.' : 'Modifica cualquier dato, promoción, estado, visibilidad en web, plano o fotografía.'}</p>
+        <h3 id="ueTitle">${isNew ? 'Añadir nueva vivienda o nave' : `Editar ${curTipo === 'nave' ? 'nave' : 'vivienda'} · ${esc(existingUnit.ref)}`}</h3>
+        <p class="m" style="margin-top:2px">${isNew ? 'Elige si es un piso/vivienda o una nave, asigna su promoción y decide si ya está activa en la web.' : 'Modifica cualquier dato, tipo de inmueble, promoción, estado, visibilidad en web, plano o fotografía.'}</p>
       </div>
       <button type="button" class="icon-btn" id="unitEdCloseX" aria-label="Cerrar">✕</button>
     </div>
@@ -9486,14 +9626,20 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
             ${PROMOS.map(p => `<option value="${esc(p.id)}" ${curPromoId === p.id ? 'selected' : ''}>${esc(p.name)} (${esc(p.location)})</option>`).join('')}
           </select>
         </label>
+        <label>Tipo de inmueble *
+          <select id="ueTipo">
+            <option value="piso" ${curTipo === 'piso' ? 'selected' : ''}>Piso / Vivienda</option>
+            <option value="nave" ${curTipo === 'nave' ? 'selected' : ''}>Nave</option>
+          </select>
+        </label>
         <label>Referencia *
           <input id="ueRef" required value="${esc(baseRef)}" ${isNew ? '' : 'readonly'} placeholder="Ej. REF-46" style="${isNew ? '' : 'opacity:.75;cursor:not-allowed'}">
         </label>
         <label>Nombre / Tipología *
           <input id="ueNombre" required value="${esc(existingUnit?.nombre || '')}" placeholder="Ej. Ático Mirador · 3D">
         </label>
-        <label>Portal / Bloque *
-          <input id="uePortal" required value="${esc(existingUnit?.portal || 'Portal A')}" placeholder="Ej. Portal C">
+        <label><span id="uePortalLbl">Portal / Bloque *</span>
+          <input id="uePortal" required value="${esc(existingUnit?.portal || (curTipo === 'nave' ? 'Nave 1' : 'Portal A'))}" placeholder="Ej. Portal C">
         </label>
         <label>Estado *
           <select id="ueSt">
@@ -9509,10 +9655,10 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
         <label>Renta mensual (€/mes) *
           <input id="ueRent" type="number" min="100" max="20000" step="10" required value="${existingUnit ? Number(existingUnit.r) : ''}" placeholder="Ej. 1180">
         </label>
-        <label>Habitaciones *
+        <label><span id="ueHabsLbl">Habitaciones *</span>
           <input id="ueHabs" type="number" min="1" max="10" required value="${existingUnit ? Number(existingUnit.h) : ''}" placeholder="Ej. 3">
         </label>
-        <label>Baños *
+        <label><span id="ueBanosLbl">Baños *</span>
           <input id="ueBanos" type="number" min="1" max="6" required value="${existingUnit ? Number(existingUnit.b) : ''}" placeholder="Ej. 2">
         </label>
         <label>Superficie (m²) *
@@ -9521,7 +9667,7 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
       </div>
 
       <div class="edit-grid">
-        <label>Planta (0 = Bajo) *
+        <label><span id="uePlantaLbl">Planta (0 = Bajo) *</span>
           <input id="uePlanta" type="number" min="0" max="30" required value="${existingUnit !== null && existingUnit !== undefined ? Number(existingUnit.pl) : ''}" placeholder="Ej. 2">
         </label>
         <label>Orientación *
@@ -9541,19 +9687,19 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
 
       <div class="edit-checks">
         <label><input type="checkbox" id="ueActive" ${curActive ? 'checked' : ''}> <b>Activa / Visible en web pública</b></label>
-        <label><input type="checkbox" id="ueTerraza" ${existingUnit?.t ? 'checked' : ''}> Terraza</label>
-        <label><input type="checkbox" id="ueGaraje" ${existingUnit ? (existingUnit.g ? 'checked' : '') : 'checked'}> Plaza de garaje</label>
-        <label><input type="checkbox" id="ueTrastero" ${existingUnit?.tr ? 'checked' : ''}> Trastero</label>
+        <label><input type="checkbox" id="ueTerraza" ${existingUnit?.t ? 'checked' : ''}> <span id="ueTerrazaLbl">Terraza</span></label>
+        <label><input type="checkbox" id="ueGaraje" ${existingUnit ? (existingUnit.g ? 'checked' : '') : 'checked'}> <span id="ueGarajeLbl">Plaza de garaje</span></label>
+        <label><input type="checkbox" id="ueTrastero" ${existingUnit?.tr ? 'checked' : ''}> <span id="ueTrasteroLbl">Trastero</span></label>
       </div>
 
-      <label>Descripción completa de la vivienda *
+      <label><span id="ueDescLbl">Descripción completa de la vivienda *</span>
         <textarea id="ueDesc" rows="3" required placeholder="Describe distribución, calidades, luminosidad, equipamiento y extras...">${esc(existingUnit?.desc || '')}</textarea>
       </label>
 
       <div class="photo-mgr" id="uePhotoBox">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
           <div>
-            <b style="font-size:.86rem">Fotografías de la vivienda ${isNew ? '* (mínimo 1 obligatoria)' : ''}</b>
+            <b style="font-size:.86rem">Fotografías del inmueble ${isNew ? '* (mínimo 1 obligatoria)' : ''}</b>
             <div class="m" style="font-size:.76rem">Sube imágenes desde tu dispositivo (se optimizan automáticamente) o añade enlaces URL. La primera será la portada.</div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -9578,7 +9724,7 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
       <div class="photo-mgr" id="uePlanBox" style="margin-top:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
           <div>
-            <b style="font-size:.86rem">${ICO('ruler')} Plano técnico de la vivienda</b>
+            <b style="font-size:.86rem">${ICO('ruler')} Plano técnico del inmueble</b>
             <div class="m" style="font-size:.76rem">Sube el plano real (JPG/PNG/WebP), pega una URL o personaliza las estancias del plano automático.</div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -9596,13 +9742,13 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
         </div>
 
         <div class="edit-grid" style="margin-top:10px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
-          <label style="margin:0;font-size:.74rem">Salón (m² en plano auto.)
-            <input type="number" id="uePlanSalonM2" min="5" max="200" value="${existingUnit?.planSalonM2 ? Number(existingUnit.planSalonM2) : ''}" placeholder="Automático" style="padding:6px 8px;font-size:.78rem">
+          <label style="margin:0;font-size:.74rem">Salón / Zona principal (m²)
+            <input type="number" id="uePlanSalonM2" min="5" max="50000" value="${existingUnit?.planSalonM2 ? Number(existingUnit.planSalonM2) : ''}" placeholder="Automático" style="padding:6px 8px;font-size:.78rem">
           </label>
           <label style="margin:0;font-size:.74rem">Estancia inf. izq. (plano auto.)
             <input type="text" id="uePlanLeftLabel" value="${esc(existingUnit?.planLeftLabel || '')}" placeholder="Ej. TERRAZA 14 m²" style="padding:6px 8px;font-size:.78rem">
           </label>
-          <label style="margin:0;font-size:.74rem">Dormitorio principal (plano auto.)
+          <label style="margin:0;font-size:.74rem">Dormitorio / Oficina (plano auto.)
             <input type="text" id="uePlanSuiteLabel" value="${esc(existingUnit?.planSuiteLabel || '')}" placeholder="Ej. SUITE PRINCIPAL" style="padding:6px 8px;font-size:.78rem">
           </label>
         </div>
@@ -9615,7 +9761,7 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
 
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
         <button type="button" class="btn g sm" id="ueCancelBtn">Cancelar</button>
-        <button type="submit" class="btn sm" id="ueSaveBtn">${isNew ? 'Crear vivienda' : 'Guardar cambios'}</button>
+        <button type="submit" class="btn sm" id="ueSaveBtn">${isNew ? (curTipo === 'nave' ? 'Crear nave' : 'Crear vivienda') : 'Guardar cambios'}</button>
       </div>
     </form>`;
 
@@ -9635,13 +9781,20 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
   const getTotalInlineBytes = () => estimateInlinePhotoBytes(unitPhotos) + (customPlanUrl.startsWith('data:') ? customPlanUrl.length : 0);
 
   const renderPlanPreview = () => {
+    const tipoInmueble = $('ueTipo').value === 'nave' ? 'nave' : 'piso';
+    const isNave = tipoInmueble === 'nave';
+    const rawH = $('ueHabs').value.trim();
+    const rawB = $('ueBanos').value.trim();
     const previewUnit = {
       ref: $('ueRef').value.trim().toUpperCase() || baseRef,
-      m2: Number($('ueM2').value) || Number(existingUnit?.m2) || 85,
-      h: Number($('ueHabs').value) || Number(existingUnit?.h) || 3,
-      b: Number($('ueBanos').value) || Number(existingUnit?.b) || 2,
+      tipoInmueble,
+      m2: Number($('ueM2').value) || Number(existingUnit?.m2) || (isNave ? 450 : 85),
+      h: rawH !== '' ? Number(rawH) : (existingUnit ? Number(existingUnit.h) : (isNave ? 0 : 3)),
+      b: rawB !== '' ? Number(rawB) : (existingUnit ? Number(existingUnit.b) : (isNave ? 1 : 2)),
       ori: $('ueOri').value || 'Sur',
       t: $('ueTerraza').checked,
+      g: $('ueGaraje').checked,
+      tr: $('ueTrastero').checked,
       customPlanUrl: customPlanUrl && isSafeImageSrc(customPlanUrl) ? customPlanUrl : '',
       planNote: $('uePlanNote').value.trim(),
       planSalonM2: Number($('uePlanSalonM2').value) || 0,
@@ -9654,6 +9807,49 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
       ? (planKb > 0 ? `Plano real subido desde tu dispositivo (${planKb} KB optimizados). Se mostrará en la ficha y en el alzado.` : 'Plano real cargado desde enlace URL. Se mostrará en la ficha y en el alzado.')
       : 'Plano esquemático automático activo. Puedes subir un plano real o personalizar los textos de las estancias.';
     $('uePlanPreview').innerHTML = buildPlanSvg(previewUnit);
+  };
+
+  const syncUnitKindUi = (fromChange = false) => {
+    const isNave = $('ueTipo').value === 'nave';
+    $('uePortalLbl').textContent = isNave ? 'Nave / Módulo *' : 'Portal / Bloque *';
+    $('ueHabsLbl').textContent = isNave ? 'Despachos / Estancias (0 = diáfana)' : 'Habitaciones *';
+    $('ueBanosLbl').textContent = isNave ? 'Aseos / Vestuarios' : 'Baños *';
+    $('uePlantaLbl').textContent = isNave ? 'Planta (0 = Pie de calle) *' : 'Planta (0 = Bajo) *';
+    $('ueTerrazaLbl').textContent = isNave ? 'Patio / Muelle de carga' : 'Terraza';
+    $('ueGarajeLbl').textContent = isNave ? 'Parking / Zona de carga' : 'Plaza de garaje';
+    $('ueTrasteroLbl').textContent = isNave ? 'Oficina / Almacén' : 'Trastero';
+    $('ueDescLbl').textContent = isNave ? 'Descripción completa de la nave *' : 'Descripción completa de la vivienda *';
+    $('ueNombre').placeholder = isNave ? 'Ej. Nave logística diáfana · 450 m²' : 'Ej. Ático Mirador · 3D';
+    $('uePortal').placeholder = isNave ? 'Ej. Nave 1 / Módulo A' : 'Ej. Portal C';
+    $('ueRent').max = isNave ? '100000' : '20000';
+    $('ueRent').placeholder = isNave ? 'Ej. 2400' : 'Ej. 1180';
+    $('ueHabs').min = isNave ? '0' : '1';
+    $('ueHabs').max = isNave ? '20' : '10';
+    $('ueHabs').required = !isNave;
+    $('ueHabs').placeholder = isNave ? 'Ej. 0 (diáfana) o 2' : 'Ej. 3';
+    $('ueBanos').min = isNave ? '0' : '1';
+    $('ueBanos').max = isNave ? '10' : '6';
+    $('ueBanos').required = !isNave;
+    $('ueBanos').placeholder = isNave ? 'Ej. 1' : 'Ej. 2';
+    $('ueM2').max = isNave ? '50000' : '999';
+    $('ueM2').placeholder = isNave ? 'Ej. 450' : 'Ej. 92';
+    $('uePlanta').placeholder = isNave ? '0' : 'Ej. 2';
+    $('ueDesc').placeholder = isNave
+      ? 'Describe altura libre, accesos rodados, muelle de carga, instalación eléctrica, oficinas y extras...'
+      : 'Describe distribución, calidades, luminosidad, equipamiento y extras...';
+    if (isNew && $('ueSaveBtn')) $('ueSaveBtn').textContent = isNave ? 'Crear nave' : 'Crear vivienda';
+    if (fromChange && isNew) {
+      if (isNave) {
+        if ($('uePortal').value.trim() === 'Portal A') $('uePortal').value = 'Nave 1';
+        if ($('uePlanta').value.trim() === '') $('uePlanta').value = '0';
+        if ($('ueHabs').value.trim() === '') $('ueHabs').value = '0';
+        if ($('ueBanos').value.trim() === '') $('ueBanos').value = '1';
+      } else {
+        if ($('uePortal').value.trim() === 'Nave 1') $('uePortal').value = 'Portal A';
+        if ($('ueHabs').value.trim() === '0') $('ueHabs').value = '';
+      }
+    }
+    renderPlanPreview();
   };
 
   const renderPhotoList = () => {
@@ -9682,8 +9878,9 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
       </div>`).join('');
   };
 
+  $('ueTipo').onchange = () => syncUnitKindUi(true);
   renderPhotoList();
-  renderPlanPreview();
+  syncUnitKindUi(false);
 
   photoListEl.oninput = e => {
     if (e.target.dataset.pcap !== undefined) {
@@ -9809,7 +10006,7 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
     notify('Restaurado al plano esquemático automático');
   };
 
-  ['ueRef', 'ueM2', 'ueHabs', 'ueBanos', 'ueOri', 'ueTerraza', 'uePlanNote', 'uePlanSalonM2', 'uePlanLeftLabel', 'uePlanSuiteLabel'].forEach(id => {
+  ['ueRef', 'ueM2', 'ueHabs', 'ueBanos', 'ueOri', 'ueTerraza', 'ueGaraje', 'ueTrastero', 'uePlanNote', 'uePlanSalonM2', 'uePlanLeftLabel', 'uePlanSuiteLabel'].forEach(id => {
     const el = $(id);
     if (!el) return;
     el.addEventListener(el.tagName === 'SELECT' || el.type === 'checkbox' ? 'change' : 'input', renderPlanPreview);
@@ -9831,14 +10028,18 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
     showErr('');
 
     const promoId = $('uePromo').value || (PROMOS[0]?.id || 'cadmia');
+    const tipoInmueble = $('ueTipo').value === 'nave' ? 'nave' : 'piso';
+    const isNave = tipoInmueble === 'nave';
     const ref = $('ueRef').value.trim().toUpperCase();
     const nombre = $('ueNombre').value.trim();
     const portal = $('uePortal').value.trim();
     const st = $('ueSt').value;
     const active = $('ueActive').checked;
     const r = Number($('ueRent').value);
-    const h = Number($('ueHabs').value);
-    const b = Number($('ueBanos').value);
+    const rawH = $('ueHabs').value.trim();
+    const rawB = $('ueBanos').value.trim();
+    const h = isNave && rawH === '' ? 0 : Number(rawH);
+    const b = isNave && rawB === '' ? 0 : Number(rawB);
     const m2 = Number($('ueM2').value);
     const pl = Number($('uePlanta').value);
     const ori = $('ueOri').value;
@@ -9857,23 +10058,30 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
 
     if (!/^[A-Z0-9][A-Z0-9-]{1,23}$/.test(ref)) { showErr('Referencia no válida: usa solo letras, números y guiones (ej. REF-46).'); $('ueRef').focus(); return; }
     if (isNew && savedNewRef !== ref && V.some(x => String(x.ref).toUpperCase() === ref)) {
-      showErr(`Ya existe una vivienda con la referencia ${ref}. Elige otra referencia.`);
+      showErr(`Ya existe un inmueble con la referencia ${ref}. Elige otra referencia.`);
       $('ueRef').focus();
       return;
     }
-    if (nombre.length < 3) { showErr('Indica el nombre o tipología de la vivienda.'); $('ueNombre').focus(); return; }
-    if (!portal) { showErr('Indica el portal o bloque de la vivienda.'); $('uePortal').focus(); return; }
-    if (!Number.isFinite(r) || r < 100 || r > 50000) { showErr('Introduce una renta mensual válida (entre 100 € y 50.000 €).'); $('ueRent').focus(); return; }
-    if (!Number.isInteger(h) || h < 1 || h > 10) { showErr('Indica el número de habitaciones (1 a 10).'); $('ueHabs').focus(); return; }
-    if (!Number.isInteger(b) || b < 1 || b > 6) { showErr('Indica el número de baños (1 a 6).'); $('ueBanos').focus(); return; }
-    if (!Number.isFinite(m2) || m2 < 15 || m2 > 999) { showErr('Indica la superficie en m² (entre 15 y 999 m²).'); $('ueM2').focus(); return; }
-    if (!Number.isInteger(pl) || pl < 0 || pl > 30) { showErr('Indica la planta (0 para bajo).'); $('uePlanta').focus(); return; }
+    if (nombre.length < 3) { showErr(`Indica el nombre o tipología de ${isNave ? 'la nave' : 'la vivienda'}.`); $('ueNombre').focus(); return; }
+    if (!portal) { showErr(isNave ? 'Indica la nave o módulo.' : 'Indica el portal o bloque de la vivienda.'); $('uePortal').focus(); return; }
+    const maxR = isNave ? 100000 : 50000;
+    if (!Number.isFinite(r) || r < 100 || r > maxR) { showErr(`Introduce una renta mensual válida (entre 100 € y ${maxR.toLocaleString('es-ES')} €).`); $('ueRent').focus(); return; }
+    if (isNave) {
+      if (!Number.isInteger(h) || h < 0 || h > 20) { showErr('Indica el número de despachos/estancias (0 para diáfana, hasta 20).'); $('ueHabs').focus(); return; }
+      if (!Number.isInteger(b) || b < 0 || b > 10) { showErr('Indica el número de aseos (0 a 10).'); $('ueBanos').focus(); return; }
+      if (!Number.isFinite(m2) || m2 < 15 || m2 > 50000) { showErr('Indica la superficie en m² (entre 15 y 50.000 m²).'); $('ueM2').focus(); return; }
+    } else {
+      if (!Number.isInteger(h) || h < 1 || h > 10) { showErr('Indica el número de habitaciones (1 a 10).'); $('ueHabs').focus(); return; }
+      if (!Number.isInteger(b) || b < 1 || b > 6) { showErr('Indica el número de baños (1 a 6).'); $('ueBanos').focus(); return; }
+      if (!Number.isFinite(m2) || m2 < 15 || m2 > 999) { showErr('Indica la superficie en m² (entre 15 y 999 m²).'); $('ueM2').focus(); return; }
+    }
+    if (!Number.isInteger(pl) || pl < 0 || pl > 30) { showErr('Indica la planta (0 para bajo / pie de calle).'); $('uePlanta').focus(); return; }
     if (rentgerUrl && !isSafeHttpUrl(rentgerUrl)) { showErr('La URL de Rentger debe ser una dirección web válida (https://...)'); $('ueRentger').focus(); return; }
     if (finalPlanUrl && !isSafeImageSrc(finalPlanUrl)) { showErr('La URL del plano debe empezar por https:// o http:// (o subir una imagen desde tu dispositivo).'); $('uePlanUrl').focus(); return; }
-    if (desc.length < 10) { showErr('Completa la descripción de la vivienda (mínimo 10 caracteres).'); $('ueDesc').focus(); return; }
+    if (desc.length < 10) { showErr(`Completa la descripción de ${isNave ? 'la nave' : 'la vivienda'} (mínimo 10 caracteres).`); $('ueDesc').focus(); return; }
     if (isNew && unitPhotos.length === 0) {
       photoBox.classList.add('err');
-      showErr('Para añadir una vivienda nueva debes subir o añadir al menos 1 fotografía.');
+      showErr(`Para añadir ${isNave ? 'una nave nueva' : 'una vivienda nueva'} debes subir o añadir al menos 1 fotografía.`);
       return;
     }
 
@@ -9890,6 +10098,7 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
     const updatedUnit = {
       ...(baseUnit || {}),
       promoId,
+      tipoInmueble,
       active,
       ref,
       nombre,
@@ -9955,7 +10164,7 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
     }
 
     closeModal();
-    notify(isNew ? `Vivienda ${ref} creada y guardada en ${getPromoById(promoId).name}` : `Vivienda ${ref} guardada en Firestore`);
+    notify(isNew ? `${isNave ? 'Nave' : 'Vivienda'} ${ref} creada y guardada en ${getPromoById(promoId).name}` : `${isNave ? 'Nave' : 'Vivienda'} ${ref} guardada en Firestore`);
   };
 }
 
@@ -10256,9 +10465,9 @@ function renderAdmin(subTab) {
           <option value="ST_C" ${adminInvVis === 'ST_C' ? 'selected' : ''}>Estado: En construcción</option>
           <option value="ST_A" ${adminInvVis === 'ST_A' ? 'selected' : ''}>Estado: Alquiladas</option>
         </select>
-        <input id="admSearch" placeholder="Buscar REF-01, tipología, portal..." style="max-width:250px;margin:0">
+        <input id="admSearch" placeholder="Buscar REF-01, nave, tipología, portal..." style="max-width:250px;margin:0">
       </div>
-      <button class="btn sm" type="button" id="addUnitBtn">${ICO('plus')} Añadir nueva vivienda</button>
+      <button class="btn sm" type="button" id="addUnitBtn">${ICO('plus')} Añadir vivienda / nave</button>
     </div>
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:10px 12px;background:var(--card2);border:1px solid var(--line);border-radius:4px">
@@ -10286,7 +10495,8 @@ function renderAdmin(subTab) {
         if (adminInvVis === 'ST_A' && v.st !== 'A') return false;
         if (!q) return true;
         const pName = getPromoById(v.promoId).name;
-        return `${v.ref} ${v.nombre || ''} ${v.portal || ''} ${v.ori || ''} ${pName}`.toLowerCase().includes(q);
+        const kindTxt = isNaveUnit(v) ? 'nave industrial' : 'piso vivienda';
+        return `${v.ref} ${v.nombre || ''} ${v.portal || ''} ${v.ori || ''} ${pName} ${kindTxt}`.toLowerCase().includes(q);
       });
     };
 
@@ -10295,17 +10505,20 @@ function renderAdmin(subTab) {
       $('invRows').innerHTML = list.length ? list.map(v => {
         const pr = getPromoById(v.promoId);
         const isAct = v.active !== false;
-        const extras = [v.t ? 'Terraza' : '', v.g ? 'Garaje' : '', v.tr ? 'Trastero' : ''].filter(Boolean).join(' · ');
+        const vNave = isNaveUnit(v);
+        const extras = vNave
+          ? [v.t ? 'Patio/Muelle' : '', v.g ? 'Parking/Carga' : '', v.tr ? 'Oficina/Almacén' : ''].filter(Boolean).join(' · ')
+          : [v.t ? 'Terraza' : '', v.g ? 'Garaje' : '', v.tr ? 'Trastero' : ''].filter(Boolean).join(' · ');
         return `
         <tr style="${isAct ? '' : 'opacity:.76'}">
           <td><b>${esc(v.ref)}</b></td>
           <td>
-            <div style="font-size:.7rem;font-weight:800;color:var(--b1);text-transform:uppercase;letter-spacing:.04em">${esc(pr.name)}</div>
+            <div style="font-size:.7rem;font-weight:800;color:var(--b1);text-transform:uppercase;letter-spacing:.04em">${esc(pr.name)}${vNave ? ' <span class="st NAVE" style="font-size:.58rem;padding:1px 5px;margin-left:4px">NAVE</span>' : ''}</div>
             <b>${esc(v.nombre || '')}</b>
             <div class="m" style="font-size:.74rem">${esc(v.portal)} · ${v.pl === 0 ? 'Bajo' : 'P' + v.pl} · ${esc(v.ori || 'Sur')} · CEE ${esc(v.cee || 'A')}</div>
           </td>
           <td>
-            ${Number(v.h)} hab · ${Number(v.b)} baño${Number(v.b) > 1 ? 's' : ''} · ${Number(v.m2)} m²
+            ${esc(unitDistLabel(v))} · ${Number(v.m2)} m²
             ${extras ? `<div class="m" style="font-size:.73rem">${extras}</div>` : ''}
           </td>
           <td><input type="number" value="${Number(v.r)}" data-rent="${esc(v.ref)}" style="width:88px;margin:0;padding:5px 8px"> €</td>
@@ -11485,7 +11698,7 @@ function renderAdmin(subTab) {
         const pr = getPromoById(v.promoId);
         return `
         <div class="qr-card">
-          <b>${esc(v.ref)} · ${Number(v.h)} hab</b>
+          <b>${esc(v.ref)} · ${isNaveUnit(v) ? 'Nave' : `${Number(v.h)} hab`}</b>
           ${makeQrSvg(u, v.ref, `${v.portal} · ${floorShortLabel(v.pl)}`)}
           <span class="m" style="font-size:.72rem">${esc(pr.name)}</span>
           <span class="m" style="font-size:.74rem">${esc(v.nombre || '')}</span>
@@ -11506,7 +11719,7 @@ function renderAdmin(subTab) {
         const v = V.find(x => x.ref === refPng);
         const prName = v ? getPromoById(v.promoId).name.toUpperCase() : 'DELTACOR';
         const refUri = encodeURIComponent(refPng);
-        downloadQrPng(`${base}?qr=1&ref=${refUri}#ficha/${refUri}`, `QR_${refPng}_Deltacor`, `DELTACOR · ${refPng}`, v ? `${prName} · ${v.h} HAB · ${eur(v.r)}/MES` : '');
+        downloadQrPng(`${base}?qr=1&ref=${refUri}#ficha/${refUri}`, `QR_${refPng}_Deltacor`, `DELTACOR · ${refPng}`, v ? `${prName} · ${isNaveUnit(v) ? 'NAVE' : `${v.h} HAB`} · ${eur(v.r)}/MES` : '');
         return;
       }
       const svgBtn = e.target.closest('[data-dl-svg]');
@@ -11515,7 +11728,7 @@ function renderAdmin(subTab) {
         const v = V.find(x => x.ref === refSvg);
         const prName = v ? getPromoById(v.promoId).name.toUpperCase() : 'DELTACOR';
         const refUri = encodeURIComponent(refSvg);
-        downloadQrSvg(`${base}?qr=1&ref=${refUri}#ficha/${refUri}`, `QR_${refSvg}_Deltacor`, `DELTACOR · ${refSvg}`, v ? `${prName} · ${v.h} HAB · ${eur(v.r)}/MES` : '');
+        downloadQrSvg(`${base}?qr=1&ref=${refUri}#ficha/${refUri}`, `QR_${refSvg}_Deltacor`, `DELTACOR · ${refSvg}`, v ? `${prName} · ${isNaveUnit(v) ? 'NAVE' : `${v.h} HAB`} · ${eur(v.r)}/MES` : '');
       }
     };
   }
@@ -12645,9 +12858,11 @@ function initFloatingChat() {
   const syncFloatingOffsets = () => {
     const cmpBar = $('compareBar');
     const waFab = $('waFab');
+    const igFab = $('igFab');
     const cmpActive = Boolean(cmpBar && !cmpBar.hidden);
     fab.classList.toggle('has-cmp', cmpActive);
     waFab?.classList.toggle('has-cmp', cmpActive);
+    igFab?.classList.toggle('has-cmp', cmpActive);
     panel.classList.toggle('has-cmp', cmpActive);
     syncCookieOffset();
   };
@@ -12700,7 +12915,7 @@ function initFloatingChat() {
         ctxText.textContent = '';
         const prefix = document.createTextNode('Vivienda activa: ');
         const strong = document.createElement('b');
-        strong.textContent = `${unit.ref} · ${unit.h} hab. (${eur(unit.r)}/mes)`;
+        strong.textContent = `${unit.ref} · ${unitRoomsShort(unit)} (${eur(unit.r)}/mes)`;
         ctxText.append(prefix, strong);
         ctxBar.hidden = false;
         return;
@@ -13123,8 +13338,9 @@ function initFloatingChat() {
           a.className = 'calc-unit-link';
           a.href = `#ficha/${encodeURIComponent(u.ref)}`;
           a.onclick = () => { if (window.innerWidth <= 768) closeChat(); };
+          const fullU = V.find(x => x.ref === u.ref) || u;
           const left = document.createElement('span');
-          left.textContent = `${u.ref} · ${u.h} hab. · ${u.m2} m²`;
+          left.textContent = `${u.ref} · ${unitRoomsShort(fullU)} · ${u.m2} m²`;
           const right = document.createElement('small');
           right.textContent = `${eur(u.r)}/mes →`;
           a.append(left, right);
@@ -13427,7 +13643,7 @@ function initFloatingChat() {
     const activeUnit = linkedRef ? V.find(v => v.ref === linkedRef) : null;
     const unitTag = activeUnit ? ` [${activeUnit.ref}]` : '';
     const unitDetails = activeUnit
-      ? `${activeUnit.ref} · ${getPromoById(activeUnit.promoId).name} · ${activeUnit.portal}, ${floorFullLabel(activeUnit.pl)} · ${activeUnit.h} hab. · ${eur(activeUnit.r)}/mes`
+      ? `${activeUnit.ref} · ${getPromoById(activeUnit.promoId).name} · ${activeUnit.portal}, ${floorFullLabel(activeUnit.pl)} · ${unitRoomsShort(activeUnit)} · ${eur(activeUnit.r)}/mes`
       : 'Consulta general Deltacor Properties';
 
     history.push({ role: 'user', text: message, time: formatNow() });
@@ -13478,6 +13694,7 @@ function initFloatingChat() {
   const floatObserver = new MutationObserver(syncFloatingOffsets);
   if ($('compareBar')) floatObserver.observe($('compareBar'), { attributes: true, attributeFilter: ['hidden'] });
   if ($('cookieBar')) floatObserver.observe($('cookieBar'), { attributes: true, attributeFilter: ['hidden'] });
+  if ($('waFab')) floatObserver.observe($('waFab'), { attributes: true, attributeFilter: ['hidden'] });
 
   renderCalcMessages();
   renderMessages();
