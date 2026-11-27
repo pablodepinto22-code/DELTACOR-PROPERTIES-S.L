@@ -29,6 +29,15 @@ const PUBLIC_ROOT_FILES = new Set([
   'og-deltacor-square.jpg',
 ]);
 
+const PUBLIC_DEMO_ASSETS = new Set([
+  'fachada_residencial_cadmia.webp',
+  'salon_mirador_sur.webp',
+  'cocina_roble_norte.webp',
+  'suite_principal_obra_nueva.webp',
+  'terraza_panoramica_mostoles.webp',
+  'bano_porcelanico_gres.webp',
+]);
+
 const ALLOWED_HOSTS = new Set(
   String(process.env.ALLOWED_HOSTS || '')
     .split(',')
@@ -177,7 +186,20 @@ app.use(
   })
 );
 
-// 5. Explicit allowlisted root public images (OG images and logos)
+// 5. Explicit allowlisted demo images (/assets/demo/*.webp)
+app.get('/assets/demo/:demoAsset', (req, res, next) => {
+  const name = req.params.demoAsset;
+  if (!PUBLIC_DEMO_ASSETS.has(name)) return next();
+
+  const filePath = path.join(__dirname, 'assets', 'demo', name);
+  if (!fs.existsSync(filePath)) return res.status(404).type('text/plain').send('Not Found');
+
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Cache-Control', 'public, max-age=604800');
+  return res.sendFile(filePath);
+});
+
+// 6. Explicit allowlisted root public images (OG images and logos)
 app.get('/:rootAsset', (req, res, next) => {
   const name = req.params.rootAsset;
   if (!PUBLIC_ROOT_FILES.has(name)) return next();

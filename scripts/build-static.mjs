@@ -18,6 +18,12 @@ const PUBLIC_FILES = [
   'logo-deltacor-icon.png',
   'og-deltacor.jpg',
   'og-deltacor-square.jpg',
+  'assets/demo/fachada_residencial_cadmia.webp',
+  'assets/demo/salon_mirador_sur.webp',
+  'assets/demo/cocina_roble_norte.webp',
+  'assets/demo/suite_principal_obra_nueva.webp',
+  'assets/demo/terraza_panoramica_mostoles.webp',
+  'assets/demo/bano_porcelanico_gres.webp',
 ];
 
 fs.rmSync(DIST, { recursive: true, force: true });
@@ -29,7 +35,9 @@ for (const rel of PUBLIC_FILES) {
   if (!fs.existsSync(src)) {
     throw new Error(`Missing required public file: ${rel}`);
   }
-  fs.copyFileSync(src, path.join(DIST, rel));
+  const dst = path.join(DIST, rel);
+  fs.mkdirSync(path.dirname(dst), { recursive: true });
+  fs.copyFileSync(src, dst);
   copied += 1;
 }
 
