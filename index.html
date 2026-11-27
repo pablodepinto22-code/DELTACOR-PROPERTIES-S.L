@@ -488,6 +488,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .alz-occ-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:.78rem;font-weight:600}
 .alz-occ-bar{height:8px;border-radius:99px;overflow:hidden;display:flex;background:var(--card2);border:1px solid var(--line)}
 .alz-occ-bar .seg-d{background:#84bd38;transition:width .3s}
+.alz-occ-bar .seg-u{background:#0284c7;transition:width .3s}
 .alz-occ-bar .seg-r{background:#f59e0b;transition:width .3s}
 .alz-occ-bar .seg-a{background:#ef4444;transition:width .3s}
 .alz-occ-bar .seg-c{background:#3c4d5b;transition:width .3s}
@@ -537,6 +538,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 
 /* Color modes */
 .alz-unit.m-st-D{border-left:4px solid #84bd38}
+.alz-unit.m-st-U{border-left:4px solid #0284c7;background:rgba(2,132,199,.07)}
 .alz-unit.m-st-R{border-left:4px solid #f59e0b;background:rgba(245,158,11,.07)}
 .alz-unit.m-st-A{border-left:4px solid #ef4444;background:rgba(239,68,68,.06);opacity:.62}
 .alz-unit.m-st-C{border-left:4px solid #3c4d5b;background:rgba(60,77,91,.07);opacity:.78}
@@ -598,10 +600,10 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 .chat-fab.has-cookie{bottom:calc(30px + var(--ck-h,84px))}
 .chat-fab.has-cmp.has-cookie{bottom:calc(40px + var(--cmp-h,48px) + var(--ck-h,84px))}
 
-.wa-fab{position:fixed;right:20px;bottom:76px;z-index:88;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:9px 16px;border:1px solid #1d8a4e;border-radius:var(--radius);background:#1f9d55;color:#fff;font:600 .84rem 'Plus Jakarta Sans',sans-serif;text-decoration:none;box-shadow:var(--shadow-lg);transition:transform .16s cubic-bezier(0.16,1,0.3,1),background .16s,border-color .16s,opacity .16s}
-.wa-fab:hover{background:#187d43;border-color:#187d43;transform:translateY(-2px);color:#fff}
+.wa-fab{position:fixed;right:20px;bottom:76px;z-index:88;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:9px 16px;border:1px solid transparent;border-radius:var(--radius);background:linear-gradient(135deg,#25d366 0%,#1fa855 55%,#128c7e 100%);color:#fff;font:600 .84rem 'Plus Jakarta Sans',sans-serif;text-decoration:none;box-shadow:var(--shadow-lg);transition:transform .16s cubic-bezier(0.16,1,0.3,1),filter .16s,opacity .16s}
+.wa-fab:hover{filter:brightness(1.07);transform:translateY(-2px);color:#fff}
 .wa-fab[hidden]{display:none}
-.wa-fab svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.wa-fab svg{width:19px;height:19px;fill:currentColor;stroke:none;flex-shrink:0}
 .wa-fab.has-cmp{bottom:calc(84px + var(--cmp-h,48px))}
 .wa-fab.has-cookie{bottom:calc(86px + var(--ck-h,84px))}
 .wa-fab.has-cmp.has-cookie{bottom:calc(96px + var(--cmp-h,48px) + var(--ck-h,84px))}
@@ -1256,7 +1258,7 @@ footer a{color:var(--b1);text-decoration:none;font-weight:600}
 
 <!-- Floating Direct WhatsApp CTA (shown automatically when WhatsApp number is configured in Admin > Web) -->
 <a class="wa-fab" id="waFab" href="#" target="_blank" rel="noopener noreferrer" hidden aria-label="Escribir por WhatsApp a Deltacor Properties">
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.52 3.48A11.86 11.86 0 0 0 12.06 0C5.49 0 .14 5.34.14 11.91c0 2.1.55 4.15 1.59 5.95L0 24l6.33-1.66a11.86 11.86 0 0 0 5.73 1.46h.01c6.57 0 11.92-5.35 11.92-11.92 0-3.18-1.24-6.17-3.47-8.4zm-8.46 18.3h-.01a9.87 9.87 0 0 1-5.04-1.38l-.36-.21-3.75.98 1-3.66-.24-.38a9.85 9.85 0 0 1-1.51-5.24c0-5.45 4.44-9.89 9.9-9.89 2.64 0 5.13 1.03 6.99 2.9a9.84 9.84 0 0 1 2.9 7c0 5.45-4.44 9.88-9.88 9.88zm5.42-7.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35z" fill="currentColor" stroke="none"/></svg>
   <span class="wa-fab-lbl">WhatsApp</span>
 </a>
 
@@ -3761,7 +3763,7 @@ const ICONS = {
   heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
   bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
   mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
-  whatsapp: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+  whatsapp: '<path d="M20.52 3.48A11.86 11.86 0 0 0 12.06 0C5.49 0 .14 5.34.14 11.91c0 2.1.55 4.15 1.59 5.95L0 24l6.33-1.66a11.86 11.86 0 0 0 5.73 1.46h.01c6.57 0 11.92-5.35 11.92-11.92 0-3.18-1.24-6.17-3.47-8.4zm-8.46 18.3h-.01a9.87 9.87 0 0 1-5.04-1.38l-.36-.21-3.75.98 1-3.66-.24-.38a9.85 9.85 0 0 1-1.51-5.24c0-5.45 4.44-9.89 9.9-9.89 2.64 0 5.13 1.03 6.99 2.9a9.84 9.84 0 0 1 2.9 7c0 5.45-4.44 9.88-9.88 9.88zm5.42-7.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35z" fill="currentColor" stroke="none"/>',
   instagram: '<rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>'
 };
 const ICO = (name, cls = 'ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ''}</svg>`;
@@ -4369,8 +4371,10 @@ function isUnitPublic(v) {
   const p = getPromoById(v.promoId || 'cadmia');
   return Boolean(p && p.visible !== false && p.status !== 'oculta');
 }
+const normalizeUnitSt = st => ['D', 'U', 'R', 'A', 'C'].includes(st) ? st : 'D';
+const isUnitOpenSt = st => st === 'D' || st === 'U';
 function isUnitBookable(v) {
-  if (!isUnitPublic(v) || v.st !== 'D') return false;
+  if (!isUnitPublic(v) || !isUnitOpenSt(v.st)) return false;
   const p = getPromoById(v.promoId || 'cadmia');
   return Boolean(p && p.status !== 'construccion');
 }
@@ -5853,7 +5857,7 @@ function openWaitlistModal(unit) {
   const preEmail = (CURRENT_USER?.email || savedChat?.email || '').trim();
   const prePhone = (savedChat?.phone || '').trim();
   const safeRef = esc(unit.ref);
-  const safeSt = ['D', 'R', 'A', 'C'].includes(unit.st) ? unit.st : 'R';
+  const safeSt = ['D', 'U', 'R', 'A', 'C'].includes(unit.st) ? unit.st : 'R';
 
   dlg.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
@@ -6010,7 +6014,7 @@ function buildPlanSvg(v) {
   </div>`;
 }
 
-const stLabel = s => ({ D: 'Disponible', R: 'Reservada', A: 'Alquilada', C: 'En construcción' }[s] || 'Disponible');
+const stLabel = s => ({ D: 'Disponible', U: 'Usada', R: 'Reservada', A: 'Alquilada', C: 'En construcción' }[s] || 'Disponible');
 const floorShortLabel = fl => Number(fl) === 0 ? 'PB' : `P${fl}`;
 const floorFullLabel = fl => Number(fl) === 0 ? 'Planta Baja' : `Planta ${fl}`;
 
@@ -6023,10 +6027,10 @@ const propertyCard = v => {
   const isFav = FAVS.includes(v.ref);
   const safeRef = esc(v.ref);
   const safeRefUri = encodeURIComponent(v.ref);
-  const safeSt = ['D', 'R', 'A', 'C'].includes(v.st) ? v.st : 'D';
-  const promoInlineTag = pr.status === 'usada'
+  const safeSt = normalizeUnitSt(v.st);
+  const promoInlineTag = pr.status === 'usada' && safeSt !== 'U'
     ? ' <span class="st U" style="font-size:.6rem;padding:1px 6px;margin-left:4px;vertical-align:middle">USADA</span>'
-    : (pr.isNew ? ' <span class="st NEW" style="font-size:.6rem;padding:1px 6px;margin-left:4px;vertical-align:middle">NUEVA</span>' : '');
+    : (pr.isNew && safeSt !== 'U' ? ' <span class="st NEW" style="font-size:.6rem;padding:1px 6px;margin-left:4px;vertical-align:middle">NUEVA</span>' : '');
   const naveTag = isNave ? ' <span class="st NAVE" style="font-size:.6rem;padding:1px 6px;margin-left:4px;vertical-align:middle">NAVE</span>' : '';
   return `
 <article class="card">
@@ -6550,6 +6554,7 @@ function renderApp() {
         <button type="button" class="chip" data-h="3">3 habitaciones</button>
         <button type="button" class="chip" data-h="4">4 habitaciones</button>
         <button type="button" class="chip" data-kind="nave" id="naveFilterChip" hidden>${ICO('building')} Naves</button>
+        <button type="button" class="chip" data-x="onlyU" id="usadaFilterChip" hidden>Usadas</button>
         <button type="button" class="chip" data-x="t">${ICO('sun')} Con terraza</button>
         <button type="button" class="chip" data-x="g">${ICO('car')} Con garaje</button>
         <button type="button" class="chip" data-x="tr">${ICO('box')} Con trastero</button>
@@ -6748,7 +6753,7 @@ function renderApp() {
       return `m-h-${h}`;
     }
     if (alzadoColorMode === 'price') return Number(v.r) <= 1050 ? 'm-p-low' : Number(v.r) <= 1350 ? 'm-p-mid' : 'm-p-high';
-    const safeSt = ['D', 'R', 'A', 'C'].includes(v.st) ? v.st : 'D';
+    const safeSt = normalizeUnitSt(v.st);
     return `m-st-${safeSt}`;
   };
 
@@ -6757,7 +6762,7 @@ function renderApp() {
     const allUnits = getAllPromoUnits(p.id);
     const activeUnits = allUnits.filter(u => u.active !== false);
     const hiddenUnits = allUnits.length - activeUnits.length;
-    const availUnits = activeUnits.filter(u => u.st === 'D');
+    const availUnits = activeUnits.filter(u => isUnitOpenSt(u.st));
     const minRent = availUnits.length
       ? Math.min(...availUnits.map(u => Number(u.r) || 0))
       : activeUnits.length ? Math.min(...activeUnits.map(u => Number(u.r) || 0)) : 0;
@@ -7058,21 +7063,23 @@ function renderApp() {
     const matchedUnits = scopeUnits.filter(unitMatchesAlzado);
 
     if (!scopeUnits.some(v => v.ref === previewRef)) {
-      previewRef = (matchedUnits.find(v => v.st === 'D') || matchedUnits[0] || scopeUnits[0] || baseUnits[0]).ref;
+      previewRef = (matchedUnits.find(v => isUnitOpenSt(v.st)) || matchedUnits[0] || scopeUnits[0] || baseUnits[0]).ref;
     }
     const cur = baseUnits.find(v => v.ref === previewRef) || scopeUnits[0] || baseUnits[0];
-    const curSafeSt = ['D', 'R', 'A', 'C'].includes(cur.st) ? cur.st : 'D';
+    const curSafeSt = normalizeUnitSt(cur.st);
     const curRefUri = encodeURIComponent(cur.ref);
     const photos = getUnitPhotos(cur);
     const inCmp = CMP.includes(cur.ref);
     const curBookable = isUnitBookable(cur);
 
     const cntD = scopeUnits.filter(v => v.st === 'D').length;
+    const cntU = scopeUnits.filter(v => v.st === 'U').length;
     const cntR = scopeUnits.filter(v => v.st === 'R').length;
     const cntA = scopeUnits.filter(v => v.st === 'A').length;
     const cntC = scopeUnits.filter(v => v.st === 'C').length;
     const tot = scopeUnits.length || 1;
     const pctD = (cntD / tot * 100).toFixed(1);
+    const pctU = (cntU / tot * 100).toFixed(1);
     const pctR = (cntR / tot * 100).toFixed(1);
     const pctA = (cntA / tot * 100).toFixed(1);
     const pctC = (cntC / tot * 100).toFixed(1);
@@ -7104,7 +7111,7 @@ function renderApp() {
 
     const roomPalette = { 1: '#a3d959', 2: '#84bd38', 3: '#5a8e1b', 4: '#3c4d5b', 5: '#24303a' };
     const legendHtml = alzadoColorMode === 'status'
-      ? `<span><i class="dot ok"></i>Disponible (${cntD})</span><span><i class="dot warn"></i>Reservada (${cntR})</span><span><i class="dot bad"></i>Alquilada (${cntA})</span>${cntC > 0 ? `<span><i class="dot" style="background:#546777"></i>En construcción (${cntC})</span>` : ''}`
+      ? `<span><i class="dot ok"></i>Disponible (${cntD})</span>${cntU > 0 ? `<span><i class="dot" style="background:#0284c7"></i>Usada (${cntU})</span>` : ''}<span><i class="dot warn"></i>Reservada (${cntR})</span><span><i class="dot bad"></i>Alquilada (${cntA})</span>${cntC > 0 ? `<span><i class="dot" style="background:#546777"></i>En construcción (${cntC})</span>` : ''}`
       : alzadoColorMode === 'rooms'
         ? roomCounts.map(n => `<span><i class="dot" style="background:${roomPalette[Math.min(5, n)] || '#3c4d5b'}"></i>${n} Dormitorio${n > 1 ? 's' : ''}</span>`).join('')
         : `<span><i class="dot ok"></i>Hasta 1.050 €/mes</span><span><i class="dot" style="background:#3c4d5b"></i>1.051 – 1.350 €/mes</span><span><i class="dot" style="background:#8a5624"></i>Más de 1.350 €/mes</span>`;
@@ -7168,7 +7175,7 @@ function renderApp() {
           <div class="alz-seg" role="tablist" aria-label="Seleccionar vista de portal">
             <button type="button" class="${activePortal === 'ALL' ? 'on' : ''}" data-alz-portal="ALL">Edificio completo (${baseUnits.length})</button>
             ${portals.map(p => {
-              const free = baseUnits.filter(v => String(v.portal || 'Portal A').trim() === p && v.st === 'D').length;
+              const free = baseUnits.filter(v => String(v.portal || 'Portal A').trim() === p && isUnitOpenSt(v.st)).length;
               return `<button type="button" class="${activePortal === p ? 'on' : ''}" data-alz-portal="${esc(p)}">${esc(p)} (${free} libres)</button>`;
             }).join('')}
           </div>
@@ -7195,6 +7202,7 @@ function renderApp() {
               <select id="alzFSt">
                 <option value="ALL" ${alzadoFilters.st === 'ALL' ? 'selected' : ''}>Todos los estados</option>
                 <option value="D" ${alzadoFilters.st === 'D' ? 'selected' : ''}>Solo disponibles</option>
+                <option value="U" ${alzadoFilters.st === 'U' ? 'selected' : ''}>Usadas</option>
                 <option value="R" ${alzadoFilters.st === 'R' ? 'selected' : ''}>Reservadas</option>
                 <option value="A" ${alzadoFilters.st === 'A' ? 'selected' : ''}>Alquiladas</option>
                 <option value="C" ${alzadoFilters.st === 'C' ? 'selected' : ''}>En construcción</option>
@@ -7232,8 +7240,9 @@ function renderApp() {
             <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">${legendHtml}</div>
             <span class="st ${matchedUnits.length ? 'D' : 'R'}">${matchedUnits.length} de ${scopeUnits.length} viviendas resaltadas${alzadoFilters.fl !== null ? ' · ' + floorFullLabel(alzadoFilters.fl) : ''}</span>
           </div>
-          <div class="alz-occ-bar" title="Disponibles ${pctD}% · Reservadas ${pctR}% · Alquiladas ${pctA}%${cntC ? ` · En construcción ${pctC}%` : ''}">
+          <div class="alz-occ-bar" title="Disponibles ${pctD}%${cntU ? ` · Usadas ${pctU}%` : ''} · Reservadas ${pctR}% · Alquiladas ${pctA}%${cntC ? ` · En construcción ${pctC}%` : ''}">
             <div class="seg-d" style="width:${pctD}%"></div>
+            <div class="seg-u" style="width:${pctU}%"></div>
             <div class="seg-r" style="width:${pctR}%"></div>
             <div class="seg-a" style="width:${pctA}%"></div>
             <div class="seg-c" style="width:${pctC}%"></div>
@@ -7251,7 +7260,7 @@ function renderApp() {
             <div class="alz-portals ${colsCls}">
               ${visiblePortals.map(portal => {
                 const pAll = baseUnits.filter(v => String(v.portal || 'Portal A').trim() === portal);
-                const pFree = pAll.filter(v => v.st === 'D').length;
+                const pFree = pAll.filter(v => isUnitOpenSt(v.st)).length;
                 return `
                 <div class="alz-portal-col">
                   <div class="alz-portal-hd">
@@ -7319,7 +7328,7 @@ function renderApp() {
                   ${allFloors.map(fl => {
                     const flAll = scopeUnits.filter(v => Number(v.pl) === fl);
                     if (!flAll.length) return '';
-                    const flFree = flAll.filter(v => v.st === 'D');
+                    const flFree = flAll.filter(v => isUnitOpenSt(v.st));
                     const minR = Math.min(...flAll.map(v => v.r));
                     const maxR = Math.max(...flAll.map(v => v.r));
                     const avgM2 = Math.round(flAll.reduce((a, b) => a + b.m2, 0) / flAll.length);
@@ -8138,7 +8147,7 @@ function renderApp() {
     const rows = [
       ['Promoción', v => esc(getPromoById(v.promoId).name)],
       ['Tipo', v => isNaveUnit(v) ? '<span class="st NAVE">Nave</span>' : 'Vivienda'],
-      ['Estado', v => { const s = ['D', 'R', 'A', 'C'].includes(v.st) ? v.st : 'D'; return `<span class="st ${s}">${stLabel(s)}</span>`; }],
+      ['Estado', v => { const s = normalizeUnitSt(v.st); return `<span class="st ${s}">${stLabel(s)}</span>`; }],
       ['Ubicación', v => `${esc(v.portal)} · ${floorFullLabel(v.pl)}`],
       ['Distribución', v => esc(unitDistLabel(v))],
       ['Superficie', v => `${Number(v.m2)} m²`],
@@ -8187,7 +8196,7 @@ function renderApp() {
     }
   };
 
-  const F = { h: 0, kind: 'ALL', t: false, g: false, tr: false, onlyD: false, onlyFav: false, maxPrice: null, sort: 'avail' };
+  const F = { h: 0, kind: 'ALL', onlyU: false, t: false, g: false, tr: false, onlyD: false, onlyFav: false, maxPrice: null, sort: 'avail' };
   window.renderCatalog = () => {
     const pubPromos = getPublicPromos();
     if (activeCatalogPromo !== 'ALL' && !pubPromos.some(p => p.id === activeCatalogPromo)) {
@@ -8209,6 +8218,15 @@ function renderApp() {
         F.kind = 'ALL';
         $('naveFilterChip').classList.remove('on');
         $('ch')?.querySelector('[data-h="0"]')?.classList.add('on');
+      }
+    }
+    const isUsadaUnit = v => v.st === 'U' || getPromoById(v.promoId).status === 'usada';
+    const hasPubUsadas = allPubUnits.some(isUsadaUnit);
+    if ($('usadaFilterChip')) {
+      $('usadaFilterChip').hidden = !hasPubUsadas;
+      if (!hasPubUsadas && F.onlyU) {
+        F.onlyU = false;
+        $('usadaFilterChip').classList.remove('on');
       }
     }
     if ($('favCountChip')) $('favCountChip').textContent = String(FAVS.length);
@@ -8273,6 +8291,7 @@ function renderApp() {
     }
     const res = baseUnits.filter(v =>
       (F.kind === 'ALL' || (F.kind === 'nave' && isNaveUnit(v))) &&
+      (!F.onlyU || isUsadaUnit(v)) &&
       (!F.h || (!isNaveUnit(v) && Number(v.h) === F.h)) &&
       (!F.t || v.t) &&
       (!F.g || v.g) &&
@@ -8281,7 +8300,7 @@ function renderApp() {
       (!F.onlyFav || FAVS.includes(v.ref)) &&
       (plFilter === null || Number(v.pl) === plFilter) &&
       Number(v.r) <= mx &&
-      (String(v.ref || '').toUpperCase().includes(q) || String(v.portal || '').toUpperCase().includes(q) || String(v.nombre || '').toUpperCase().includes(q) || (isNaveUnit(v) ? 'NAVE INDUSTRIAL' : 'PISO VIVIENDA').includes(q) || getPromoById(v.promoId).name.toUpperCase().includes(q))
+      (String(v.ref || '').toUpperCase().includes(q) || String(v.portal || '').toUpperCase().includes(q) || String(v.nombre || '').toUpperCase().includes(q) || (isNaveUnit(v) ? 'NAVE INDUSTRIAL' : 'PISO VIVIENDA').includes(q) || (isUsadaUnit(v) ? 'USADA USADAS' : '').includes(q) || getPromoById(v.promoId).name.toUpperCase().includes(q))
     );
 
     const cmpRef = (a, b) => String(a.ref || '').localeCompare(String(b.ref || ''), 'es', { numeric: true });
@@ -8848,7 +8867,7 @@ function renderFicha(ref) {
   const bookable = isUnitBookable(v);
   const safeRef = esc(v.ref);
   const safeRefUri = encodeURIComponent(v.ref);
-  const safeSt = ['D', 'R', 'A', 'C'].includes(v.st) ? v.st : 'D';
+  const safeSt = normalizeUnitSt(v.st);
 
   if (!unitPublic && !isAdmin) {
     document.title = 'Vivienda no disponible | Deltacor Properties';
@@ -8938,7 +8957,7 @@ function renderFicha(ref) {
         <div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
             <span class="tag" style="margin:0">${esc(promo.name.toUpperCase())}</span>
-            ${promo.status === 'usada' ? '<span class="st U">USADAS</span>' : (promo.isNew ? '<span class="st NEW">NUEVA · OBRA NUEVA</span>' : '')}
+            ${safeSt === 'U' ? '<span class="st U">USADA</span>' : (promo.status === 'usada' ? '<span class="st U">USADAS</span>' : (promo.isNew ? '<span class="st NEW">NUEVA · OBRA NUEVA</span>' : ''))}
             ${isNave ? '<span class="st NAVE">NAVE</span>' : ''}
             <span class="m" style="font-size:.76rem;font-weight:700">${esc(v.portal)} · ${floorFullLabel(v.pl)}</span>
           </div>
@@ -9644,6 +9663,7 @@ function openUnitEditorModal(existingUnit = null, onSaved = null, defaultPromoId
         <label>Estado *
           <select id="ueSt">
             <option value="D" ${curSt === 'D' ? 'selected' : ''}>Disponible</option>
+            <option value="U" ${curSt === 'U' ? 'selected' : ''}>Usada</option>
             <option value="R" ${curSt === 'R' ? 'selected' : ''}>Reservada</option>
             <option value="A" ${curSt === 'A' ? 'selected' : ''}>Alquilada</option>
             <option value="C" ${curSt === 'C' ? 'selected' : ''}>En construcción</option>
@@ -10330,7 +10350,7 @@ function renderAdmin(subTab) {
         const meta = getPromoStatusMeta(p);
         const allU = getAllPromoUnits(p.id);
         const actU = allU.filter(u => u.active !== false).length;
-        const dispU = allU.filter(u => u.active !== false && u.st === 'D').length;
+        const dispU = allU.filter(u => u.active !== false && isUnitOpenSt(u.st)).length;
         const isVis = isPromoPublic(p);
         const isFeat = Boolean(p.isFeatured);
         return `
@@ -10462,10 +10482,11 @@ function renderAdmin(subTab) {
           <option value="ACTIVE" ${adminInvVis === 'ACTIVE' ? 'selected' : ''}>Solo activas en web</option>
           <option value="INACTIVE" ${adminInvVis === 'INACTIVE' ? 'selected' : ''}>Solo ocultas / desactivadas</option>
           <option value="ST_D" ${adminInvVis === 'ST_D' ? 'selected' : ''}>Estado: Disponibles</option>
+          <option value="ST_U" ${adminInvVis === 'ST_U' ? 'selected' : ''}>Estado: Usadas</option>
           <option value="ST_C" ${adminInvVis === 'ST_C' ? 'selected' : ''}>Estado: En construcción</option>
           <option value="ST_A" ${adminInvVis === 'ST_A' ? 'selected' : ''}>Estado: Alquiladas</option>
         </select>
-        <input id="admSearch" placeholder="Buscar REF-01, nave, tipología, portal..." style="max-width:250px;margin:0">
+        <input id="admSearch" placeholder="Buscar REF-01, nave, usada, tipología..." style="max-width:250px;margin:0">
       </div>
       <button class="btn sm" type="button" id="addUnitBtn">${ICO('plus')} Añadir vivienda / nave</button>
     </div>
@@ -10491,12 +10512,14 @@ function renderAdmin(subTab) {
         if (adminInvVis === 'ACTIVE' && v.active === false) return false;
         if (adminInvVis === 'INACTIVE' && v.active !== false) return false;
         if (adminInvVis === 'ST_D' && v.st !== 'D') return false;
+        if (adminInvVis === 'ST_U' && v.st !== 'U') return false;
         if (adminInvVis === 'ST_C' && v.st !== 'C') return false;
         if (adminInvVis === 'ST_A' && v.st !== 'A') return false;
         if (!q) return true;
         const pName = getPromoById(v.promoId).name;
         const kindTxt = isNaveUnit(v) ? 'nave industrial' : 'piso vivienda';
-        return `${v.ref} ${v.nombre || ''} ${v.portal || ''} ${v.ori || ''} ${pName} ${kindTxt}`.toLowerCase().includes(q);
+        const stTxt = stLabel(v.st);
+        return `${v.ref} ${v.nombre || ''} ${v.portal || ''} ${v.ori || ''} ${pName} ${kindTxt} ${stTxt}`.toLowerCase().includes(q);
       });
     };
 
@@ -10525,6 +10548,7 @@ function renderAdmin(subTab) {
           <td>
             <select data-st="${esc(v.ref)}" style="width:142px;margin:0;padding:5px 8px">
               <option value="D" ${v.st === 'D' ? 'selected' : ''}>Disponible</option>
+              <option value="U" ${v.st === 'U' ? 'selected' : ''}>Usada</option>
               <option value="R" ${v.st === 'R' ? 'selected' : ''}>Reservada</option>
               <option value="A" ${v.st === 'A' ? 'selected' : ''}>Alquilada</option>
               <option value="C" ${v.st === 'C' ? 'selected' : ''}>En construcción</option>
@@ -10610,7 +10634,7 @@ function renderAdmin(subTab) {
       if (e.target.dataset.st) {
         const v = V.find(x => x.ref === e.target.dataset.st);
         const val = e.target.value;
-        if (v && ['D', 'R', 'A', 'C'].includes(val)) {
+        if (v && ['D', 'U', 'R', 'A', 'C'].includes(val)) {
           v.st = val;
           refreshAdminHeaderCounts();
           refreshAllPropertyViews();
@@ -10621,9 +10645,10 @@ function renderAdmin(subTab) {
         const v = V.find(x => x.ref === e.target.dataset.rent);
         const nextRent = Number(e.target.value);
         if (v) {
-          if (!Number.isFinite(nextRent) || nextRent < 100 || nextRent > 50000) {
+          const maxR = isNaveUnit(v) ? 100000 : 50000;
+          if (!Number.isFinite(nextRent) || nextRent < 100 || nextRent > maxR) {
             e.target.value = String(v.r);
-            notify('La renta debe estar entre 100 € y 50.000 €');
+            notify(`La renta debe estar entre 100 € y ${maxR.toLocaleString('es-ES')} €`);
             return;
           }
           v.r = Math.round(nextRent);
